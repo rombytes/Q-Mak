@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg p-8 max-w-md w-full">
+        <button onclick="goHome()" class="float-right text-gray-500 hover:text-red-600 text-2xl">&times;</button>
+        <h3 class="text-2xl font-bold text-blue-900 mb-6 text-center border-b-2 border-blue-400 pb-2">Order Status</h3>
+        <p id="orderId" class="mb-4"></p>
+        <div class="text-center p-4 border border-gray-300 rounded mb-4">
+            <h4 class="text-sm text-gray-600 mb-2">Current Status:</h4>
+            <p id="statusBadge" class="px-4 py-2 rounded inline-block font-bold"></p>
+        </div>
+        <div class="bg-gray-100 p-4 rounded">
+            <p id="statusDesc" class="text-gray-700"></p>
+        </div>
+        <button onclick="goHome()" class="w-full mt-6 border-2 border-blue-900 text-blue-900 hover:bg-gray-100 py-3 rounded-lg font-bold">
+            Close
+        </button>
+    </div>
+
+    <script>
+        const API_BASE = '../../php/api';
+        
+        const statusConfig = {
+            'pending': { 
+                text: 'PENDING', 
+                desc: 'Your order is currently being processed by the COOP staff.',
+                color: 'bg-orange-500 text-white'
+            },
+            'processing': { 
+                text: 'PROCESSING', 
+                desc: 'Your items are being picked and prepared.',
+                color: 'bg-blue-500 text-white'
+            },
+            'ready': { 
+                text: 'READY FOR PICK-UP', 
+                desc: 'Your order is ready! Please proceed to the COOP pickup counter.',
+                color: 'bg-indigo-600 text-white'
+            },
+            'completed': { 
+                text: 'COMPLETED', 
+                desc: 'Order completed and successfully picked up.',
+                color: 'bg-green-600 text-white'
+            },
+            'cancelled': { 
+                text: 'CANCELLED', 
+                desc: 'This order has been cancelled. Please contact COOP for details.',
+                color: 'bg-red-600 text-white'
+            }
+        };
+
+        async function loadOrderStatus() {
+            const email = sessionStorage.getItem('checkStatusEmail');
+            
+            if (!email) {
+                alert('Session expired. Please start again.');
+                window.location.href = '../../homepage.html';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/check_status.php?email=${encodeURIComponent(email)}`);
+                const result = await response.json();
+                
+                if (result.success && result.data.orders.length > 0) {
+                    // Display the most recent order
+                    const order = result.data.orders[0];
+                    const status = statusConfig[order.order_status] || statusConfig['pending'];
+                    
+                    document.getElementById('orderId').innerHTML = `
+                        <strong>Queue Number:</strong> ${order.queue_number}<br>
+                        <strong>Item:</strong> ${order.item_ordered}<br>
+                        <strong>Order Date:</strong> ${new Date(order.created_at).toLocaleString()}
+                    `;
+                    
+                    const statusBadge = document.getElementById('statusBadge');
+                    statusBadge.textContent = status.text;
+                    statusBadge.className = status.color + ' px-4 py-2 rounded inline-block font-bold';
+                    
+                    document.getElementById('statusDesc').textContent = status.desc;
+                    
+                    // Show all orders if multiple
+                    if (result.data.orders.length > 1) {
+                        const ordersHtml = result.data.orders.map(o => `
+                            <div class="border-t pt-2 mt-2">
+                                <strong>${o.queue_number}</strong> - ${o.item_ordered} 
+                                <span class="text-sm">(${statusConfig[o.order_status].text})</span>
+                            </div>
+                        `).join('');
+                        
+                        document.getElementById('statusDesc').innerHTML += `
+                            <div class="mt-4">
+                                <strong>All Your Orders (${result.data.orders.length}):</strong>
+                                ${ordersHtml}
+                            </div>
+                        `;
+                    }
+                } else {
+                    alert('No orders found for this email.');
+                    window.location.href = '../../homepage.html';
+                }
+            } catch (error) {
+                console.error('Error loading status:', error);
+                alert('Failed to load order status. Please try again.');
+            }
+        }
+
+        // Load status on page load
+        loadOrderStatus();
+
+        function goHome() {
+            sessionStorage.clear();
+            window.location.href = '../../homepage.html';
+        }
+    </script>
+</body>
+</html>

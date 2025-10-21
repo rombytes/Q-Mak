@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="w-64 bg-gray-800 text-white flex flex-col">
+        <div class="p-6 text-center border-b border-gray-700">
+            <h3 class="text-xl font-bold text-orange-400">COOP Admin</h3>
+        </div>
+        <nav class="flex-1">
+            <ul>
+                <li onclick="showTab('queue-management')" id="tab-queue-management" class="px-6 py-4 cursor-pointer transition border-l-4 bg-blue-900 border-orange-500 font-bold">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Queue & Orders
+                    </div>
+                </li>
+                <li onclick="showTab('student-records')" id="tab-student-records" class="px-6 py-4 cursor-pointer transition border-l-4 border-transparent hover:bg-gray-700">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Student Records
+                    </div>
+                </li>
+                <li onclick="showTab('service-config')" id="tab-service-config" class="px-6 py-4 cursor-pointer transition border-l-4 border-transparent hover:bg-gray-700">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Service Config
+                    </div>
+                </li>
+                <li onclick="showTab('email-logs')" id="tab-email-logs" class="px-6 py-4 cursor-pointer transition border-l-4 border-transparent hover:bg-gray-700">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        Email Logs
+                    </div>
+                </li>
+                <li onclick="showTab('admin-settings')" id="tab-admin-settings" class="px-6 py-4 cursor-pointer transition border-l-4 border-transparent hover:bg-gray-700">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                        Admin Settings
+                    </div>
+                </li>
+            </ul>
+        </nav>
+        <button onclick="logout()" class="m-4 bg-red-600 hover:bg-red-700 py-3 rounded font-bold">
+            Log Out
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto bg-gray-100">
+        <!-- Top Bar -->
+        <div class="bg-white shadow-sm sticky top-0 z-10 px-8 py-5 border-b">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-900">Welcome, Admin! 👋</h1>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <div id="connectionStatus" class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-sm text-gray-600">Live</span>
+                    </div>
+                    <p class="text-gray-600" id="currentDate"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8">
+            <!-- Queue Management Tab -->
+            <div id="content-queue-management" class="tab-content">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Queue & Orders Management</h2>
+                
+                <!-- Current Queue Display -->
+                <div id="currentQueueDisplay" class="bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-lg shadow-lg p-8 mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold">Current Queue</h3>
+                        <div class="text-sm bg-orange-500 px-4 py-2 rounded-full font-bold" id="queuePosition">Queue: -</div>
+                    </div>
+                    
+                    <div id="currentOrderCard" class="bg-white text-gray-900 rounded-lg p-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-lg font-bold text-blue-900 mb-4">Order Information</h4>
+                                <div class="space-y-2">
+                                    <div><span class="font-bold">Queue Number:</span> <span id="currentQueueNumber">-</span></div>
+                                    <div><span class="font-bold">Item Ordered:</span> <span id="currentItemOrdered">-</span></div>
+                                    <div><span class="font-bold">Time Placed:</span> <span id="currentTimePlaced">-</span></div>
+                                    <div><span class="font-bold">Wait Time:</span> <span id="currentWaitTime">-</span> mins</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-blue-900 mb-4">Student Information</h4>
+                                <div class="space-y-2">
+                                    <div><span class="font-bold">Student ID:</span> <span id="currentStudentId">-</span></div>
+                                    <div><span class="font-bold">Name:</span> <span id="currentStudentName">-</span></div>
+                                    <div><span class="font-bold">Email:</span> <span id="currentStudentEmail">-</span></div>
+                                    <div><span class="font-bold">Program:</span> <span id="currentStudentProgram">-</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <div class="flex gap-4 justify-center">
+                                <button onclick="processQueue('processing')" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    Start Processing
+                                </button>
+                                <button onclick="processQueue('ready')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Mark Ready
+                                </button>
+                                <button onclick="processQueue('completed')" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    Complete
+                                </button>
+                                <button onclick="skipQueue()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+                                    Skip
+                                </button>
+                                <button onclick="processQueue('cancelled')" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="noQueueMessage" class="hidden bg-white text-gray-900 rounded-lg p-8 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-gray-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+                        <h4 class="text-xl font-bold text-gray-600 mb-2">No Orders in Queue</h4>
+                        <p class="text-gray-500">All orders have been processed or there are no pending orders.</p>
+                    </div>
+                </div>
+                
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow text-center">
+                        <h4 class="text-gray-600 mb-2">Pending Orders</h4>
+                        <p class="text-5xl font-bold text-orange-500" id="pendingCount">1</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow text-center">
+                        <h4 class="text-gray-600 mb-2">Ready for Pick Up</h4>
+                        <p class="text-5xl font-bold text-blue-500" id="readyCount">1</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow text-center">
+                        <h4 class="text-gray-600 mb-2">Completed Today</h4>
+                        <p class="text-5xl font-bold text-green-600" id="doneCount">1</p>
+                    </div>
+                </div>
+
+                <!-- Queue Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-4">Current Queue Status</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Queue ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Student ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Item</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Time Placed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Current Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueTableBody" class="divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Records Tab -->
+            <div id="content-student-records" class="tab-content hidden">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Student Records</h2>
+                <input type="text" id="searchStudent" placeholder="Search by Student ID or Email..." class="w-full border border-gray-300 rounded p-3 mb-6" onkeyup="filterStudents()" />
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Student ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Full Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">College/Program</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody" class="divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Config Tab -->
+            <div id="content-service-config" class="tab-content hidden">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Service & Time Configuration</h2>
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <form class="space-y-4" onsubmit="event.preventDefault(); alert('Service updated!');">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-bold mb-1">Service Name</label>
+                                <input type="text" value="School Uniform" class="w-full border border-gray-300 rounded p-2" />
+                            </div>
+                            <div>
+                                <label class="block font-bold mb-1">Estimated Time (mins)</label>
+                                <input type="number" value="10" min="1" class="w-full border border-gray-300 rounded p-2" />
+                            </div>
+                        </div>
+                        <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
+                            Update Service
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-4">Current Services</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Service ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Service Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Estimated Time (mins)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4">1</td>
+                                    <td class="px-6 py-4">ID Lace</td>
+                                    <td class="px-6 py-4">5</td>
+                                    <td class="px-6 py-4">
+                                        <button class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
+                                            Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4">2</td>
+                                    <td class="px-6 py-4">School Uniform</td>
+                                    <td class="px-6 py-4">10</td>
+                                    <td class="px-6 py-4">
+                                        <button class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
+                                            Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Logs Tab -->
+            <div id="content-email-logs" class="tab-content hidden">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Email Logs</h2>
+                
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow text-center">
+                        <h4 class="text-gray-600 mb-2">Total Emails</h4>
+                        <p class="text-4xl font-bold text-blue-600" id="totalEmails">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow text-center">
+                        <h4 class="text-gray-600 mb-2">Successfully Sent</h4>
+                        <p class="text-4xl font-bold text-green-600" id="sentEmails">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow text-center">
+                        <h4 class="text-gray-600 mb-2">Failed</h4>
+                        <p class="text-4xl font-bold text-red-600" id="failedEmails">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow text-center">
+                        <h4 class="text-gray-600 mb-2">Success Rate</h4>
+                        <p class="text-4xl font-bold text-indigo-600" id="successRate">0%</p>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="bg-white p-4 rounded-lg shadow mb-6">
+                    <div class="grid grid-cols-3 gap-4">
+                        <select id="filterEmailType" onchange="fetchEmailLogs()" class="border border-gray-300 rounded p-2">
+                            <option value="all">All Types</option>
+                            <option value="otp">OTP</option>
+                            <option value="receipt">Receipt</option>
+                            <option value="status_update">Status Update</option>
+                        </select>
+                        <select id="filterEmailStatus" onchange="fetchEmailLogs()" class="border border-gray-300 rounded p-2">
+                            <option value="all">All Status</option>
+                            <option value="sent">Sent</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        <input type="text" id="searchEmail" placeholder="Search by email..." 
+                               onkeyup="fetchEmailLogs()" class="border border-gray-300 rounded p-2" />
+                    </div>
+                </div>
+                
+                <!-- Email Logs Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-4">Email History</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Log ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Recipient</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Subject</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Sent At</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="emailLogsTableBody" class="divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Settings Tab -->
+            <div id="content-admin-settings" class="tab-content hidden">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Admin Account Management</h2>
+                <div class="bg-white rounded-lg shadow p-8 max-w-md">
+                    <h3 class="text-xl font-bold text-blue-900 mb-4 border-b pb-2">Change Password</h3>
+                    <form class="space-y-4" onsubmit="event.preventDefault(); alert('Password updated successfully!');">
+                        <div>
+                            <label class="block font-bold mb-1">New Password</label>
+                            <input type="password" class="w-full border border-gray-300 rounded p-2" required />
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Confirm Password</label>
+                            <input type="password" class="w-full border border-gray-300 rounded p-2" required />
+                        </div>
+                        <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '../../php/api';
+        let ordersData = [];
+        let studentsData = [];
+        let refreshInterval = null;
+        let currentQueueOrder = null;
+        let queueIndex = 0;
+
+        // Check if admin is logged in
+        if (!sessionStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'admin_login.html';
+        }
+
+        // Display current date
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').textContent = 'Today is: ' + new Date().toLocaleDateString('en-US', options);
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all menu items
+            document.querySelectorAll('nav li').forEach(item => {
+                item.classList.remove('bg-blue-900', 'border-orange-500', 'font-bold');
+                item.classList.add('border-transparent');
+            });
+            
+            // Show selected tab
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            
+            // Add active class to selected menu item
+            const activeItem = document.getElementById('tab-' + tabName);
+            activeItem.classList.add('bg-blue-900', 'border-orange-500', 'font-bold');
+            activeItem.classList.remove('border-transparent');
+        }
+
+        // Logout function
+        async function logout() {
+            sessionStorage.clear();
+            window.location.href = '../../homepage.html';
+        }
+
+        // Fetch orders from API
+        async function fetchOrders() {
+            try {
+                const response = await fetch(`${API_BASE}/admin_orders.php`, {
+                    method: 'GET',
+                    credentials: 'include' // Important for session cookies
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    ordersData = result.data.orders;
+                    updateQueueTable();
+                    updateCounts(result.data.stats);
+                    updateCurrentQueue();
+                    updateConnectionStatus(true);
+                } else if (response.status === 401) {
+                    // Session expired, redirect to login
+                    sessionStorage.clear();
+                    window.location.href = 'admin_login.html';
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Fetch students from API
+        async function fetchStudents() {
+            try {
+                const response = await fetch(`${API_BASE}/admin_students.php`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    studentsData = result.data.students;
+                    updateStudentTable();
+                } else if (response.status === 401) {
+                    sessionStorage.clear();
+                    window.location.href = 'admin_login.html';
+                }
+            } catch (error) {
+                console.error('Error fetching students:', error);
+            }
+        }
+
+        // Initialize queue table
+        function updateQueueTable() {
+            const tbody = document.getElementById('queueTableBody');
+            tbody.innerHTML = '';
+            
+            if (ordersData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No orders found</td></tr>';
+                return;
+            }
+            
+            ordersData.forEach(order => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                const createdTime = new Date(order.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">${order.queue_number}</td>
+                    <td class="px-6 py-4">${order.student_id}</td>
+                    <td class="px-6 py-4">${order.item_ordered}</td>
+                    <td class="px-6 py-4">${createdTime}</td>
+                    <td class="px-6 py-4">
+                        <span class="${getStatusColor(order.order_status)} text-white px-3 py-1 rounded text-xs font-bold uppercase">
+                            ${order.order_status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <select onchange="updateOrderStatus(${order.order_id}, this.value)" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                            <option value="pending" ${order.order_status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${order.order_status === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="ready" ${order.order_status === 'ready' ? 'selected' : ''}>Ready for Pick Up</option>
+                            <option value="completed" ${order.order_status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="cancelled" ${order.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'bg-orange-500',
+                'processing': 'bg-blue-500',
+                'ready': 'bg-indigo-600',
+                'completed': 'bg-green-600',
+                'cancelled': 'bg-red-600'
+            };
+            return colors[status] || 'bg-gray-500';
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/admin_orders.php`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        status: newStatus
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Refresh orders to show updated status
+                    await fetchOrders();
+                } else {
+                    alert(result.message || 'Failed to update order status');
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                alert('An error occurred while updating the order status');
+            }
+        }
+
+        function updateCounts(stats) {
+            if (stats) {
+                document.getElementById('pendingCount').textContent = stats.pending || 0;
+                document.getElementById('readyCount').textContent = stats.ready || 0;
+                document.getElementById('doneCount').textContent = stats.completed || 0;
+            } else {
+                // Fallback to counting from ordersData
+                const pending = ordersData.filter(o => o.order_status === 'pending').length;
+                const ready = ordersData.filter(o => o.order_status === 'ready').length;
+                const completed = ordersData.filter(o => o.order_status === 'completed').length;
+                
+                document.getElementById('pendingCount').textContent = pending;
+                document.getElementById('readyCount').textContent = ready;
+                document.getElementById('doneCount').textContent = completed;
+            }
+        }
+
+        // Initialize student table
+        function updateStudentTable(filteredStudents = null) {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            
+            const dataToDisplay = filteredStudents || studentsData;
+            
+            if (dataToDisplay.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No students found</td></tr>';
+                return;
+            }
+            
+            dataToDisplay.forEach(student => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                const fullName = `${student.first_name} ${student.last_name}`;
+                const program = student.program || 'N/A';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">${student.student_id}</td>
+                    <td class="px-6 py-4">${fullName}</td>
+                    <td class="px-6 py-4">${student.college} - ${program}</td>
+                    <td class="px-6 py-4">${student.email}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="viewStudentOrders('${student.student_id}')" class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
+                            View Orders
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterStudents() {
+            const query = document.getElementById('searchStudent').value.toLowerCase();
+            const filtered = studentsData.filter(student =>
+                student.student_id.toLowerCase().includes(query) ||
+                student.first_name.toLowerCase().includes(query) ||
+                student.last_name.toLowerCase().includes(query) ||
+                student.email.toLowerCase().includes(query)
+            );
+            updateStudentTable(filtered);
+        }
+
+        function viewStudentOrders(studentId) {
+            // Switch to queue management tab and filter by student
+            showTab('queue-management');
+            // You could add filtering logic here
+            alert(`Viewing orders for student: ${studentId}`);
+        }
+
+        // Connection status indicator
+        function updateConnectionStatus(isConnected) {
+            const statusDot = document.getElementById('connectionStatus');
+            if (isConnected) {
+                statusDot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+            } else {
+                statusDot.className = 'w-3 h-3 rounded-full bg-red-500';
+            }
+        }
+
+        // Auto-refresh functionality
+        function startAutoRefresh() {
+            // Refresh every 5 seconds
+            refreshInterval = setInterval(() => {
+                fetchOrders();
+            }, 5000);
+        }
+
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+
+        // Queue Management Functions
+        function updateCurrentQueue() {
+            const pendingOrders = ordersData.filter(o => o.order_status === 'pending' || o.order_status === 'processing');
+            
+            if (pendingOrders.length === 0) {
+                // No orders in queue
+                document.getElementById('currentOrderCard').classList.add('hidden');
+                document.getElementById('noQueueMessage').classList.remove('hidden');
+                currentQueueOrder = null;
+                return;
+            }
+            
+            // Show first pending order
+            document.getElementById('currentOrderCard').classList.remove('hidden');
+            document.getElementById('noQueueMessage').classList.add('hidden');
+            
+            currentQueueOrder = pendingOrders[0];
+            
+            // Update queue position
+            document.getElementById('queuePosition').textContent = `Queue: 1 of ${pendingOrders.length}`;
+            
+            // Update order information
+            document.getElementById('currentQueueNumber').textContent = currentQueueOrder.queue_number;
+            document.getElementById('currentItemOrdered').textContent = currentQueueOrder.item_ordered;
+            const createdTime = new Date(currentQueueOrder.created_at).toLocaleString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                month: 'short',
+                day: 'numeric'
+            });
+            document.getElementById('currentTimePlaced').textContent = createdTime;
+            document.getElementById('currentWaitTime').textContent = currentQueueOrder.estimated_wait_time;
+            
+            // Update student information
+            document.getElementById('currentStudentId').textContent = currentQueueOrder.student_id;
+            document.getElementById('currentStudentName').textContent = `${currentQueueOrder.first_name} ${currentQueueOrder.last_name}`;
+            document.getElementById('currentStudentEmail').textContent = currentQueueOrder.email;
+            document.getElementById('currentStudentProgram').textContent = `${currentQueueOrder.college} - ${currentQueueOrder.program || 'N/A'}`;
+        }
+        
+        async function processQueue(newStatus) {
+            if (!currentQueueOrder) {
+                alert('No order in queue to process');
+                return;
+            }
+            
+            const confirmMessages = {
+                'processing': 'Start processing this order?',
+                'ready': 'Mark this order as ready for pickup?',
+                'completed': 'Mark this order as completed?',
+                'cancelled': 'Cancel this order? This action cannot be undone.'
+            };
+            
+            if (!confirm(confirmMessages[newStatus])) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin_orders.php`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: currentQueueOrder.order_id,
+                        status: newStatus
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Refresh orders to show updated status
+                    await fetchOrders();
+                    
+                    // Show success message
+                    const statusLabels = {
+                        'processing': 'started processing',
+                        'ready': 'marked as ready',
+                        'completed': 'completed',
+                        'cancelled': 'cancelled'
+                    };
+                    
+                    showNotification(`Order ${currentQueueOrder.queue_number} ${statusLabels[newStatus]}!`, 'success');
+                } else {
+                    alert(result.message || 'Failed to update order status');
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                alert('An error occurred while updating the order status');
+            }
+        }
+        
+        function skipQueue() {
+            if (!currentQueueOrder) {
+                alert('No order in queue to skip');
+                return;
+            }
+            
+            if (!confirm('Skip this order? It will remain in the queue but move to the end.')) {
+                return;
+            }
+            
+            // Move current order to end of pending orders
+            const currentIndex = ordersData.findIndex(o => o.order_id === currentQueueOrder.order_id);
+            if (currentIndex !== -1) {
+                const skippedOrder = ordersData.splice(currentIndex, 1)[0];
+                ordersData.push(skippedOrder);
+                updateCurrentQueue();
+                showNotification(`Order ${currentQueueOrder.queue_number} skipped`, 'info');
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const colors = {
+                'success': 'bg-green-500',
+                'error': 'bg-red-500',
+                'info': 'bg-blue-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-8 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Fetch email logs from API
+        async function fetchEmailLogs() {
+            try {
+                const type = document.getElementById('filterEmailType').value;
+                const status = document.getElementById('filterEmailStatus').value;
+                const search = document.getElementById('searchEmail').value;
+                
+                const response = await fetch(`${API_BASE}/email_logs.php?type=${type}&status=${status}&search=${search}&limit=100`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayEmailLogs(result.data.logs);
+                    updateEmailStats(result.data.stats);
+                } else if (response.status === 401) {
+                    sessionStorage.clear();
+                    window.location.href = 'admin_login.html';
+                }
+            } catch (error) {
+                console.error('Error fetching email logs:', error);
+            }
+        }
+
+        // Display email logs in table
+        function displayEmailLogs(logs) {
+            const tbody = document.getElementById('emailLogsTableBody');
+            tbody.innerHTML = '';
+            
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No email logs found</td></tr>';
+                return;
+            }
+            
+            logs.forEach(log => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const statusColor = log.status === 'sent' ? 'bg-green-500' : 'bg-red-500';
+                const sentTime = new Date(log.sent_at).toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                const typeColors = {
+                    'otp': 'bg-blue-100 text-blue-800',
+                    'receipt': 'bg-green-100 text-green-800',
+                    'status_update': 'bg-purple-100 text-purple-800'
+                };
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">${log.log_id}</td>
+                    <td class="px-6 py-4">${log.recipient_email}</td>
+                    <td class="px-6 py-4">
+                        <span class="${typeColors[log.email_type] || 'bg-gray-100 text-gray-800'} px-2 py-1 rounded text-xs font-bold uppercase">
+                            ${log.email_type.replace('_', ' ')}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">${log.subject}</td>
+                    <td class="px-6 py-4">${sentTime}</td>
+                    <td class="px-6 py-4">
+                        <span class="${statusColor} text-white px-3 py-1 rounded text-xs font-bold uppercase">
+                            ${log.status}
+                        </span>
+                    </td>
+                `;
+                
+                // Add error message tooltip if failed
+                if (log.status === 'failed' && log.error_message) {
+                    row.title = `Error: ${log.error_message}`;
+                    row.style.cursor = 'help';
+                }
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update email statistics
+        function updateEmailStats(stats) {
+            document.getElementById('totalEmails').textContent = stats.total || 0;
+            document.getElementById('sentEmails').textContent = stats.sent || 0;
+            document.getElementById('failedEmails').textContent = stats.failed || 0;
+            
+            const successRate = stats.total > 0 ? ((stats.sent / stats.total) * 100).toFixed(1) : 0;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        // Initialize data on page load
+        async function initializeDashboard() {
+            await fetchOrders();
+            await fetchStudents();
+            await fetchEmailLogs();
+            updateCurrentQueue();
+            startAutoRefresh();
+        }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            stopAutoRefresh();
+        });
+
+        // Start the dashboard
+        initializeDashboard();
+    </script>
+</body>
+</html>

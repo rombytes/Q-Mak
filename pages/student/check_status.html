@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Order Status - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/notifications.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-3xl font-bold text-blue-900">Check Order Status</h3>
+                <p class="text-gray-600 mt-1">Track your order</p>
+            </div>
+            <button onclick="window.location.href='../../homepage.html'" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="bg-blue-50 rounded-xl p-6 mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-sm text-gray-700">Enter your UMak email address to receive an OTP and check your order status.</p>
+            </div>
+        </div>
+        <form id="statusForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">UMak Student Email <span class="text-red-500">*</span></label>
+                <input type="email" id="checkStatusEmail" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="studentID@umak.edu.ph" required />
+            </div>
+            <button type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                Check Status
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE = '../../php/api';
+        
+        document.getElementById('statusForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('checkStatusEmail').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending OTP...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/check_status.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    sessionStorage.setItem('checkStatusEmail', email);
+                    sessionStorage.setItem('currentOtp', result.data.otp_code);
+                    sessionStorage.setItem('otpMode', 'status');
+                    sessionStorage.setItem('userEmail', email);
+                    
+                    // Show push notification
+                    if (window.notificationManager) {
+                        window.notificationManager.otpSent(email);
+                    }
+                    
+                    alert('OTP has been sent to your email: ' + email);
+                    console.log('Development OTP:', result.data.otp_code);
+                    
+                    // Redirect to OTP page
+                    setTimeout(() => {
+                        window.location.href = 'otp_verification.html';
+                    }, 1000);
+                } else {
+                    if (window.notificationManager) {
+                        window.notificationManager.error(result.message || 'Failed to send OTP');
+                    }
+                    alert(result.message || 'Failed to send OTP. Please try again.');
+                }
+            } catch (error) {
+                console.error('Check status error:', error);
+                if (window.notificationManager) {
+                    window.notificationManager.error('Connection error. Please try again.');
+                }
+                alert('An error occurred. Please check your connection and try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
+            }
+        });
+    </script>
+</body>
+</html>

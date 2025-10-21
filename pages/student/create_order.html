@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Order - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/notifications.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full my-8">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-3xl font-bold text-blue-900">Create New Order</h3>
+                <p class="text-gray-600 mt-1">Fill out the form to place your order</p>
+            </div>
+            <button onclick="window.location.href='../../homepage.html'" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="orderForm" class="space-y-6">
+            <!-- Student Information -->
+            <div class="bg-blue-50 rounded-xl p-6">
+                <h4 class="text-lg font-semibold text-blue-900 mb-4">Student Information</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Student ID <span class="text-red-500">*</span></label>
+                        <input type="text" id="studentId" placeholder="e.g., K12345678" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">First Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="fname" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="lname" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">M.I.</label>
+                            <input type="text" id="minitial" maxlength="1" placeholder="Optional" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">UMak Student Email <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="studentID@umak.edu.ph" required />
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Academic Information -->
+            <div class="bg-orange-50 rounded-xl p-6">
+                <h4 class="text-lg font-semibold text-blue-900 mb-4">Academic Information</h4>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">College/School/Institute <span class="text-red-500">*</span></label>
+                            <select id="college" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                                <option value="">Select College/School/Institute</option>
+                                <optgroup label="Colleges">
+                                    <option value="CLAS">CLAS</option>
+                                    <option value="CHK">CHK</option>
+                                    <option value="CBFS">CBFS</option>
+                                    <option value="CCIS">CCIS</option>
+                                    <option value="CITE">CITE</option>
+                                    <option value="CITE-HSU">CITE-HSU</option>
+                                    <option value="CGPP">CGPP</option>
+                                    <option value="CCSE">CCSE</option>
+                                    <option value="CET">CET</option>
+                                    <option value="CTHM">CTHM</option>
+                                    <option value="CCAPS">CCAPS</option>
+                                </optgroup>
+                                <optgroup label="Schools and Institutes">
+                                    <option value="SOL">SOL</option>
+                                    <option value="IAD">IAD</option>
+                                    <option value="IOA">IOA</option>
+                                    <option value="IOP">IOP</option>
+                                    <option value="ION">ION</option>
+                                    <option value="IIHS">IIHS</option>
+                                    <option value="ITEST">ITEST</option>
+                                    <option value="ISDNB">ISDNB</option>
+                                    <option value="IOPsy">IOPsy</option>
+                                    <option value="ISW">ISW</option>
+                                    <option value="IDEM">IDEM</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Program <span class="text-red-500">*</span></label>
+                            <input type="text" id="program" placeholder="e.g., BS Computer Science" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Year Level <span class="text-red-500">*</span></label>
+                            <select id="year" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                                <option value="">Select Year Level</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                                <option value="5">5th Year</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Section</label>
+                            <input type="text" id="section" placeholder="e.g., A, B, C (Optional)" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Details -->
+            <div class="bg-green-50 rounded-xl p-6">
+                <h4 class="text-lg font-semibold text-blue-900 mb-4">Order Details</h4>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Item to Order <span class="text-red-500">*</span></label>
+                    <select id="purchasing" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                        <option value="">Select Item</option>
+                        <option value="id lace">ID Lace</option>
+                        <option value="uniform">School Uniform</option>
+                        <option value="PE uniform">PE Uniform</option>
+                        <option value="nstp shirt">NSTP Shirt</option>
+                        <option value="patch">School Patch</option>
+                        <option value="book">Book/Manual</option>
+                        <option value="supplies">School Supplies</option>
+                        <option value="merchandise">UMak Merchandise</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                <button type="submit" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Submit Order
+                </button>
+                <button type="reset" class="flex-1 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Clear Form
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE = '../../php/api';
+        
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            
+            // Collect form data
+            const formData = {
+                studentId: document.getElementById('studentId').value,
+                fname: document.getElementById('fname').value,
+                lname: document.getElementById('lname').value,
+                minitial: document.getElementById('minitial').value,
+                email: document.getElementById('email').value,
+                college: document.getElementById('college').value,
+                program: document.getElementById('program').value,
+                year: document.getElementById('year').value,
+                section: document.getElementById('section').value,
+                purchasing: document.getElementById('purchasing').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/create_order.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Store form data and OTP info
+                    sessionStorage.setItem('orderFormData', JSON.stringify(formData));
+                    sessionStorage.setItem('currentOtp', result.data.otp_code);
+                    sessionStorage.setItem('otpMode', 'order');
+                    sessionStorage.setItem('userEmail', formData.email);
+                    
+                    // Show push notification
+                    if (window.notificationManager) {
+                        window.notificationManager.otpSent(formData.email);
+                    }
+                    
+                    alert('OTP has been sent to your email: ' + formData.email);
+                    console.log('Development OTP:', result.data.otp_code);
+                    
+                    // Redirect to OTP page
+                    setTimeout(() => {
+                        window.location.href = 'otp_verification.html';
+                    }, 1000);
+                } else {
+                    if (window.notificationManager) {
+                        window.notificationManager.error(result.message || 'Failed to create order');
+                    }
+                    alert(result.message || 'Failed to create order. Please try again.');
+                }
+            } catch (error) {
+                console.error('Order creation error:', error);
+                if (window.notificationManager) {
+                    window.notificationManager.error('Connection error. Please try again.');
+                }
+                alert('An error occurred. Please check your connection and try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Order';
+            }
+        });
+    </script>
+</body>
+</html>

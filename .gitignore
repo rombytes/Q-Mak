@@ -1,0 +1,203 @@
+# Q-Mak System - Git Ignore File
+# This file tells Git which files NOT to upload to GitHub
+
+# ==========================================
+# Sensitive Configuration Files
+# ==========================================
+# DO NOT upload files with passwords or API keys
+php/config/database.php
+php/config/email.php
+php/config/secrets.php
+.env
+.env.local
+
+# ==========================================
+# Operating System Files
+# ==========================================
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# ==========================================
+# IDE and Editor Files
+# ==========================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# PhpStorm / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Notepad++
+*.bak
+
+# ==========================================
+# PHP Files
+# ==========================================
+# Composer
+/vendor/
+composer.lock
+
+# PHP logs
+*.log
+error_log
+php_errors.log
+
+# ==========================================
+# Database Files
+# ==========================================
+# Database backups (keep schema, ignore backups)
+*.sql.backup
+*.sql.bak
+database/backups/
+
+# SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+
+# ==========================================
+# Temporary Files
+# ==========================================
+# General temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Cache files
+cache/
+tmp/
+temp/
+
+# ==========================================
+# Upload Directories
+# ==========================================
+# User uploaded files (if you have uploads)
+uploads/
+files/
+media/
+
+# ==========================================
+# Node.js (if you add Node.js later)
+# ==========================================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# ==========================================
+# Build Files
+# ==========================================
+dist/
+build/
+*.min.js
+*.min.css
+
+# ==========================================
+# Testing Files
+# ==========================================
+test_*.html
+test_*.php
+testing/
+tests/coverage/
+
+# ==========================================
+# Documentation Drafts
+# ==========================================
+# Keep final docs, ignore drafts
+*_DRAFT.md
+*_TODO.md
+notes.txt
+
+# Documentation folder (setup guides not needed in GitHub)
+docs/
+
+# Setup and upload guide files (not needed in GitHub)
+ADMIN_ACCOUNTS_UPDATED.md
+FILE_ORGANIZATION_SUCCESS.md
+FIX_PASSWORD_HASH.md
+GITHUB_UPLOAD_CLEAN.md
+LICENSE_ADDED.md
+MANUAL_UPLOAD_STEPS.md
+ORGANIZATION_COMPLETE.md
+PASSWORD_UPDATE_COMPLETE.md
+QUICK_GITHUB_UPLOAD.md
+README_UPDATED.md
+README_OLD.md
+TEST_NAVIGATION.md
+UPDATE_FILE_PATHS.md
+UPLOAD_TO_GITHUB_SUMMARY.md
+WHAT_GETS_UPLOADED.md
+UPLOAD_TO_GITHUB.ps1
+
+# ==========================================
+# Large Files
+# ==========================================
+# Files larger than 100MB
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.iso
+
+# ==========================================
+# Security
+# ==========================================
+# SSH keys
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+
+# Certificates
+*.crt
+*.cer
+
+# ==========================================
+# Project Specific
+# ==========================================
+# Development/testing pages
+test_admin_dashboard.html
+
+# Password generator (contains sensitive logic)
+generate_password.php
+
+# Old versions
+*.old
+*.backup
+*_old.*
+
+# Screenshots (optional - remove if you want to include them)
+# screenshots/
+
+# ==========================================
+# Keep These Files (Exceptions)
+# ==========================================
+# Force include important files even if ignored by pattern
+!.gitignore
+!README.md
+!LICENSE
+
+# Keep example config files (without real credentials)
+!php/config/database.example.php
+!php/config/email.example.php

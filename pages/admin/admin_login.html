@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-black bg-opacity-80 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg p-8 max-w-md w-full">
+        <h3 class="text-2xl font-bold text-blue-900 mb-6 border-b-2 border-orange-500 pb-2">Admin Login</h3>
+        <form id="loginForm">
+            <div class="mb-4">
+                <label class="block font-bold mb-1">Email Address</label>
+                <input type="email" id="loginEmail" class="w-full border border-gray-300 rounded p-2" required />
+            </div>
+            <div class="mb-6">
+                <label class="block font-bold mb-1">Password</label>
+                <input type="password" id="loginPassword" class="w-full border border-gray-300 rounded p-2" required />
+            </div>
+            <div class="flex gap-4">
+                <button type="submit" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold">
+                    Log In
+                </button>
+                <button type="button" onclick="window.location.href='../../homepage.html'" class="flex-1 border-2 border-blue-900 text-blue-900 hover:bg-gray-100 py-3 rounded-lg font-bold">
+                    Back to Home
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE = '../../php/api';
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin_login.php`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    sessionStorage.setItem('adminData', JSON.stringify(result.data));
+                    window.location.href = 'admin_dashboard.html';
+                } else {
+                    alert(result.message || 'Invalid credentials. Please try again.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Log In';
+            }
+        });
+    </script>
+</body>
+</html>
