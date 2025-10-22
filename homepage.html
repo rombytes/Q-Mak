@@ -7,9 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.cdnfonts.com/css/metropolis-2');
         
         body {
             font-family: 'Inter', sans-serif;
+        }
+        
+        .font-metropolis {
+            font-family: 'Metropolis', sans-serif;
         }
         
         .hover-lift {
@@ -19,6 +24,19 @@
         .hover-lift:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .hero-background {
+            background-image: url('images/UMak-Facade-Admin-2024.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        
+        .hero-overlay {
+            background: rgba(30, 58, 138, 0.85);
+            backdrop-filter: blur(2px);
         }
     </style>
 </head>
@@ -46,25 +64,29 @@
     </header>
 
     <div class="pt-20">
-        <!-- Hero Section -->
-        <div class="bg-gradient-to-r from-blue-900 to-blue-600 text-white py-32 px-8">
-            <div class="max-w-7xl mx-auto text-center">
-                <h1 class="text-6xl font-extrabold mb-6 leading-tight">
-                    Welcome, <span class="text-orange-400">Herons!</span>
-                </h1>
-                <p class="text-2xl mb-4 text-gray-100 font-light">
-                    Your one-stop shop for university essentials and merchandise
-                </p>
-                <p class="text-lg mb-10 text-gray-300">
-                    Order your COOP items with ease and convenience
-                </p>
-                <div class="flex gap-4 justify-center">
-                    <button onclick="showOrderModal()" class="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg text-lg font-bold transition-all hover:shadow-2xl hover:scale-105">
-                        Order Now
-                    </button>
-                    <button onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})" class="bg-white text-blue-900 hover:bg-gray-100 px-10 py-4 rounded-lg text-lg font-bold transition-all hover:shadow-2xl">
-                        Learn More
-                    </button>
+        <!-- Hero Section with UMak Facade Background -->
+        <div class="hero-background text-white py-32 px-8 min-h-[600px] flex items-center">
+            <div class="hero-overlay absolute inset-0"></div>
+            <div class="max-w-7xl mx-auto text-center relative z-10">
+                <!-- Content Box with Semi-Transparent Background -->
+                <div class="bg-white/10 backdrop-blur-md rounded-3xl p-12 shadow-2xl border border-white/20">
+                    <h1 class="text-6xl font-extrabold mb-6 leading-tight drop-shadow-lg">
+                        Welcome, <span class="text-orange-400">Herons!</span>
+                    </h1>
+                    <p class="text-2xl mb-4 text-white font-light drop-shadow-md">
+                        Your one-stop shop for university essentials and merchandise
+                    </p>
+                    <p class="text-lg mb-10 text-gray-100 drop-shadow-md">
+                        Order your COOP items with ease and convenience
+                    </p>
+                    <div class="flex gap-4 justify-center">
+                        <button onclick="showOrderModal()" class="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg text-lg font-bold transition-all hover:shadow-2xl hover:scale-105">
+                            Order Now
+                        </button>
+                        <button onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})" class="bg-white text-blue-900 hover:bg-gray-100 px-10 py-4 rounded-lg text-lg font-bold transition-all hover:shadow-2xl">
+                            Learn More
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -181,22 +203,21 @@
     <footer class="bg-blue-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-8">
             <div class="flex flex-col items-center">
-                <!-- Logos -->
-                <div class="flex items-center justify-center gap-16 mb-8">
-                    <div class="text-center">
-                        <img src="images/UMAK.png" alt="University of Makati Logo" class="h-20 mb-3">
-                        <div class="text-sm text-gray-300">University Logo</div>
-                    </div>
-                    <div class="text-center">
-                        <img src="images/MAKATI.png" alt="Makati City Logo" class="h-20 mb-3">
-                        <div class="text-sm text-gray-300">City Logo</div>
-                    </div>
+                <!-- Rise and Shine Logo -->
+                <div class="mb-8">
+                    <img src="images/UMak-Rise-Shine-Anywhere-Logotype-White.png" alt="UMak Rise and Shine" class="h-16">
                 </div>
                 
-                <!-- University Name -->
+                <!-- University Name with Metropolis Font -->
                 <div class="text-center mb-8">
-                    <h3 class="text-2xl font-bold mb-2">University of Makati</h3>
+                    <h3 class="text-2xl font-bold mb-2 font-metropolis tracking-wide">UNIVERSITY OF MAKATI</h3>
                     <p class="text-gray-300">J.P. Rizal Extension, West Rembo, Makati City</p>
+                </div>
+                
+                <!-- Logos -->
+                <div class="flex items-center justify-center gap-8 mb-8">
+                    <img src="images/UMAK.png" alt="University of Makati Logo" class="h-20">
+                    <img src="images/MAKATI.png" alt="Makati City Logo" class="h-20">
                 </div>
                 
                 <!-- Quick Links -->
