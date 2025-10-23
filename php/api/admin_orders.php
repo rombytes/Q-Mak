@@ -37,6 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $date = $_GET['date'] ?? '';
         $search = $_GET['search'] ?? '';
         
+        $filter = $_GET['filter'] ?? 'today';
+
         $query = "
             SELECT 
                 o.order_id,
@@ -56,6 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             JOIN students s ON o.student_id = s.student_id
             WHERE 1=1
         ";
+
+        if ($filter === 'today') {
+            $query .= " AND DATE(o.created_at) = CURDATE()";
+        }
         
         $params = [];
         
@@ -78,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $params[] = $searchParam;
         }
         
-        $query .= " ORDER BY o.created_at DESC";
+        $query .= " ORDER BY o.created_at ASC";
         
         $stmt = $db->prepare($query);
         $stmt->execute($params);

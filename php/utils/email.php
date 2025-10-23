@@ -108,7 +108,7 @@ class EmailService {
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>🦅 UMak COOP Order Hub</h1>
+                    <h1>UMak COOP Order Hub</h1>
                 </div>
                 <div class='content'>
                     <p>$greeting</p>
