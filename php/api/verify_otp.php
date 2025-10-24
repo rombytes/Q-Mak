@@ -3,6 +3,10 @@
  * Verify OTP and Complete Order
  */
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
@@ -123,15 +127,13 @@ try {
         
         // Insert order
         $insertOrder = $db->prepare("
-            INSERT INTO orders (queue_number, student_id, item_ordered, estimated_wait_time, qr_expiry)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO orders (queue_number, student_id, item_name, status)
+            VALUES (?, ?, ?, 'pending')
         ");
         $insertOrder->execute([
             $queueNum,
             $student['student_id'],
-            $orderData['purchasing'],
-            $waitTime,
-            $qrExpiry
+            $orderData['purchasing']
         ]);
         
         $orderId = $db->lastInsertId();
@@ -175,12 +177,28 @@ try {
     
     echo json_encode($response);
     
+} catch (PDOException $e) {
+    if (isset($db) && $db->inTransaction()) {
+        $db->rollBack();
+    }
+    error_log("Verify OTP PDO Error: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Database error: ' . $e->getMessage(),
+        'error_code' => $e->getCode(),
+        'trace' => $e->getTraceAsString()
+    ]);
 } catch (Exception $e) {
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();
     }
     error_log("Verify OTP Error: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Server error occurred: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Server error: ' . $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ]);
 }
 ?>

@@ -37,7 +37,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $search = $_GET['search'] ?? '';
         $limit = intval($_GET['limit'] ?? 100);
         
-        $query = "SELECT * FROM email_logs WHERE 1=1";
+        $query = "
+            SELECT 
+                log_id,
+                order_id,
+                student_id,
+                email_to as recipient_email,
+                email_type,
+                subject,
+                status,
+                sent_at,
+                error_message,
+                created_at
+            FROM email_logs 
+            WHERE 1=1
+        ";
         $params = [];
         
         // Filter by email type
@@ -54,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         // Search by recipient email
         if (!empty($search)) {
-            $query .= " AND recipient_email LIKE ?";
+            $query .= " AND email_to LIKE ?";
             $params[] = "%$search%";
         }
         
@@ -91,7 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } catch (Exception $e) {
         error_log("Get Email Logs Error: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Server error occurred',
+            'error' => $e->getMessage()
+        ]);
     }
     
 } else {

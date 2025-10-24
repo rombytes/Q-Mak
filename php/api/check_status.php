@@ -92,12 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             SELECT 
                 o.order_id,
                 o.queue_number,
-                o.item_ordered,
-                o.order_status,
-                o.estimated_wait_time,
+                o.item_name as item_ordered,
+                o.status as order_status,
                 o.created_at,
                 o.updated_at,
                 s.student_id,
+                s.student_number,
                 s.first_name,
                 s.last_name
             FROM orders o

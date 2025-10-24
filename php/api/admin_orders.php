@@ -43,17 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             SELECT 
                 o.order_id,
                 o.queue_number,
-                o.item_ordered,
-                o.order_status,
-                o.estimated_wait_time,
+                o.item_name as item_ordered,
+                o.status as order_status,
                 o.created_at,
                 o.updated_at,
                 s.student_id,
+                s.student_number,
                 s.first_name,
                 s.last_name,
                 s.email,
-                s.college,
-                s.program
+                COALESCE(s.college, 'N/A') as college,
+                COALESCE(s.program, 'N/A') as program,
+                COALESCE(s.year_level, 'N/A') as year_level,
+                COALESCE(s.section, 'N/A') as section
             FROM orders o
             JOIN students s ON o.student_id = s.student_id
             WHERE 1=1
@@ -66,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $params = [];
         
         if ($status !== 'all') {
-            $query .= " AND o.order_status = ?";
+            $query .= " AND o.status = ?";
             $params[] = $status;
         }
         
@@ -94,11 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $statsStmt = $db->query("
             SELECT 
                 COUNT(*) as total,
-                SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending,
-                SUM(CASE WHEN order_status = 'processing' THEN 1 ELSE 0 END) as processing,
-                SUM(CASE WHEN order_status = 'ready' THEN 1 ELSE 0 END) as ready,
-                SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as completed,
-                SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
+                SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) as ready,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
             FROM orders
             WHERE DATE(created_at) = CURDATE()
         ");
@@ -116,7 +118,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } catch (Exception $e) {
         error_log("Get Orders Error: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Server error occurred',
+            'error' => $e->getMessage()
+        ]);
     }
     
 } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
@@ -158,12 +164,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Update status
         $updateStmt = $db->prepare("
             UPDATE orders 
-            SET order_status = ?, 
+            SET status = ?, 
                 updated_at = NOW(),
-                completed_at = CASE WHEN ? = 'completed' THEN NOW() ELSE completed_at END
+                ready_time = CASE WHEN ? = 'ready' THEN NOW() ELSE ready_time END,
+                completed_time = CASE WHEN ? = 'completed' THEN NOW() ELSE completed_time END
             WHERE order_id = ?
         ");
-        $updateStmt->execute([$newStatus, $newStatus, $orderId]);
+        $updateStmt->execute([$newStatus, $newStatus, $newStatus, $orderId]);
         
         // Send status update email
         $statusMessages = [
@@ -177,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $emailData = [
             'queue_number' => $order['queue_number'],
             'student_name' => $order['first_name'] . ' ' . $order['last_name'],
-            'item_ordered' => $order['item_ordered'],
+            'item_ordered' => $order['item_name'],
             'status' => strtoupper($newStatus),
             'message' => $statusMessages[$newStatus]
         ];
