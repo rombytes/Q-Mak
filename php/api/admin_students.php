@@ -37,12 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $query = "
             SELECT 
                 student_id,
+                student_number,
                 first_name,
                 last_name,
                 email,
-                college,
-                program,
-                year_level,
+                COALESCE(college, 'N/A') as college,
+                COALESCE(program, 'N/A') as program,
+                COALESCE(year_level, 'N/A') as year_level,
+                COALESCE(section, 'N/A') as section,
+                COALESCE(phone, 'N/A') as phone,
                 created_at
             FROM students
             WHERE 1=1
@@ -76,7 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } catch (Exception $e) {
         error_log("Get Students Error: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Server error occurred',
+            'error' => $e->getMessage()
+        ]);
     }
     
 } else {

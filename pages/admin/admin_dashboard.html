@@ -210,7 +210,10 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Student ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Full Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">College/Program</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">College</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Program</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Year Level</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Section</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Action</th>
                                 </tr>
@@ -226,21 +229,23 @@
             <div id="content-service-config" class="tab-content hidden">
                 <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Service & Time Configuration</h2>
                 <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <form class="space-y-4" onsubmit="event.preventDefault(); alert('Service updated!');">
+                    <h3 class="text-xl font-bold text-blue-900 mb-4">Add New Service</h3>
+                    <form id="addServiceForm" class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block font-bold mb-1">Service Name</label>
-                                <input type="text" value="School Uniform" class="w-full border border-gray-300 rounded p-2" />
+                                <label class="block font-bold mb-1">Service Name *</label>
+                                <input type="text" id="newServiceName" required class="w-full border border-gray-300 rounded p-2" placeholder="e.g., School Uniform" />
                             </div>
                             <div>
-                                <label class="block font-bold mb-1">Estimated Time (mins)</label>
-                                <input type="number" value="10" min="1" class="w-full border border-gray-300 rounded p-2" />
+                                <label class="block font-bold mb-1">Estimated Time (mins) *</label>
+                                <input type="number" id="newServiceTime" required min="1" value="10" class="w-full border border-gray-300 rounded p-2" />
                             </div>
                         </div>
                         <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
-                            Update Service
+                            Add Service
                         </button>
                     </form>
+                    <div id="addServiceMessage" class="mt-4 text-sm font-medium"></div>
                 </div>
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <div class="p-6">
@@ -253,33 +258,47 @@
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Service ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Service Name</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Estimated Time (mins)</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Action</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4">1</td>
-                                    <td class="px-6 py-4">ID Lace</td>
-                                    <td class="px-6 py-4">5</td>
-                                    <td class="px-6 py-4">
-                                        <button class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
-                                            Edit
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4">2</td>
-                                    <td class="px-6 py-4">School Uniform</td>
-                                    <td class="px-6 py-4">10</td>
-                                    <td class="px-6 py-4">
-                                        <button class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
-                                            Edit
-                                        </button>
-                                    </td>
-                                </tr>
+                            <tbody id="servicesTableBody" class="divide-y divide-gray-200">
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- Edit Service Modal -->
+            <div id="editServiceModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+                    <h3 class="text-2xl font-bold text-blue-900 mb-4">Edit Service</h3>
+                    <form id="editServiceForm" class="space-y-4">
+                        <input type="hidden" id="editServiceId" />
+                        <div>
+                            <label class="block font-bold mb-1">Service Name *</label>
+                            <input type="text" id="editServiceName" required class="w-full border border-gray-300 rounded p-2" />
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Estimated Time (mins) *</label>
+                            <input type="number" id="editServiceTime" required min="1" class="w-full border border-gray-300 rounded p-2" />
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="editServiceActive" class="w-4 h-4" />
+                                <span class="font-bold">Active</span>
+                            </label>
+                        </div>
+                        <div class="flex gap-4">
+                            <button type="submit" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
+                                Update
+                            </button>
+                            <button type="button" onclick="closeEditServiceModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-bold">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                    <div id="editServiceMessage" class="mt-4 text-sm font-medium"></div>
                 </div>
             </div>
 
@@ -798,10 +817,13 @@
                     sessionStorage.clear();
                     window.location.href = 'admin_login.html';
                 } else {
-                    alert('Error fetching analytics: ' + result.message);
+                    const errorMsg = result.error || result.message || 'Unknown error';
+                    alert('Error fetching analytics: ' + errorMsg);
+                    console.error('Analytics API Error:', result);
                 }
             } catch (error) {
                 console.error('Error fetching analytics:', error);
+                alert('Error fetching analytics: ' + error.message);
             }
         }
 
@@ -936,7 +958,7 @@
             const dataToDisplay = filteredStudents || studentsData;
             
             if (dataToDisplay.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No students found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">No students found</td></tr>';
                 return;
             }
             
@@ -949,7 +971,10 @@
                 row.innerHTML = `
                     <td class="px-6 py-4">${student.student_id}</td>
                     <td class="px-6 py-4">${fullName}</td>
-                    <td class="px-6 py-4">${student.college} - ${program}</td>
+                    <td class="px-6 py-4">${student.college || 'N/A'}</td>
+                    <td class="px-6 py-4">${program}</td>
+                    <td class="px-6 py-4">${student.year_level || 'N/A'}</td>
+                    <td class="px-6 py-4">${student.section || 'N/A'}</td>
                     <td class="px-6 py-4">${student.email}</td>
                     <td class="px-6 py-4">
                         <button onclick="viewStudentOrders('${student.student_id}', '${fullName}')" class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
@@ -1053,7 +1078,7 @@
             currentQueueOrder = pendingOrders[0];
 
             // ... (all the code that updates text content, from line 536 to 563) ...
-            document.getElementById('currentStudentProgram').textContent = `${currentQueueOrder.college} - ${currentQueueOrder.program || 'N/A'}`;
+            document.getElementById('currentStudentProgram').textContent = `${currentQueueOrder.program} - ${currentQueueOrder.year_level} ${currentQueueOrder.section}` || 'N/A';
             
             // --- ADDED: This block controls which buttons are visible ---
             if (currentQueueOrder.order_status === 'pending') {
@@ -1084,7 +1109,7 @@
             document.getElementById('currentStudentId').textContent = currentQueueOrder.student_id;
             document.getElementById('currentStudentName').textContent = `${currentQueueOrder.first_name} ${currentQueueOrder.last_name}`;
             document.getElementById('currentStudentEmail').textContent = currentQueueOrder.email;
-            document.getElementById('currentStudentProgram').textContent = `${currentQueueOrder.college} - ${currentQueueOrder.program || 'N/A'}`;
+            document.getElementById('currentStudentProgram').textContent = `${currentQueueOrder.program} - ${currentQueueOrder.year_level} ${currentQueueOrder.section}` || 'N/A';
         }
         
         async function processQueue(newStatus) {
@@ -1515,6 +1540,201 @@
             }
         }
 
+        // Service Management Functions
+        async function fetchServices() {
+            try {
+                const response = await fetch(`${API_BASE}/services.php`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayServices(result.data.services);
+                }
+            } catch (error) {
+                console.error('Error fetching services:', error);
+            }
+        }
+
+        function displayServices(services) {
+            const tbody = document.getElementById('servicesTableBody');
+            tbody.innerHTML = '';
+            
+            if (services.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No services found</td></tr>';
+                return;
+            }
+            
+            services.forEach(service => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const statusColor = service.is_active == 1 ? 'bg-green-500' : 'bg-gray-500';
+                const statusText = service.is_active == 1 ? 'Active' : 'Inactive';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">${service.service_id}</td>
+                    <td class="px-6 py-4">${service.service_name}</td>
+                    <td class="px-6 py-4">${service.estimated_time}</td>
+                    <td class="px-6 py-4">
+                        <span class="${statusColor} text-white px-3 py-1 rounded text-xs font-bold">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            <button onclick='editService(${JSON.stringify(service)})' class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
+                                Edit
+                            </button>
+                            <button onclick="deleteService(${service.service_id}, '${service.service_name}')" class="border-2 border-red-600 text-red-600 hover:bg-red-50 px-4 py-1 rounded text-sm font-bold">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Add service form handler
+        document.getElementById('addServiceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageEl = document.getElementById('addServiceMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding...';
+            messageEl.textContent = '';
+            
+            const formData = {
+                service_name: document.getElementById('newServiceName').value,
+                estimated_time: parseInt(document.getElementById('newServiceTime').value)
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/services.php`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageEl.textContent = 'Service added successfully!';
+                    messageEl.className = 'mt-4 text-sm font-medium text-green-600';
+                    e.target.reset();
+                    await fetchServices();
+                } else {
+                    messageEl.textContent = `Error: ${result.message}`;
+                    messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+                }
+            } catch (error) {
+                console.error('Error adding service:', error);
+                messageEl.textContent = 'A connection error occurred.';
+                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Add Service';
+            }
+        });
+
+        function editService(service) {
+            document.getElementById('editServiceId').value = service.service_id;
+            document.getElementById('editServiceName').value = service.service_name;
+            document.getElementById('editServiceTime').value = service.estimated_time;
+            document.getElementById('editServiceActive').checked = service.is_active == 1;
+            
+            const modal = document.getElementById('editServiceModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditServiceModal() {
+            const modal = document.getElementById('editServiceModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('editServiceMessage').textContent = '';
+        }
+
+        // Edit service form handler
+        document.getElementById('editServiceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageEl = document.getElementById('editServiceMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+            messageEl.textContent = '';
+            
+            const formData = {
+                service_id: document.getElementById('editServiceId').value,
+                service_name: document.getElementById('editServiceName').value,
+                estimated_time: parseInt(document.getElementById('editServiceTime').value),
+                is_active: document.getElementById('editServiceActive').checked ? 1 : 0
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/services.php`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageEl.textContent = 'Service updated successfully!';
+                    messageEl.className = 'mt-4 text-sm font-medium text-green-600';
+                    await fetchServices();
+                    setTimeout(closeEditServiceModal, 1500);
+                } else {
+                    messageEl.textContent = `Error: ${result.message}`;
+                    messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+                }
+            } catch (error) {
+                console.error('Error updating service:', error);
+                messageEl.textContent = 'A connection error occurred.';
+                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update';
+            }
+        });
+
+        async function deleteService(serviceId, serviceName) {
+            if (!confirm(`Are you sure you want to delete service: ${serviceName}?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/services.php`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service_id: serviceId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Service deleted successfully', 'success');
+                    await fetchServices();
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error deleting service:', error);
+                alert('A connection error occurred.');
+            }
+        }
+
         // Clean up on page unload
         window.addEventListener('beforeunload', () => {
             stopAutoRefresh();
@@ -1522,6 +1742,7 @@
 
         // Start the dashboard
         initializeDashboard();
+        fetchServices(); // Load services on init
     </script>
 </body>
 </html>

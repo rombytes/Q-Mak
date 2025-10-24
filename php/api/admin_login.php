@@ -31,6 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../config/database.php';
 
+// Start session at the beginning
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean();
     http_response_code(405);
@@ -65,8 +70,14 @@ try {
         exit;
     }
     
-    $database = new Database();
+    $database = Database::getInstance();
     $conn = $database->getConnection();
+
+    if (!$conn) {
+        ob_end_clean();
+        echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+        exit;
+    }
     
     // Query admin_accounts table
     $stmt = $conn->prepare("
@@ -75,35 +86,34 @@ try {
         WHERE email = ?
         LIMIT 1
     ");
-    $stmt->execute([$email]);
-    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $admin = $result->fetch_assoc();
+
     if (!$admin) {
         ob_end_clean();
         echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
         exit;
     }
-    
+
     // Verify password
     if (!password_verify($password, $admin['password'])) {
         ob_end_clean();
         echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
         exit;
     }
-    
+
     // Update last login
     try {
         $updateStmt = $conn->prepare("UPDATE admin_accounts SET last_login = NOW() WHERE admin_id = ?");
-        $updateStmt->execute([$admin['admin_id']]);
-    } catch (PDOException $e) {
+        $updateStmt->bind_param("i", $admin['admin_id']);
+        $updateStmt->execute();
+    } catch (Exception $e) {
         // Ignore if last_login column doesn't exist
     }
     
-    // Start session
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    
+    // Set session variables
     $_SESSION['admin_id'] = $admin['admin_id'];
     $_SESSION['admin_email'] = $admin['email'];
     $_SESSION['admin_name'] = $admin['full_name'];
@@ -126,12 +136,12 @@ try {
         ]
     ]);
     
-} catch (PDOException $e) {
+} catch (mysqli_sql_exception $e) {
     ob_end_clean();
     error_log("Admin Login Database Error: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
-        'success' => false, 
+        'success' => false,
         'message' => 'Database connection error. Please contact administrator.'
     ]);
 } catch (Exception $e) {
@@ -139,7 +149,7 @@ try {
     error_log("Admin Login Error: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
-        'success' => false, 
+        'success' => false,
         'message' => 'An error occurred. Please try again.'
     ]);
 }

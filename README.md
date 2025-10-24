@@ -1,179 +1,281 @@
-# Q-Mak - Queue Management System
+# Q-Mak Queue Management System
 
 University of Makati Cooperative Queue Management System
 
 ## Overview
 
-Q-Mak is a comprehensive order management system designed for the University of Makati (UMak) Cooperative. It streamlines the ordering process for students, reduces wait times, and provides efficient queue management through QR code verification and real-time notifications.
-
-Developed as part of academic requirements at University of Makati.
+Q-Mak is a comprehensive web-based queue management system designed for the University of Makati (UMak) Cooperative. The system streamlines the ordering process for students, reduces wait times, and provides efficient queue management through QR code verification, OTP authentication, and real-time notifications.
 
 ## Features
 
-- **Student Queue Management**: Students can place orders and receive queue numbers
-- **Real-time Status Updates**: Track order status (Pending → Processing → Ready → Completed)
-- **Email Notifications**: Automatic email notifications when orders are ready
-- **Admin Dashboard**: Comprehensive admin panel for managing orders and students
-- **Admin Management**: Super admin can create and manage admin accounts
-- **Queue History**: View and search past orders
+### Student Portal
+- Secure OTP-based order placement with email verification
+- QR code generation for order confirmation and pickup
+- Real-time order status tracking
+- Email notifications for order updates
+
+### Admin Dashboard
+- Real-time queue management with status updates
+- Student records management with College, Program, Year Level, and Section
+- Comprehensive analytics and reporting with Chart.js integration
+- Email logs monitoring with search and filter capabilities
+- CSV/Excel export functionality for orders and email logs
+- Archive management system for data organization
+- Service configuration and management
+- Role-based access control (Admin/Super Admin)
+
+### Advanced Features
+- QR code generation using Google Charts API
+- Email automation with PHPMailer integration
+- Archive system for data management
+- Multi-level administrative controls
+- Mobile-responsive design
 
 ## Technology Stack
 
-- **Frontend**: HTML5, Tailwind CSS, JavaScript
-- **Backend**: PHP 8.x
-- **Database**: MySQL 8.x
-- **Web Server**: Apache (XAMPP)
+- **Frontend:** HTML5, TailwindCSS, JavaScript
+- **Backend:** PHP 7.4+
+- **Database:** MySQL 5.7+
+- **Web Server:** Apache/Nginx
+- **External APIs:** Google Charts API (QR codes)
+- **Libraries:** PHPMailer, Chart.js
 
 ## Installation
 
 ### Prerequisites
-
-- XAMPP (or any Apache + MySQL + PHP environment)
-- PHP 8.0 or higher
+- PHP 7.4 or higher
 - MySQL 5.7 or higher
+- Apache/Nginx web server
+- Composer (for dependency management)
+- SMTP server (for email functionality)
 
 ### Setup Instructions
 
-1. **Clone the repository**
+1. **Clone the Repository**
    ```bash
    git clone https://github.com/yourusername/Q-Mak.git
    cd Q-Mak
    ```
 
-2. **Move to XAMPP htdocs**
+2. **Install Dependencies**
    ```bash
-   # Copy the project to your XAMPP htdocs folder
-   # Windows: c:\xampp\htdocs\Q-Mak
-   # Mac/Linux: /opt/lampp/htdocs/Q-Mak
+   composer install
    ```
 
-3. **Configure Database**
-   - Open phpMyAdmin: `http://localhost/phpmyadmin`
-   - Import the database schema: `database/qmak_schema.sql`
-   - This will create the database `qmak_db` with all required tables
+3. **Database Setup**
+   - Import `database/qmak_schema.sql` into your MySQL database
+   - This creates the `qmak_db` database with all required tables and default data
 
-4. **Configure Database Connection**
+4. **Configuration**
    - Copy `php/config/database.example.php` to `php/config/database.php`
-   - Update database credentials if needed (default: root with no password)
+   - Copy `php/config/email.example.php` to `php/config/email.php`
+   - Update database credentials and SMTP settings
 
-5. **Start Apache and MySQL**
-   - Open XAMPP Control Panel
-   - Start Apache and MySQL services
+5. **Web Server Configuration**
+   - Ensure the project is in your web server's document root
+   - Enable PHP sessions and file uploads if needed
 
 6. **Access the Application**
    - Homepage: `http://localhost/Q-Mak/homepage.html`
-   - Student Portal: `http://localhost/Q-Mak/pages/student/student_login.html`
-   - Admin Portal: `http://localhost/Q-Mak/pages/admin/admin_login.html`
+   - Admin Login: `http://localhost/Q-Mak/pages/admin/admin_login.html`
+   - Setup Wizard: `http://localhost/Q-Mak/QUICK_SETUP.php`
 
-## Default Admin Credentials
+## Default Accounts
 
-**Super Administrator:**
+### Super Administrator
 - Email: `superadmin@umak.edu.ph`
 - Password: `SuperAdmin123`
 
-**Regular Administrator:**
+### Regular Administrator
 - Email: `admin@umak.edu.ph`
 - Password: `Admin123`
 
-⚠️ **IMPORTANT**: Change these default passwords after first login!
+**Security Note:** Change these default passwords immediately after installation.
 
 ## Project Structure
 
 ```
 Q-Mak/
-├── css/
-│   └── styles.css
 ├── database/
-│   └── qmak_schema.sql
-├── images/
-│   ├── UMAK COOP.png
-│   └── UMak-Facade-Admin-2024.jpg
-├── js/
-│   └── main.js
+│   └── qmak_schema.sql          # Complete database schema
 ├── pages/
 │   ├── admin/
-│   │   ├── admin_login.html
-│   │   └── admin_dashboard.html
+│   │   ├── admin_login.html     # Admin authentication
+│   │   └── admin_dashboard.html # Main admin interface
 │   └── student/
-│       ├── student_login.html
-│       └── student_dashboard.html
+│       ├── order_result.html    # Order confirmation with QR
+│       └── check_status.html    # Status checking page
 ├── php/
-│   ├── api/
-│   │   ├── admin_login.php
-│   │   ├── admin_management.php
-│   │   ├── orders.php
-│   │   └── students.php
-│   └── config/
-│       ├── database.php
-│       └── constants.php
-├── .gitignore
-├── homepage.html
+│   ├── api/                     # REST API endpoints
+│   │   ├── admin_orders.php     # Order management
+│   │   ├── admin_students.php   # Student records
+│   │   ├── admin_reports.php    # Analytics and reports
+│   │   ├── email_logs.php       # Email monitoring
+│   │   ├── services.php         # Service management
+│   │   ├── verify_otp.php       # OTP verification
+│   │   ├── export_orders.php    # CSV export
+│   │   ├── export_email_logs.php # Email logs export
+│   │   └── archive_manager.php  # Archive operations
+│   ├── config/                  # Configuration files
+│   │   ├── database.php         # Database connection
+│   │   ├── constants.php        # System constants
+│   │   └── email.php           # Email configuration
+│   └── utils/                    # Utility functions
+│       └── email.php            # Email sending and QR generation
+├── QUICK_SETUP.php              # Installation wizard
+├── homepage.html                # Landing page
 └── README.md
 ```
 
-## Features by User Role
-
-### Students
-- Login with student number
-- Place new orders
-- View order status
-- Receive queue numbers
-- Get email notifications
-
-### Admin
-- View all orders
-- Update order status
-- Manage students
-- View queue history
-- Export reports
-
-### Super Admin
-- All admin features
-- Create/edit/delete admin accounts
-- Manage admin privileges
-- System settings
-
 ## Database Schema
 
-### Tables
-- `admin_accounts` - Admin user accounts
-- `students` - Student information
-- `orders` - Order records and queue management
-- `email_logs` - Email notification history
-- `settings` - System configuration
+### Core Tables
+- **admin_accounts** - Administrative user accounts with role-based access
+- **students** - Student information (ID, name, college, program, year level, section)
+- **orders** - Order records with queue numbers and status tracking
+- **email_logs** - Email delivery tracking and history
+- **services** - Available services configuration
+- **otp_verifications** - OTP codes for email verification
+- **settings** - System configuration parameters
+
+### Key Features
+- Foreign key constraints for data integrity
+- Optimized indexes for performance
+- Archive support for data management
+- Comprehensive logging for audit trails
+
+## API Endpoints
+
+### Student APIs
+- `POST /php/api/verify_otp.php` - OTP verification and order creation
+- `GET /php/api/check_status.php` - Order status checking
+
+### Admin APIs (Authentication Required)
+- `GET /php/api/admin_orders.php` - Retrieve orders with filtering
+- `PUT /php/api/admin_orders.php` - Update order status
+- `GET /php/api/admin_students.php` - Student records management
+- `GET /php/api/admin_reports.php` - Analytics and reporting data
+- `GET /php/api/email_logs.php` - Email logs with search/filter
+- `POST /php/api/services.php` - Service management
+- `GET /php/api/export_orders.php` - Export orders to CSV
+- `POST /php/api/archive_manager.php` - Archive management operations
 
 ## Security Features
 
-- Password hashing with bcrypt
-- Session management
-- SQL injection prevention (prepared statements)
-- XSS protection
-- Role-based access control (Admin/Super Admin)
+- Password hashing using bcrypt
+- Session-based authentication
+- SQL injection prevention with prepared statements
+- XSS protection measures
+- Role-based access control (Super Admin vs Regular Admin)
+- OTP verification with expiration
+- Input validation and sanitization
+
+## Configuration
+
+### Database Settings
+Edit `php/config/database.php`:
+```php
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'qmak_db');
+define('DB_USER', 'username');
+define('DB_PASS', 'password');
+```
+
+### Email Settings
+Edit `php/config/email.php`:
+```php
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_USER', 'your-email@gmail.com');
+define('SMTP_PASS', 'your-app-password');
+```
+
+### System Constants
+Edit `php/config/constants.php`:
+```php
+define('QR_EXPIRY_MINUTES', 60);
+define('OTP_EXPIRY_MINUTES', 5);
+define('OTP_MAX_ATTEMPTS', 3);
+```
+
+## User Roles
+
+### Super Administrator
+- Full system access
+- Admin account management
+- Archive deletion capabilities
+- System configuration
+
+### Regular Administrator
+- Order and queue management
+- Student records access
+- Report generation
+- Archive management (restore/view)
+
+### Student
+- Order placement with OTP verification
+- Order status tracking
+- QR code generation for pickup
+- Email notifications
+
+## Development
+
+### File Organization
+- API endpoints follow RESTful conventions
+- Configuration files are centralized
+- Database operations use prepared statements
+- Error handling with comprehensive logging
+
+### Code Quality
+- Consistent coding standards
+- Input validation on all endpoints
+- Session management for security
+- Responsive design principles
+
+## Troubleshooting
+
+### Common Issues
+1. **Database Connection Errors**
+   - Verify database credentials
+   - Check MySQL service status
+   - Ensure database exists and is accessible
+
+2. **Email Not Sending**
+   - Verify SMTP credentials
+   - Check firewall settings
+   - Enable less secure apps or use app passwords
+
+3. **QR Codes Not Displaying**
+   - Check internet connection (uses Google Charts API)
+   - Verify browser console for errors
+   - Ensure proper URL encoding
+
+### Debug Mode
+Enable error reporting in `php/config/database.php`:
+```php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+```
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Follow the existing code style and structure
+4. Test thoroughly before submitting
+5. Submit a pull request with detailed description
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Contact
+## Support
 
-- Developer: rombytes  
-- GitHub: [https://github.com/rombytes](https://github.com/rombytes)  
-- Repository: [https://github.com/rombytes/Q-Mak](https://github.com/rombytes/Q-Mak)
-
-## Acknowledgments
-
-- University of Makati
-- UMak Cooperative Team
-- All contributors
+For issues, questions, or contributions:
+- Create an issue on GitHub
+- Contact: University of Makati Cooperative
+- Documentation: See IMPLEMENTATION_GUIDE.md for detailed setup instructions
 
 ---
 
-**Note**: This is a student project for educational purposes.
+Developed for University of Makati Cooperative
+Academic Project - 2025

@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmtSummary = $db->prepare("
             SELECT
                 COUNT(*) as total_orders,
-                SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as completed_orders
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_orders
             FROM orders
             WHERE created_at >= ? AND created_at < ?
         ");
@@ -52,11 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // 2. Get Top Ordered Items
         $stmtTopItems = $db->prepare("
             SELECT
-                item_ordered,
+                item_name as item_ordered,
                 COUNT(*) as total
             FROM orders
             WHERE created_at >= ? AND created_at < ?
-            GROUP BY item_ordered
+            GROUP BY item_name
             ORDER BY total DESC
             LIMIT 10
         ");
@@ -74,7 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     } catch (Exception $e) {
         error_log("Get Reports Error: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Server error occurred',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
     }
     
 } else {

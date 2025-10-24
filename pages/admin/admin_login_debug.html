@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - DEBUG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-blue-900">
+    
+    <div class="bg-white rounded-2xl shadow-2xl p-10 max-w-2xl w-full">
+        <h1 class="text-3xl font-bold text-blue-900 mb-6">Admin Login - DEBUG MODE</h1>
+        
+        <!-- Login Form -->
+        <form id="loginForm" class="space-y-4 mb-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                <input 
+                    type="email" 
+                    id="loginEmail" 
+                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3" 
+                    value="admin@umak.edu.ph"
+                    required 
+                />
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <input 
+                    type="password" 
+                    id="loginPassword" 
+                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3" 
+                    value="Admin123"
+                    required 
+                />
+            </div>
+            
+            <button 
+                type="submit" 
+                class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold text-lg"
+            >
+                Test Login
+            </button>
+        </form>
+
+        <!-- Debug Output -->
+        <div id="debugOutput" class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto max-h-96">
+            <div>Waiting for login attempt...</div>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+            <a href="admin_login.html" class="text-blue-600 underline">← Back to Normal Login</a>
+            <a href="../../setup_admin.php" class="text-blue-600 underline">Setup Admin Accounts</a>
+            <a href="../../test_admin_api.php" class="text-blue-600 underline">Test API</a>
+        </div>
+    </div>
+
+    <script>
+        const debugOutput = document.getElementById('debugOutput');
+        
+        function addLog(message, isError = false) {
+            const div = document.createElement('div');
+            div.className = isError ? 'text-red-400' : 'text-green-400';
+            div.textContent = '> ' + message;
+            debugOutput.appendChild(div);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        function addJSON(obj) {
+            const pre = document.createElement('pre');
+            pre.className = 'text-yellow-300 ml-4';
+            pre.textContent = JSON.stringify(obj, null, 2);
+            debugOutput.appendChild(pre);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            debugOutput.innerHTML = '';
+            addLog('=== Starting Login Test ===');
+            
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            addLog('Email: ' + email);
+            addLog('Password length: ' + password.length);
+            
+            const requestData = { email, password };
+            addLog('Request data:');
+            addJSON(requestData);
+            
+            try {
+                addLog('Sending POST request to: ../../php/api/admin_login_debug.php');
+                
+                const response = await fetch('../../php/api/admin_login_debug.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                addLog('Response received!');
+                addLog('HTTP Status: ' + response.status);
+                addLog('Response headers:');
+                response.headers.forEach((value, key) => {
+                    addLog(`  ${key}: ${value}`);
+                });
+                
+                const text = await response.text();
+                addLog('Raw response text:');
+                addJSON(text);
+                
+                // Try to parse each line as JSON
+                const lines = text.trim().split('\n');
+                addLog('Processing ' + lines.length + ' response lines...');
+                
+                let finalResult = null;
+                lines.forEach((line, index) => {
+                    try {
+                        const parsed = JSON.parse(line);
+                        addLog(`Line ${index + 1}:`);
+                        addJSON(parsed);
+                        
+                        if (parsed.success !== undefined) {
+                            finalResult = parsed;
+                        }
+                    } catch (e) {
+                        addLog(`Line ${index + 1} (not JSON): ${line}`, true);
+                    }
+                });
+                
+                if (finalResult) {
+                    addLog('=== FINAL RESULT ===');
+                    if (finalResult.success) {
+                        addLog('✅ LOGIN SUCCESSFUL!');
+                        addJSON(finalResult);
+                        
+                        setTimeout(() => {
+                            addLog('Redirecting to dashboard...');
+                            sessionStorage.setItem('adminLoggedIn', 'true');
+                            sessionStorage.setItem('adminData', JSON.stringify(finalResult.data));
+                            window.location.href = 'admin_dashboard.html';
+                        }, 2000);
+                    } else {
+                        addLog('❌ LOGIN FAILED: ' + finalResult.message, true);
+                        addJSON(finalResult);
+                    }
+                } else {
+                    addLog('No final result found in response', true);
+                }
+                
+            } catch (error) {
+                addLog('=== ERROR ===', true);
+                addLog('Error: ' + error.message, true);
+                addLog('Stack: ' + error.stack, true);
+            }
+        });
+
+        // Auto-submit for quick testing (optional)
+        // document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+    </script>
+</body>
+</html>

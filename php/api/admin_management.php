@@ -19,8 +19,7 @@ if (!isset($_SESSION['is_super_admin']) || $_SESSION['is_super_admin'] != 1) {
     exit;
 }
 
-$database = new Database();
-$conn = $database->getConnection();
+$conn = getDB();
 
 $method = $_SERVER['REQUEST_METHOD'];
 

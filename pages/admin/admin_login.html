@@ -154,7 +154,15 @@
         <!-- Footer Info -->
         <div class="mt-8 text-center text-xs text-gray-500">
             <p>Secure Admin Access</p>
-            <p class="mt-1">© 2025 University of Makati COOP</p>
+            <p class="mt-1"> 2025 University of Makati COOP</p>
+            <p class="mt-2">
+                <a href="../../setup.php" class="text-blue-600 hover:text-blue-800 underline">
+                    Setup Database
+                </a> |
+                <a href="../../debug_login.php" class="text-blue-600 hover:text-blue-800 underline">
+                    Debug Login
+                </a>
+            </p>
         </div>
     </div>
 
@@ -179,12 +187,18 @@
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
-            errorText.textContent = message;
+
+            // Add setup link for connection errors
+            if (message.includes('Connection error')) {
+                message += ' <a href="../../setup.php" class="underline text-blue-600 hover:text-blue-800">Run Setup</a>';
+            }
+
+            errorText.innerHTML = message;
             errorDiv.classList.remove('hidden');
-            
+
             setTimeout(() => {
                 errorDiv.classList.add('hidden');
-            }, 5000);
+            }, 8000);
         }
         
         // Login form handler

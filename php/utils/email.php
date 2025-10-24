@@ -93,40 +93,25 @@ class EmailService {
 
     public static function generateQRCodeDataUri($dataString) {
         try {
-            // Check if the QR code library is available
-            if (!class_exists('Endroid\QrCode\Builder\Builder')) {
-                error_log("QR Code library not available - Endroid\QrCode\Builder\Builder class not found");
+            // Use Google Charts API for QR code generation (no library needed)
+            $qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' . urlencode($dataString) . '&choe=UTF-8';
+            
+            // Get image data
+            $imageData = @file_get_contents($qrUrl);
+            
+            if ($imageData === false) {
+                error_log("QR Code generation failed - Could not fetch from Google Charts API");
                 return '';
             }
-
-            // Check if the writer class is available
-            if (!class_exists('Endroid\QrCode\Writer\PngWriter')) {
-                error_log("QR Code writer not available - Endroid\QrCode\Writer\PngWriter class not found");
-                return '';
-            }
-
-            // Use the Builder pattern for Endroid QR Code v6
-            $builder = new \Endroid\QrCode\Builder\Builder();
-            $result = $builder->build(
-                writer: new \Endroid\QrCode\Writer\PngWriter(),
-                data: $dataString,
-                size: 200,
-                margin: 10
-            );
-
-            $dataUri = $result->getDataUri();
-            if (empty($dataUri)) {
-                error_log("QR Code generation failed - empty data URI returned");
-                return '';
-            }
-
+            
+            // Convert to data URI
+            $base64 = base64_encode($imageData);
+            $dataUri = 'data:image/png;base64,' . $base64;
+            
             return $dataUri;
         } catch (Exception $e) {
-            error_log("QR Code Generation Error: " . $e->getMessage() . " | Data: " . $dataString);
-            return ''; // Return empty string on failure
-        } catch (Throwable $e) {
-            error_log("QR Code Generation Fatal Error: " . $e->getMessage());
-            return ''; // Return empty string on failure
+            error_log("QR Code Generation Error: " . $e->getMessage());
+            return '';
         }
     }
 
@@ -433,12 +418,34 @@ class EmailService {
     private static function logEmail($email, $type, $subject, $success, $error = null) {
         try {
             $db = getDB();
+            
+            // Get order_id and student_id if available (for receipt and status_update emails)
+            $orderId = 0;
+            $studentId = 0;
+            
+            // Try to find student by email
+            $studentStmt = $db->prepare("SELECT student_id FROM students WHERE email = ? LIMIT 1");
+            $studentStmt->execute([$email]);
+            $student = $studentStmt->fetch();
+            if ($student) {
+                $studentId = $student['student_id'];
+                
+                // Get most recent order for this student
+                $orderStmt = $db->prepare("SELECT order_id FROM orders WHERE student_id = ? ORDER BY created_at DESC LIMIT 1");
+                $orderStmt->execute([$studentId]);
+                $order = $orderStmt->fetch();
+                if ($order) {
+                    $orderId = $order['order_id'];
+                }
+            }
+            
             $stmt = $db->prepare("
-                INSERT INTO email_logs (recipient_email, email_type, subject, status, error_message)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO email_logs (order_id, student_id, email_to, email_type, subject, message, status, sent_at, error_message)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
             ");
             $status = $success ? 'sent' : 'failed';
-            $stmt->execute([$email, $type, $subject, $status, $error]);
+            $message = substr($subject, 0, 255); // Use subject as message preview
+            $stmt->execute([$orderId, $studentId, $email, $type, $subject, $message, $status, $error]);
         } catch (Exception $e) {
             error_log("Failed to log email: " . $e->getMessage());
         }
