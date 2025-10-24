@@ -274,25 +274,6 @@ Q-Mak/
 └── vendor/                    # Composer packages (PHPMailer, etc.)
 ```
 
-## Development Workflow
-
-### Git Workflow
-This project uses **conventional commits** for clear, structured commit messages:
-
-```bash
-# Feature commits
-git commit -m "feat: add QR code generation system"
-git commit -m "feat: implement email notification service"
-
-# Bug fixes
-git commit -m "fix: resolve email template responsive issue"
-
-# Documentation
-git commit -m "docs: update API configuration examples"
-```
-
-**See `docs/GIT_COMMANDS_CHEATSHEET.md` for complete Git workflow guide!**
-
 ## Security Features
 
 - **Password Hashing** - Bcrypt algorithm for secure password storage
@@ -379,80 +360,6 @@ open tests/qr_test.html
 ```
 
 **See `tests/` folder for all available tests!**
-
-## Contributing
-
-We welcome contributions to improve the Q-Mak system! This is an academic project for University of Makati.
-
-### How to Contribute
-
-1. **Fork the repository** on GitHub
-2. **Create a feature branch** using conventional commits:
-   ```bash
-   git checkout -b feat/enhanced-email-templates
-   git checkout -b fix/qr-code-generation-bug
-   git checkout -b docs/update-api-documentation
-   ```
-3. **Make your changes** with clear, focused commits
-4. **Test thoroughly** using the provided test suite
-5. **Submit a pull request** with descriptive title
-
-### Commit Message Guidelines
-
-Use **conventional commits** for clear, structured messages:
-
-```bash
-# Features
-git commit -m "feat: add QR code generation system"
-git commit -m "feat: implement email notification service"
-
-# Bug fixes
-git commit -m "fix: resolve email template responsive issue"
-git commit -m "fix: correct API validation error"
-
-# Documentation
-git commit -m "docs: update installation guide"
-git commit -m "docs: add API usage examples"
-
-# Code improvements
-git commit -m "refactor: optimize database queries"
-git commit -m "style: format code consistently"
-```
-
-### Development Setup
-
-1. **Clone and setup** (see Installation section above)
-2. **Create feature branch**: `git checkout -b feat/your-feature`
-3. **Make changes** with proper testing
-4. **Run tests**: `php tests/test_api.php` and `php tests/complete_qr_test.php`
-5. **Commit with conventional format**: `git commit -m "feat: description"`
-6. **Push and create PR**: `git push origin feat/your-feature`
-
-### Code Standards
-
-- **PHP**: PSR-12 coding standards
-- **JavaScript**: ES6+ with consistent formatting
-- **CSS**: Tailwind CSS utility classes
-- **Git**: Conventional commits (see `docs/GIT_COMMANDS_CHEATSHEET.md`)
-- **Testing**: Comprehensive test coverage for new features
-
-## Recent Updates
-
-### Version 2.0 - Enhanced System (Current)
-- **QR Code Integration** - Advanced QR generation with email embedding
-- **Modern Email Templates** - Responsive designs with UMak branding
-- **Improved Performance** - Optimized queries and asset loading
-- **Mobile Optimization** - Full responsive design for all devices
-- **Comprehensive Testing** - Complete test suite with validation
-- **Updated Documentation** - Enhanced guides and examples
-- **Better Configuration** - Streamlined setup process
-
-### Getting Help
-
-- **Documentation**: Check `docs/` folder for detailed guides
-- **Testing**: Run `php tests/test_api.php` for system diagnostics
-- **Git Workflow**: See `docs/GIT_COMMANDS_CHEATSHEET.md`
-- **Issues**: Report bugs via GitHub Issues
 
 ## Acknowledgments
 
