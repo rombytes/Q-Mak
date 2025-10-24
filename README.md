@@ -274,66 +274,6 @@ Q-Mak/
 └── vendor/                    # Composer packages (PHPMailer, etc.)
 ```
 
-## Security Features
-
-- **Password Hashing** - Bcrypt algorithm for secure password storage
-- **OTP Verification** - Email-based one-time passwords
-- **Session Management** - Secure session handling
-- **SQL Injection Prevention** - Prepared statements
-- **XSS Protection** - Input sanitization
-- **CSRF Protection** - Token-based validation
-- **Role-Based Access** - Super Admin and Admin roles
-
-## Technologies Used
-
-### Frontend
-- **HTML5** - Semantic markup with modern standards
-- **Tailwind CSS** - Utility-first CSS framework for responsive design
-- **JavaScript (ES6+)** - Modern vanilla JavaScript with async/await
-- **QRCode.js** - QR code generation for web interfaces
-- **Google Fonts (Inter)** - Professional typography
-- **PWA Features** - Progressive web app capabilities
-
-### Backend
-- **PHP 7.4+** - Server-side logic with modern practices
-- **MySQL 8.0+** - Database management with advanced features
-- **PHPMailer** - Professional email delivery system
-- **Composer** - PHP dependency management
-- **RESTful API** - JSON-based communication with error handling
-
-### Development Tools
-- **Git** - Version control with conventional commits
-- **XAMPP/WAMP** - Local development environment
-- **Visual Studio Code** - Code editor with PHP support
-- **Endroid QR Code** - Advanced QR code generation library
-
-### Email System Features
-- **Responsive Templates** - Mobile-optimized email designs
-- **Template Engine** - Dynamic content with PHP variables
-- **Delivery Tracking** - Email status logging and monitoring
-- **Error Handling** - Graceful fallbacks when email fails
-- **Brand Consistency** - Professional UMak COOP styling
-
-## API Endpoints
-
-### Student Endpoints
-- `POST /php/api/create_order.php` - Create new order with validation
-- `POST /php/api/verify_otp.php` - Verify OTP code and process order
-- `GET /php/api/check_status.php` - Check order status with email OTP
-
-### Admin Endpoints
-- `POST /php/api/admin_login.php` - Admin authentication with session management
-- `GET /php/api/admin_orders.php` - Get all orders with filtering options
-- `PUT /php/api/update_order_status.php` - Update order status (pending → completed)
-- `POST /php/api/archive_order.php` - Archive completed orders
-- `GET /php/api/admin_analytics.php` - Get system analytics and metrics
-
-### Configuration
-- Database connection with singleton pattern
-- Email configuration with PHPMailer integration
-- Constants-based configuration for security
-- Environment-specific settings support
-
 ## Testing
 
 The project includes comprehensive testing for quality assurance:
