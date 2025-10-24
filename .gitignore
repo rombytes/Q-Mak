@@ -180,7 +180,7 @@ id_rsa.pub
 test_admin_dashboard.html
 
 # Password generator (contains sensitive logic)
-generate_password.php
+php/generate_password.php
 
 # Old versions
 *.old

@@ -8,6 +8,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../utils/email.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -135,7 +136,14 @@ try {
         
         $orderId = $db->lastInsertId();
         
-        $db->commit();
+        // Generate QR code for frontend display
+        $qrData = json_encode([
+            'queue_number' => $queueNum,
+            'email' => $email,
+            'timestamp' => date('c'),
+            'type' => 'umak_coop_order'
+        ]);
+        $qrCodeUri = EmailService::generateQRCodeDataUri($qrData);
         
         // Prepare receipt data
         $receiptData = [
@@ -147,6 +155,8 @@ try {
             'wait_time' => $waitTime
         ];
         
+        $db->commit();
+        
         // Send receipt email
         EmailService::sendReceipt($email, $receiptData);
         
@@ -154,7 +164,9 @@ try {
             'order_id' => $orderId,
             'queue_number' => $queueNum,
             'wait_time' => $waitTime,
-            'qr_expiry' => $qrExpiry
+            'qr_expiry' => $qrExpiry,
+            'qr_code' => $qrCodeUri, // Include QR code in API response
+            'qr_code_data' => $qrData // Include QR data for debugging
         ];
     } else {
         $db->commit();

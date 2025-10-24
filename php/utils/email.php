@@ -7,8 +7,12 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
+
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/constants.php';
 
 class EmailService {
     
@@ -30,7 +34,7 @@ class EmailService {
      */
     public static function sendReceipt($email, $orderData) {
         $subject = "Order Confirmation - Queue #{$orderData['queue_number']}";
-        $body = self::getReceiptEmailTemplate($orderData);
+        $body = self::getReceiptEmailTemplate($email, $orderData);
         
         $result = self::sendEmail($email, $subject, $body);
         self::logEmail($email, 'receipt', $subject, $result['success'], $result['error'] ?? null);
@@ -85,24 +89,72 @@ class EmailService {
         }
     }
     
+    // php/utils/email.php (inside the EmailService class)
+
+    public static function generateQRCodeDataUri($dataString) {
+        try {
+            // Check if the QR code library is available
+            if (!class_exists('Endroid\QrCode\Builder\Builder')) {
+                error_log("QR Code library not available - Endroid\QrCode\Builder\Builder class not found");
+                return '';
+            }
+
+            // Check if the writer class is available
+            if (!class_exists('Endroid\QrCode\Writer\PngWriter')) {
+                error_log("QR Code writer not available - Endroid\QrCode\Writer\PngWriter class not found");
+                return '';
+            }
+
+            // Use the Builder pattern for Endroid QR Code v6
+            $builder = new \Endroid\QrCode\Builder\Builder();
+            $result = $builder->build(
+                writer: new \Endroid\QrCode\Writer\PngWriter(),
+                data: $dataString,
+                size: 200,
+                margin: 10
+            );
+
+            $dataUri = $result->getDataUri();
+            if (empty($dataUri)) {
+                error_log("QR Code generation failed - empty data URI returned");
+                return '';
+            }
+
+            return $dataUri;
+        } catch (Exception $e) {
+            error_log("QR Code Generation Error: " . $e->getMessage() . " | Data: " . $dataString);
+            return ''; // Return empty string on failure
+        } catch (Throwable $e) {
+            error_log("QR Code Generation Fatal Error: " . $e->getMessage());
+            return ''; // Return empty string on failure
+        }
+    }
+
     /**
-     * OTP Email Template
+     * OTP Email Template - Enhanced UI/UX
      */
     private static function getOTPEmailTemplate($otp, $firstName) {
         $greeting = $firstName ? "Hello $firstName," : "Hello,";
-        
+        $expiryMinutes = defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES : 10; // Use constant or default
+
         return "
         <!DOCTYPE html>
         <html>
         <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>UMak COOP Verification Code</title>
             <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-                .otp-box { background: white; border: 3px dashed #f97316; padding: 20px; text-align: center; margin: 20px 0; border-radius: 10px; }
-                .otp-code { font-size: 36px; font-weight: bold; color: #1e3a8a; letter-spacing: 8px; }
-                .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f4f4f7; }
+                .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+                .header { background-color: #1e3a8a; color: #ffffff; padding: 25px; text-align: center; }
+                .header h1 { margin: 0; font-size: 24px; }
+                .content { padding: 30px; }
+                .content p { margin: 0 0 15px; }
+                .otp-box { background-color: #f8fafc; border: 1px solid #cbd5e1; padding: 20px; text-align: center; margin: 25px 0; border-radius: 6px; }
+                .otp-code { font-size: 32px; font-weight: bold; color: #1e40af; letter-spacing: 5px; margin: 0; }
+                .footer { text-align: center; padding: 20px; color: #64748b; font-size: 12px; background-color: #f1f5f9; }
+                .footer p { margin: 0; }
             </style>
         </head>
         <body>
@@ -114,133 +166,260 @@ class EmailService {
                     <p>$greeting</p>
                     <p>Your verification code for the UMak COOP Order Hub is:</p>
                     <div class='otp-box'>
-                        <div class='otp-code'>$otp</div>
+                        <p class='otp-code'>$otp</p>
                     </div>
-                    <p><strong>This code will expire in " . OTP_EXPIRY_MINUTES . " minutes.</strong></p>
-                    <p>If you didn't request this code, please ignore this email.</p>
-                    <p>Best regards,<br>UMak COOP Team</p>
+                    <p><strong>This code will expire in $expiryMinutes minutes.</strong> Please do not share this code with anyone.</p>
+                    <p>If you did not request this code, you can safely ignore this email.</p>
+                    <p>Thank you,<br>The UMak COOP Team</p>
                 </div>
                 <div class='footer'>
-                    <p>University of Makati © 2025 | Q-Mak System</p>
+                    <p>University of Makati &copy; " . date('Y') . " | Q-Mak System</p>
                 </div>
             </div>
         </body>
         </html>
         ";
     }
-    
+
     /**
-     * Receipt Email Template
+     * Receipt Email Template - Enhanced UI/UX
      */
-    private static function getReceiptEmailTemplate($data) {
+    private static function getReceiptEmailTemplate($email, $data) {
+        $qrExpiryMinutes = defined('QR_EXPIRY_MINUTES') ? QR_EXPIRY_MINUTES : 30; // Use constant or default
+
+        // Generate QR Code (Uses the existing function which now includes error handling)
+        $qrData = json_encode([
+            'queue_number' => $data['queue_number'],
+            'email' => $email,
+            'timestamp' => date('c'),
+            'type' => 'umak_coop_order'
+        ]);
+        $qrCodeUri = self::generateQRCodeDataUri($qrData);
+
+        // Build QR code HTML conditionally
+        $qrCodeHtml = '';
+        if (!empty($qrCodeUri)) {
+            $qrCodeHtml = "
+                <div style='text-align: center; margin: 30px 0; padding-top: 20px; border-top: 1px solid #e2e8f0;'>
+                    <img src='{$qrCodeUri}' alt='Order QR Code' style='width:180px; height:180px; margin: 0 auto; display: block; border: 1px solid #e2e8f0; padding: 5px;'>
+                    <p style='font-size: 13px; color: #475569; margin-top: 10px;'>Scan this code at the counter.</p>
+                    <p style='font-size: 12px; color: #64748b;'>Valid for $qrExpiryMinutes minutes.</p>
+                </div>";
+        } else {
+            // Provide alternative text if QR generation failed
+             $qrCodeHtml = "
+                <div style='text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #e2e8f0; background-color: #fffbeb; border-left: 4px solid #f59e0b; color: #b45309;'>
+                    <p style='margin: 0; font-weight: 600;'>QR Code could not be generated</p>
+                    <p style='margin: 8px 0 0; font-size: 14px;'>Please use your Queue Number for verification at the counter.</p>
+                </div>";
+        }
+
         return "
         <!DOCTYPE html>
         <html>
         <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>UMak COOP Order Confirmation</title>
             <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-                .receipt-box { background: white; border: 2px solid #1e3a8a; padding: 20px; margin: 20px 0; border-radius: 10px; }
-                .queue-number { font-size: 48px; font-weight: bold; color: #1e3a8a; text-align: center; margin: 20px 0; }
-                .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
-                .label { font-weight: bold; color: #6b7280; }
-                .value { color: #1e3a8a; }
-                .success-badge { background: #10b981; color: white; padding: 10px 20px; border-radius: 20px; text-align: center; font-weight: bold; margin: 20px 0; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f4f4f7; }
+                .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+                .header { background-color: #1e3a8a; color: #ffffff; padding: 30px; text-align: center; }
+                .header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+                .content { padding: 35px; }
+                .content p { margin: 0 0 18px; font-size: 15px; }
+                .success-banner { background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 18px; margin-bottom: 25px; text-align: center; }
+                .success-banner p { color: #065f46; font-weight: 600; font-size: 16px; margin: 0; }
+                .order-details { margin: 25px 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+                .order-details th, .order-details td { padding: 14px 18px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+                .order-details th { background-color: #f8fafc; color: #475569; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+                .order-details td { font-size: 15px; color: #1e293b; }
+                .order-details tr:last-child td { border-bottom: none; }
+                .queue-number-display { text-align: center; margin: 30px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+                .queue-number-display span { font-size: 14px; color: #64748b; display: block; margin-bottom: 8px; font-weight: 500; }
+                .queue-number-display strong { font-size: 52px; font-weight: 800; color: #1e3a8a; display: block; letter-spacing: 2px; }
+                .footer { text-align: center; padding: 25px; color: #64748b; font-size: 12px; background-color: #f1f5f9; }
+                .footer p { margin: 0; }
+                .instructions { background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 20px 25px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+                .instructions h4 { margin: 0 0 10px; color: #1e3a8a; font-size: 16px; font-weight: 600; }
+                .instructions ul { margin: 0; padding-left: 20px; }
+                .instructions li { margin-bottom: 6px; font-size: 14px; color: #475569; }
             </style>
         </head>
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>🎉 Order Confirmed!</h1>
+                    <h1>Order Confirmed</h1>
                 </div>
                 <div class='content'>
-                    <div class='success-badge'>✓ Your order has been successfully placed</div>
-                    <div class='receipt-box'>
-                        <h2 style='color: #1e3a8a; text-align: center;'>Order Receipt</h2>
-                        <div class='queue-number'>{$data['queue_number']}</div>
-                        <div class='info-row'>
-                            <span class='label'>Student Name:</span>
-                            <span class='value'>{$data['student_name']}</span>
-                        </div>
-                        <div class='info-row'>
-                            <span class='label'>Student ID:</span>
-                            <span class='value'>{$data['student_id']}</span>
-                        </div>
-                        <div class='info-row'>
-                            <span class='label'>Item Ordered:</span>
-                            <span class='value'>{$data['item_ordered']}</span>
-                        </div>
-                        <div class='info-row'>
-                            <span class='label'>Order Date:</span>
-                            <span class='value'>{$data['order_date']}</span>
-                        </div>
-                        <div class='info-row'>
-                            <span class='label'>Estimated Wait:</span>
-                            <span class='value'>{$data['wait_time']} minutes</span>
-                        </div>
+                    <div class='success-banner'>
+                        <p>Your order has been successfully placed and confirmed</p>
                     </div>
-                    <p><strong>⚠️ Important:</strong></p>
-                    <ul>
-                        <li>Please present your QR code at the COOP counter</li>
-                        <li>QR code is valid for " . QR_EXPIRY_MINUTES . " minutes</li>
-                        <li>Keep this email for your records</li>
-                    </ul>
-                    <p>Thank you for using UMak COOP Order Hub!</p>
+
+                    <p>Hello {$data['student_name']},</p>
+                    <p>Your order with the UMak Cooperative has been successfully processed. Please find your order details below:</p>
+
+                    <div class='queue-number-display'>
+                        <span>Your Queue Number</span>
+                        <strong>{$data['queue_number']}</strong>
+                    </div>
+                    <table class='order-details' width='100%' cellpadding='0' cellspacing='0'>
+                        <tr>
+                            <th>Student Name</th>
+                            <td>{$data['student_name']}</td>
+                        </tr>
+                        <tr>
+                            <th>Student ID</th>
+                            <td>{$data['student_id']}</td>
+                        </tr>
+                        <tr>
+                            <th>Item Ordered</th>
+                            <td>{$data['item_ordered']}</td>
+                        </tr>
+                        <tr>
+                            <th>Order Date</th>
+                            <td>{$data['order_date']}</td>
+                        </tr>
+                        <tr>
+                            <th>Estimated Wait Time</th>
+                            <td>Approximately {$data['wait_time']} minutes</td>
+                        </tr>
+                    </table>
+
+                    {$qrCodeHtml}
+
+                    <div class='instructions'>
+                        <h4>Next Steps:</h4>
+                        <ul>
+                            <li>Proceed to the UMak COOP counter</li>
+                            <li>Present your Queue Number" . (!empty($qrCodeUri) ? " or scan the QR Code above" : "") . " for verification</li>
+                            <li>Wait for your number to be called to collect your item</li>
+                            <li>Keep this email as proof of your order</li>
+                        </ul>
+                    </div>
+
+                    <p>If you have any questions about your order, please contact the COOP staff at the counter.</p>
+                    <p>Thank you for using the UMak COOP Order System!</p>
                 </div>
-                <div style='text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px;'>
-                    <p>University of Makati © 2025 | Q-Mak System</p>
+                <div class='footer'>
+                    <p>University of Makati &copy; " . date('Y') . " | Q-Mak System</p>
                 </div>
             </div>
         </body>
         </html>
         ";
     }
-    
+
     /**
-     * Status Update Email Template
+     * Status Update Email Template - Enhanced UI/UX
      */
     private static function getStatusUpdateTemplate($data) {
-        $statusColors = [
-            'pending' => '#f59e0b',
-            'processing' => '#3b82f6',
-            'ready' => '#10b981',
-            'completed' => '#6b7280',
-            'cancelled' => '#ef4444'
+        // Define status colors (using TailwindCSS class names conceptually)
+        $statusStyles = [
+            'pending' => ['label' => 'Pending', 'color' => '#f59e0b', 'bg' => '#fffbeb'], // Amber
+            'processing' => ['label' => 'Processing', 'color' => '#3b82f6', 'bg' => '#eff6ff'], // Blue
+            'ready' => ['label' => 'Ready for Pick-up', 'color' => '#8b5cf6', 'bg' => '#f5f3ff'], // Violet
+            'completed' => ['label' => 'Completed', 'color' => '#10b981', 'bg' => '#ecfdf5'], // Emerald
+            'cancelled' => ['label' => 'Cancelled', 'color' => '#ef4444', 'bg' => '#fef2f2']  // Red
         ];
-        
-        $color = $statusColors[$data['status']] ?? '#6b7280';
-        
+
+        $statusInfo = $statusStyles[strtolower($data['status'])] ?? ['label' => strtoupper($data['status']), 'color' => '#64748b', 'bg' => '#f1f5f9', 'text' => '#374151'];
+
+        // Build conditional content based on status
+        $actionContent = '';
+        switch (strtolower($data['status'])) {
+            case 'ready':
+                $actionContent = "
+                    <div style='background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;'>
+                        <p style='margin: 0; color: #065f46; font-weight: 600; font-size: 16px;'>Your order is ready for pick-up!</p>
+                        <p style='margin: 8px 0 0; color: #047857; font-size: 14px;'>Please proceed to the UMak COOP counter immediately to collect your item.</p>
+                    </div>";
+                break;
+            case 'cancelled':
+                $actionContent = "
+                    <div style='background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;'>
+                        <p style='margin: 0; color: #991b1b; font-weight: 600; font-size: 16px;'>Order Cancelled</p>
+                        <p style='margin: 8px 0 0; color: #dc2626; font-size: 14px;'>If you have any questions about this cancellation, please contact the COOP staff.</p>
+                    </div>";
+                break;
+            case 'processing':
+                $actionContent = "
+                    <div style='background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;'>
+                        <p style='margin: 0; color: #1e40af; font-weight: 500; font-size: 15px;'>Your order is being prepared. Please wait for further updates.</p>
+                    </div>";
+                break;
+            case 'completed':
+                $actionContent = "
+                    <div style='background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center;'>
+                        <p style='margin: 0; color: #065f46; font-weight: 600; font-size: 16px;'>Order Completed</p>
+                        <p style='margin: 8px 0 0; color: #047857; font-size: 14px;'>Thank you for using the UMak COOP Order System!</p>
+                    </div>";
+                break;
+        }
+
         return "
         <!DOCTYPE html>
         <html>
         <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>UMak COOP Order Status Update</title>
             <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-                .status-badge { background: $color; color: white; padding: 15px 30px; border-radius: 25px; text-align: center; font-weight: bold; font-size: 18px; margin: 20px 0; text-transform: uppercase; }
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f4f4f7; }
+                .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+                .header { background-color: #1e3a8a; color: #ffffff; padding: 30px; text-align: center; }
+                .header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+                .content { padding: 35px; }
+                .content p { margin: 0 0 18px; font-size: 15px; }
+                .status-container { text-align: center; margin: 25px 0; }
+                .status-badge { display: inline-block; padding: 12px 28px; border-radius: 25px; font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; border: 2px solid; }
+                .order-summary { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; margin: 25px 0; }
+                .order-summary h4 { margin: 0 0 15px; color: #1e3a8a; font-size: 17px; font-weight: 600; }
+                .order-summary p { margin: 8px 0; font-size: 14px; color: #475569; }
+                .order-summary strong { color: #1e293b; font-weight: 600; }
+                .footer { text-align: center; padding: 25px; color: #64748b; font-size: 12px; background-color: #f1f5f9; }
+                .footer p { margin: 0; }
+                .status-details { background-color: {$statusInfo['bg']}; border-left: 4px solid {$statusInfo['color']}; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+                .status-details h3 { margin: 0 0 10px; color: {$statusInfo['text']}; font-size: 18px; font-weight: 600; }
+                .status-details p { margin: 8px 0; color: {$statusInfo['text']}; font-size: 15px; }
             </style>
         </head>
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>📦 Order Status Update</h1>
+                    <h1>Order Status Update</h1>
                 </div>
                 <div class='content'>
                     <p>Hello {$data['student_name']},</p>
-                    <p>Your order status has been updated:</p>
-                    <div class='status-badge'>{$data['status']}</div>
-                    <p><strong>Queue Number:</strong> {$data['queue_number']}</p>
-                    <p><strong>Item:</strong> {$data['item_ordered']}</p>
-                    <p>{$data['message']}</p>
-                    <p>Thank you for your patience!</p>
-                    <p>Best regards,<br>UMak COOP Team</p>
+                    <p>There has been an update regarding your UMak COOP order:</p>
+
+                    <div class='status-container'>
+                        <div class='status-badge' style='background-color: {$statusInfo['bg']}; color: {$statusInfo['color']}; border-color: {$statusInfo['color']};'>
+                            {$statusInfo['label']}
+                        </div>
+                    </div>
+
+                    <div class='status-details'>
+                        <h3>Status Update</h3>
+                        <p>{$data['message']}</p>
+                    </div>
+
+                    <div class='order-summary'>
+                        <h4>Order Information</h4>
+                        <p><strong>Queue Number:</strong> {$data['queue_number']}</p>
+                        <p><strong>Item Ordered:</strong> {$data['item_ordered']}</p>
+                        <p><strong>Current Status:</strong> {$statusInfo['label']}</p>
+                    </div>
+
+                    {$actionContent}
+
+                    <p>You can check the latest status anytime through the Order Hub portal.</p>
+                    <p>If you have any questions about this update, please contact the COOP staff at the counter.</p>
+                    <p>Thank you for your patience.</p>
+                    <p>Best regards,<br>The UMak COOP Team</p>
                 </div>
-                <div style='text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px;'>
-                    <p>University of Makati © 2025 | Q-Mak System</p>
+                <div class='footer'>
+                    <p>University of Makati &copy; " . date('Y') . " | Q-Mak System</p>
                 </div>
             </div>
         </body>

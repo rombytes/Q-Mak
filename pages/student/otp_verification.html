@@ -107,9 +107,23 @@
                     }
                     
                     if (otpMode === 'order') {
-                        // Store order result data
+                        // Store order result data including QR code
                         sessionStorage.setItem('queueNum', result.data.queue_number);
                         sessionStorage.setItem('waitTime', result.data.wait_time);
+
+                        // Store QR code data for the order result page
+                        if (result.data.qr_code) {
+                            sessionStorage.setItem('qrCode', result.data.qr_code);
+                        }
+
+                        // Store additional order data if available
+                        if (result.data.order_id) {
+                            sessionStorage.setItem('orderId', result.data.order_id);
+                        }
+                        if (result.data.qr_expiry) {
+                            sessionStorage.setItem('qrExpiry', result.data.qr_expiry);
+                        }
+
                         setTimeout(() => {
                             window.location.href = 'order_result.html';
                         }, 500);
