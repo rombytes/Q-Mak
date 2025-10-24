@@ -59,7 +59,13 @@ composer.lock
 # PHP logs
 *.log
 error_log
-php_errors.log
+php_error_log
+
+# Test Files
+test*.php
+debug*.php
+reset*.php
+fix*.php
 
 # ==========================================
 # Database Files
@@ -81,8 +87,7 @@ database/backups/
 *.tmp
 *.temp
 *.swp
-*.swo
-*~
+*.bak
 
 # Cache files
 cache/
@@ -93,9 +98,8 @@ temp/
 # Upload Directories
 # ==========================================
 # User uploaded files (if you have uploads)
-uploads/
-files/
-media/
+uploads/*
+!uploads/.gitkeep
 
 # ==========================================
 # Node.js (if you add Node.js later)

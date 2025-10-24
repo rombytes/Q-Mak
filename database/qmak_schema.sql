@@ -1,98 +1,150 @@
--- Q-Mak Database Schema for UMak COOP Order System
--- Created: 2025-10-01
+-- Q-Mak Database Schema
+-- University of Makati Cooperative Queue Management System
+-- Created: 2025
 
-CREATE DATABASE IF NOT EXISTS qmak_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE qmak_db;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Admin Users Table
-CREATE TABLE IF NOT EXISTS admins (
-    admin_id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    role ENUM('super_admin', 'admin') DEFAULT 'admin',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    INDEX idx_email (email),
-    INDEX idx_role (role)
+-- Database: qmak_db
+CREATE DATABASE IF NOT EXISTS `qmak_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `qmak_db`;
+
+-- --------------------------------------------------------
+-- Table structure for table `admin_accounts`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `admin_accounts` (
+  `admin_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(50) NOT NULL UNIQUE,
+  `email` VARCHAR(100) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL,
+  `full_name` VARCHAR(100) NOT NULL,
+  `is_super_admin` TINYINT(1) NOT NULL DEFAULT 0,
+  `last_login` DATETIME NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`admin_id`),
+  INDEX `idx_email` (`email`),
+  INDEX `idx_username` (`username`),
+  INDEX `idx_is_super_admin` (`is_super_admin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Students Table
-CREATE TABLE IF NOT EXISTS students (
-    student_id VARCHAR(20) PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    middle_initial VARCHAR(5),
-    email VARCHAR(255) NOT NULL UNIQUE,
-    college VARCHAR(50) NOT NULL,
-    program VARCHAR(100) NOT NULL,
-    year_level INT NOT NULL,
-    section VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_email (email),
-    INDEX idx_student_id (student_id)
+-- Insert default Super Admin Account
+-- Email: superadmin@umak.edu.ph
+-- Password: SuperAdmin123
+INSERT INTO `admin_accounts` 
+(`username`, `email`, `password`, `full_name`, `is_super_admin`) 
+VALUES 
+('superadmin', 
+ 'superadmin@umak.edu.ph', 
+ '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 
+ 'Super Administrator', 
+ 1);
+
+-- Insert default Regular Admin Account
+-- Email: admin@umak.edu.ph
+-- Password: Admin123
+INSERT INTO `admin_accounts` 
+(`username`, `email`, `password`, `full_name`, `is_super_admin`) 
+VALUES 
+('admin', 
+ 'admin@umak.edu.ph', 
+ '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', 
+ 'Regular Administrator', 
+ 0);
+
+-- --------------------------------------------------------
+-- Table structure for table `students`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `students` (
+  `student_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `student_number` VARCHAR(50) NOT NULL UNIQUE,
+  `first_name` VARCHAR(50) NOT NULL,
+  `last_name` VARCHAR(50) NOT NULL,
+  `email` VARCHAR(100) NOT NULL UNIQUE,
+  `phone` VARCHAR(20) NULL,
+  `course` VARCHAR(100) NULL,
+  `year_level` VARCHAR(20) NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`student_id`),
+  INDEX `idx_student_number` (`student_number`),
+  INDEX `idx_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Orders Table
-CREATE TABLE IF NOT EXISTS orders (
-    order_id INT AUTO_INCREMENT PRIMARY KEY,
-    queue_number VARCHAR(20) NOT NULL UNIQUE,
-    student_id VARCHAR(20) NOT NULL,
-    item_ordered VARCHAR(100) NOT NULL,
-    order_status ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') DEFAULT 'pending',
-    estimated_wait_time INT NOT NULL COMMENT 'in minutes',
-    qr_code VARCHAR(255),
-    qr_expiry TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP NULL,
-    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
-    INDEX idx_queue_number (queue_number),
-    INDEX idx_student_id (student_id),
-    INDEX idx_status (order_status),
-    INDEX idx_created_at (created_at)
+-- --------------------------------------------------------
+-- Table structure for table `orders`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `orders` (
+  `order_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `student_id` INT(11) NOT NULL,
+  `queue_number` VARCHAR(20) NOT NULL UNIQUE,
+  `item_name` VARCHAR(100) NOT NULL,
+  `quantity` INT(11) NOT NULL DEFAULT 1,
+  `total_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  `order_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ready_time` DATETIME NULL,
+  `completed_time` DATETIME NULL,
+  `notes` TEXT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`order_id`),
+  INDEX `idx_student_id` (`student_id`),
+  INDEX `idx_queue_number` (`queue_number`),
+  INDEX `idx_status` (`status`),
+  INDEX `idx_order_date` (`order_date`),
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- OTP Verification Table
-CREATE TABLE IF NOT EXISTS otp_verifications (
-    otp_id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
-    otp_code VARCHAR(6) NOT NULL,
-    otp_type ENUM('order', 'status') NOT NULL,
-    attempts INT DEFAULT 0,
-    max_attempts INT DEFAULT 3,
-    is_verified BOOLEAN DEFAULT FALSE,
-    expires_at TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    verified_at TIMESTAMP NULL,
-    INDEX idx_email_otp (email, otp_code),
-    INDEX idx_expires (expires_at)
+-- --------------------------------------------------------
+-- Table structure for table `email_logs`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `email_logs` (
+  `log_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `order_id` INT(11) NOT NULL,
+  `student_id` INT(11) NOT NULL,
+  `email_to` VARCHAR(100) NOT NULL,
+  `email_type` ENUM('order_placed', 'order_ready', 'order_completed') NOT NULL,
+  `subject` VARCHAR(255) NOT NULL,
+  `message` TEXT NOT NULL,
+  `status` ENUM('sent', 'failed', 'pending') NOT NULL DEFAULT 'pending',
+  `sent_at` DATETIME NULL,
+  `error_message` TEXT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  INDEX `idx_order_id` (`order_id`),
+  INDEX `idx_student_id` (`student_id`),
+  INDEX `idx_status` (`status`),
+  INDEX `idx_email_type` (`email_type`),
+  FOREIGN KEY (`order_id`) REFERENCES `orders`(`order_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Email Logs Table
-CREATE TABLE IF NOT EXISTS email_logs (
-    log_id INT AUTO_INCREMENT PRIMARY KEY,
-    recipient_email VARCHAR(255) NOT NULL,
-    email_type ENUM('otp', 'receipt', 'status_update') NOT NULL,
-    subject VARCHAR(255) NOT NULL,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('sent', 'failed') DEFAULT 'sent',
-    error_message TEXT,
-    INDEX idx_recipient (recipient_email),
-    INDEX idx_sent_at (sent_at)
+-- --------------------------------------------------------
+-- Table structure for table `settings`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `settings` (
+  `setting_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `setting_key` VARCHAR(50) NOT NULL UNIQUE,
+  `setting_value` TEXT NOT NULL,
+  `description` VARCHAR(255) NULL,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`setting_id`),
+  INDEX `idx_setting_key` (`setting_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default admin users
--- Super Admin password: coopsuperadmin@123
--- Regular Admin password: coopadmin@123
--- Password hashes generated using password_hash()
-INSERT INTO admins (email, password_hash, full_name, role) VALUES 
-('superadmin@umakcoop.local', '$2y$10$1mapploCHKcL3IOqy3EaC.VvHRGzmSbQeYGHVT7iaJsuhTYOuqj1e', 'Super Administrator', 'super_admin'),
-('admin@umakcoop.local', '$2y$10$L40YaqEmyMxTfcChovUv3OIIWp5MIwl3H.QwfEfTicYfsgcPxwO.e', 'Administrator', 'admin');
+-- Insert default settings
+INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
+('queue_prefix', 'Q', 'Prefix for queue numbers'),
+('max_queue_per_day', '999', 'Maximum queue numbers per day'),
+('auto_email_notifications', '1', 'Enable automatic email notifications'),
+('business_hours_start', '08:00', 'Business hours start time'),
+('business_hours_end', '17:00', 'Business hours end time');
 
--- Sample data for testing (optional)
-INSERT INTO students (student_id, first_name, last_name, middle_initial, email, college, program, year_level, section) VALUES
-('2024-00001', 'Juan', 'Dela Cruz', 'A', '2024-00001@umak.edu.ph', 'CCIS', 'BS Computer Science', 3, 'A'),
-('2024-00002', 'Maria', 'Santos', 'B', '2024-00002@umak.edu.ph', 'CTHM', 'BS Tourism Management', 2, 'B');
+COMMIT;

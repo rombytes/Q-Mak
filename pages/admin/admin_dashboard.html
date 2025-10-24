@@ -57,6 +57,12 @@
                         Admin Settings
                     </div>
                 </li>
+                <li onclick="showTab('admin-management')" id="tab-admin-management" class="px-6 py-4 cursor-pointer transition border-l-4 border-transparent hover:bg-gray-700 hidden">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="22" x2="22" y1="11" y2="11"/><line x1="19" x2="25" y1="11" y2="11"/><line x1="22" x2="22" y1="8" y2="14"/></svg>
+                        Admin Management
+                    </div>
+                </li>
             </ul>
         </nav>
         <button onclick="logout()" class="m-4 bg-red-600 hover:bg-red-700 py-3 rounded font-bold">
@@ -375,6 +381,110 @@
                     <div id="passwordUpdateMessage" class="mt-4 text-sm font-medium"></div>
                 </div>
             </div>
+
+            <!-- Admin Management Tab -->
+            <div id="content-admin-management" class="tab-content hidden">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Admin Account Management</h2>
+                
+                <!-- Create New Admin Form -->
+                <div class="bg-white rounded-lg shadow p-6 mb-8">
+                    <h3 class="text-xl font-bold text-blue-900 mb-4">Create New Admin Account</h3>
+                    <form id="createAdminForm" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-bold mb-1">Full Name *</label>
+                                <input type="text" id="newAdminFullName" required class="w-full border border-gray-300 rounded p-2" />
+                            </div>
+                            <div>
+                                <label class="block font-bold mb-1">Username *</label>
+                                <input type="text" id="newAdminUsername" required class="w-full border border-gray-300 rounded p-2" />
+                            </div>
+                            <div>
+                                <label class="block font-bold mb-1">Email *</label>
+                                <input type="email" id="newAdminEmail" required class="w-full border border-gray-300 rounded p-2" />
+                            </div>
+                            <div>
+                                <label class="block font-bold mb-1">Password * (min 8 characters)</label>
+                                <input type="password" id="newAdminPassword" required minlength="8" class="w-full border border-gray-300 rounded p-2" />
+                            </div>
+                            <div>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="newAdminSuperAdmin" class="w-4 h-4" />
+                                    <span class="font-bold">Super Admin</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
+                            Create Admin Account
+                        </button>
+                    </form>
+                    <div id="createAdminMessage" class="mt-4 text-sm font-medium"></div>
+                </div>
+                
+                <!-- Admins List -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-blue-900 mb-4">Admin Accounts</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Full Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Username</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminAccountsTableBody" class="divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Admin Modal -->
+            <div id="editAdminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+                    <h3 class="text-2xl font-bold text-blue-900 mb-4">Edit Admin Account</h3>
+                    <form id="editAdminForm" class="space-y-4">
+                        <input type="hidden" id="editAdminId" />
+                        <div>
+                            <label class="block font-bold mb-1">Full Name</label>
+                            <input type="text" id="editAdminFullName" required class="w-full border border-gray-300 rounded p-2" />
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Username</label>
+                            <input type="text" id="editAdminUsername" required class="w-full border border-gray-300 rounded p-2" />
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">Email</label>
+                            <input type="email" id="editAdminEmail" required class="w-full border border-gray-300 rounded p-2" />
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1">New Password (leave blank to keep current)</label>
+                            <input type="password" id="editAdminPassword" minlength="8" class="w-full border border-gray-300 rounded p-2" />
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="editAdminSuperAdmin" class="w-4 h-4" />
+                                <span class="font-bold">Super Admin</span>
+                            </label>
+                        </div>
+                        <div class="flex gap-4">
+                            <button type="submit" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
+                                Update
+                            </button>
+                            <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-bold">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                    <div id="editAdminMessage" class="mt-4 text-sm font-medium"></div>
+                </div>
+            </div>
         </div>
 
         <div id="content-queue-history" class="tab-content hidden">
@@ -535,6 +645,8 @@
                 document.getElementById('analyticsStartDate').valueAsDate = new Date();
                 document.getElementById('analyticsEndDate').valueAsDate = new Date();
                 fetchAnalytics();
+            } else if (tabName === 'admin-management') {
+                fetchAdminAccounts();
             }
         }
 
@@ -1172,6 +1284,9 @@
             } catch (e) {
                 console.error("Could not parse admin data from sessionStorage");
             }
+            
+            checkSuperAdminAccess(); // ADD THIS LINE
+            
             await fetchOrders();
             await fetchStudents();
             await fetchEmailLogs();
@@ -1179,66 +1294,224 @@
             startAutoRefresh();
         }
 
-        // Listen for the password update form submission
-        document.getElementById('passwordUpdateForm').addEventListener('submit', handlePasswordUpdate);
+        // Check if super admin and show management tab
+        function checkSuperAdminAccess() {
+            const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
+            if (adminData && adminData.is_super_admin == 1) {
+                document.getElementById('tab-admin-management').classList.remove('hidden');
+            }
+        }
 
-        async function handlePasswordUpdate(e) {
+        // Fetch admin accounts
+        async function fetchAdminAccounts() {
+            try {
+                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayAdminAccounts(result.data.admins);
+                } else if (response.status === 403) {
+                    alert('Access denied. Super admin only.');
+                }
+            } catch (error) {
+                console.error('Error fetching admin accounts:', error);
+            }
+        }
+
+        // Display admin accounts in table
+        function displayAdminAccounts(admins) {
+            const tbody = document.getElementById('adminAccountsTableBody');
+            tbody.innerHTML = '';
+            
+            const currentAdminId = JSON.parse(sessionStorage.getItem('adminData') || '{}').admin_id;
+            
+            admins.forEach(admin => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const roleColor = admin.is_super_admin == 1 ? 'bg-purple-500' : 'bg-blue-500';
+                const roleText = admin.is_super_admin == 1 ? 'Super Admin' : 'Admin';
+                
+                const isCurrentUser = admin.admin_id == currentAdminId;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">${admin.admin_id}</td>
+                    <td class="px-6 py-4">${admin.full_name} ${isCurrentUser ? '(You)' : ''}</td>
+                    <td class="px-6 py-4">${admin.username}</td>
+                    <td class="px-6 py-4">${admin.email}</td>
+                    <td class="px-6 py-4">
+                        <span class="${roleColor} text-white px-3 py-1 rounded text-xs font-bold">
+                            ${roleText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            <button onclick='editAdmin(${JSON.stringify(admin)})' class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
+                                Edit
+                            </button>
+                            ${!isCurrentUser ? `
+                            <button onclick="deleteAdmin(${admin.admin_id}, '${admin.full_name}')" class="border-2 border-red-600 text-red-600 hover:bg-red-50 px-4 py-1 rounded text-sm font-bold">
+                                Delete
+                            </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Create admin form handler
+        document.getElementById('createAdminForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Get values from the new/modified IDs
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const messageEl = document.getElementById('passwordUpdateMessage');
+            const messageEl = document.getElementById('createAdminMessage');
             const submitBtn = e.target.querySelector('button[type="submit"]');
-
-            if (newPassword !== confirmPassword) {
-                messageEl.textContent = 'New passwords do not match.';
-                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
-                return;
-            }
             
-            // Validate password strength (matches API requirement)
-            if (newPassword.length < 8) {
-                messageEl.textContent = 'Password must be at least 8 characters long.';
-                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
-                return;
-            }
-
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Updating...';
+            submitBtn.textContent = 'Creating...';
             messageEl.textContent = '';
-
+            
+            const formData = {
+                full_name: document.getElementById('newAdminFullName').value,
+                username: document.getElementById('newAdminUsername').value,
+                email: document.getElementById('newAdminEmail').value,
+                password: document.getElementById('newAdminPassword').value,
+                is_super_admin: document.getElementById('newAdminSuperAdmin').checked ? 1 : 0
+            };
+            
             try {
-                const response = await fetch(`${API_BASE}/admin_password.php`, {
-                    method: 'PUT',
+                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                    method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        current_password: currentPassword,
-                        new_password: newPassword,
-                        confirm_password: confirmPassword
-                    })
+                    body: JSON.stringify(formData)
                 });
-
+                
                 const result = await response.json();
-
+                
                 if (result.success) {
-                    messageEl.textContent = 'Password updated successfully!';
+                    messageEl.textContent = 'Admin account created successfully!';
                     messageEl.className = 'mt-4 text-sm font-medium text-green-600';
-                    e.target.reset(); // Clear the form
+                    e.target.reset();
+                    await fetchAdminAccounts();
                 } else {
                     messageEl.textContent = `Error: ${result.message}`;
                     messageEl.className = 'mt-4 text-sm font-medium text-red-600';
                 }
-
             } catch (error) {
-                console.error('Password update error:', error);
-                messageEl.textContent = 'A connection error occurred. Please try again.';
+                console.error('Error creating admin:', error);
+                messageEl.textContent = 'A connection error occurred.';
                 messageEl.className = 'mt-4 text-sm font-medium text-red-600';
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Update Password';
+                submitBtn.textContent = 'Create Admin Account';
+            }
+        });
+
+        // Edit admin
+        function editAdmin(admin) {
+            document.getElementById('editAdminId').value = admin.admin_id;
+            document.getElementById('editAdminFullName').value = admin.full_name;
+            document.getElementById('editAdminUsername').value = admin.username;
+            document.getElementById('editAdminEmail').value = admin.email;
+            document.getElementById('editAdminPassword').value = '';
+            document.getElementById('editAdminSuperAdmin').checked = admin.is_super_admin == 1;
+            
+            const modal = document.getElementById('editAdminModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editAdminModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('editAdminMessage').textContent = '';
+        }
+
+        // Edit admin form handler
+        document.getElementById('editAdminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageEl = document.getElementById('editAdminMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+            messageEl.textContent = '';
+            
+            const formData = {
+                admin_id: document.getElementById('editAdminId').value,
+                full_name: document.getElementById('editAdminFullName').value,
+                username: document.getElementById('editAdminUsername').value,
+                email: document.getElementById('editAdminEmail').value,
+                is_super_admin: document.getElementById('editAdminSuperAdmin').checked ? 1 : 0
+            };
+            
+            const password = document.getElementById('editAdminPassword').value;
+            if (password) {
+                formData.password = password;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageEl.textContent = 'Admin account updated successfully!';
+                    messageEl.className = 'mt-4 text-sm font-medium text-green-600';
+                    await fetchAdminAccounts();
+                    setTimeout(closeEditModal, 1500);
+                } else {
+                    messageEl.textContent = `Error: ${result.message}`;
+                    messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+                }
+            } catch (error) {
+                console.error('Error updating admin:', error);
+                messageEl.textContent = 'A connection error occurred.';
+                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update';
+            }
+        });
+
+        // Delete admin
+        async function deleteAdmin(adminId, fullName) {
+            if (!confirm(`Are you sure you want to delete admin account: ${fullName}?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: adminId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Admin account deleted successfully', 'success');
+                    await fetchAdminAccounts();
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error deleting admin:', error);
+                alert('A connection error occurred.');
             }
         }
 
