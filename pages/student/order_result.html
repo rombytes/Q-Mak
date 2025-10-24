@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmed - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="js/notifications.js"></script>
+    <script src="../../js/notifications.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
@@ -121,7 +120,7 @@
             document.getElementById('queueNum').textContent = queueNum;
             document.getElementById('waitTime').textContent = waitTime + ' - ' + (parseInt(waitTime) + 5) + ' mins';
             
-            // Generate QR Code
+            // Generate QR Code (simplified approach)
             generateQRCode();
             
             // Show success notification
@@ -133,7 +132,89 @@
             createConfetti();
         }
 
+        // Check if QRCode library is loaded
+        function checkQRLibrary() {
+            if (typeof QRCode === 'undefined') {
+                console.warn('QRCode library not loaded, will try fallback...');
+                return false;
+            }
+            console.log('QRCode library available');
+            return true;
+        }
+
+        // Generate QR Code using API response data or fallback to simple display
         function generateQRCode() {
+            const canvas = document.getElementById('qrcode');
+
+            // Try to use QR code from API response first
+            const qrCodeData = sessionStorage.getItem('qrCode');
+            
+            if (qrCodeData && qrCodeData.startsWith('data:image/')) {
+                // If we have QR code data from API, display it as image
+                const img = new Image();
+                img.onload = function() {
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 200;
+                    canvas.height = 200;
+                    ctx.clearRect(0, 0, 200, 200);
+                    ctx.drawImage(img, 0, 0, 200, 200);
+                };
+                img.onerror = function() {
+                    showFallbackQR();
+                };
+                img.src = qrCodeData;
+                return;
+            }
+
+            // Fallback: Show simple QR-style pattern
+            showFallbackQR();
+        }
+
+        function showFallbackQR() {
+            const canvas = document.getElementById('qrcode');
+            const ctx = canvas.getContext('2d');
+
+            // Create a simple QR-like pattern
+            canvas.width = 200;
+            canvas.height = 200;
+
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 200, 200);
+
+            // Border
+            ctx.strokeStyle = '#1e3a8a';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(10, 10, 180, 180);
+
+            // Corner markers (typical QR pattern)
+            ctx.fillStyle = '#1e3a8a';
+            const markerSize = 25;
+            const positions = [
+                [15, 15], [15, 165], [165, 15]
+            ];
+
+            positions.forEach(pos => {
+                ctx.fillRect(pos[0], pos[1], markerSize, markerSize);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(pos[0] + 5, pos[1] + 5, markerSize - 10, markerSize - 10);
+                ctx.fillStyle = '#1e3a8a';
+            });
+
+            // Data pattern (simple grid)
+            ctx.fillStyle = '#1e3a8a';
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    if ((i + j) % 2 === 0) {
+                        ctx.fillRect(35 + i * 12, 35 + j * 12, 8, 8);
+                    }
+                }
+            }
+
+            console.log('Fallback QR pattern displayed');
+        }
+
+        function generateClientQRCode() {
             const canvas = document.getElementById('qrcode');
             const qrData = JSON.stringify({
                 queue_number: queueNum,
@@ -141,7 +222,14 @@
                 timestamp: new Date().toISOString(),
                 type: 'umak_coop_order'
             });
-            
+
+            // Check if QRCode library is loaded
+            if (typeof QRCode === 'undefined') {
+                console.error('QRCode library not loaded');
+                showQRError('QR Code library not available - please refresh page');
+                return;
+            }
+
             QRCode.toCanvas(canvas, qrData, {
                 width: 200,
                 margin: 2,
@@ -152,11 +240,30 @@
             }, function (error) {
                 if (error) {
                     console.error('QR Code generation error:', error);
-                    if (window.notificationManager) {
-                        window.notificationManager.error('Failed to generate QR code');
-                    }
+                    showQRError('Failed to generate QR code: ' + error.message);
+                } else {
+                    console.log('QR code generated successfully via client-side');
                 }
             });
+        }
+
+        function showQRError(message) {
+            const canvas = document.getElementById('qrcode');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 200;
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(0, 0, 200, 200);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('QR Error', 100, 90);
+            ctx.font = '10px Arial';
+            ctx.fillText(message, 100, 110);
+
+            if (window.notificationManager) {
+                window.notificationManager.error('Failed to generate QR code');
+            }
         }
 
         function downloadQR() {

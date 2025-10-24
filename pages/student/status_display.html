@@ -5,19 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Status - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="../../js/notifications.js"></script>
 </head>
 <body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
     <div class="bg-white rounded-lg p-8 max-w-md w-full">
         <button onclick="goHome()" class="float-right text-gray-500 hover:text-red-600 text-2xl">&times;</button>
         <h3 class="text-2xl font-bold text-blue-900 mb-6 text-center border-b-2 border-blue-400 pb-2">Order Status</h3>
         <p id="orderId" class="mb-4"></p>
+        
         <div class="text-center p-4 border border-gray-300 rounded mb-4">
             <h4 class="text-sm text-gray-600 mb-2">Current Status:</h4>
             <p id="statusBadge" class="px-4 py-2 rounded inline-block font-bold"></p>
         </div>
+        
+        <div id="qrCodeWrapper" class="hidden text-center mb-4">
+            <canvas id="qrcode" class="mx-auto border p-2 rounded-lg"></canvas>
+            <p class="text-xs text-center text-gray-500 mt-3">Scan to verify</p>
+        </div>
+        
         <div class="bg-gray-100 p-4 rounded">
             <p id="statusDesc" class="text-gray-700"></p>
         </div>
+        
         <button onclick="goHome()" class="w-full mt-6 border-2 border-blue-900 text-blue-900 hover:bg-gray-100 py-3 rounded-lg font-bold">
             Close
         </button>
@@ -55,6 +66,7 @@
         };
 
         async function loadOrderStatus() {
+            // --- MODIFIED: Get email from sessionStorage at the top ---
             const email = sessionStorage.getItem('checkStatusEmail');
             
             if (!email) {
@@ -83,6 +95,11 @@
                     statusBadge.className = status.color + ' px-4 py-2 rounded inline-block font-bold';
                     
                     document.getElementById('statusDesc').textContent = status.desc;
+
+                    // --- ADD THIS CALL ---
+                    // Try to generate a QR code for this order
+                    generateStatusQRCode(order, email);
+                    // --- END OF ADDED CALL ---
                     
                     // Show all orders if multiple
                     if (result.data.orders.length > 1) {
@@ -109,6 +126,46 @@
                 alert('Failed to load order status. Please try again.');
             }
         }
+
+        // --- ADD THIS ENTIRE NEW FUNCTION ---
+        function generateStatusQRCode(order, email) {
+            // Only show QR code for active orders
+            const activeStatus = ['pending', 'processing', 'ready'];
+            if (!activeStatus.includes(order.order_status)) {
+                return; // Do not show QR for completed or cancelled orders
+            }
+
+            const canvas = document.getElementById('qrcode');
+            const wrapper = document.getElementById('qrCodeWrapper');
+            
+            if (!canvas || !wrapper) return; // Safety check
+
+            // Show the QR code section
+            wrapper.classList.remove('hidden');
+
+            // Build the same data object as order_result.html
+            const qrData = JSON.stringify({
+                queue_number: order.queue_number,
+                email: email,
+                timestamp: new Date().toISOString(),
+                type: 'umak_coop_order'
+            });
+
+            QRCode.toCanvas(canvas, qrData, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#1e3a8a', // Match order_result.html
+                    light: '#ffffff'
+                }
+            }, function (error) {
+                if (error) {
+                    console.error('QR Code generation error:', error);
+                    wrapper.innerHTML = '<p class="text-red-500">Failed to load QR code</p>';
+                }
+            });
+        }
+        // --- END OF ADDED FUNCTION ---
 
         // Load status on page load
         loadOrderStatus();
