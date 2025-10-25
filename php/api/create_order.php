@@ -10,6 +10,23 @@ header('Access-Control-Allow-Methods: POST');
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 0); // Don't display, but log them
+ob_start();
+
+set_exception_handler(function($e){
+    http_response_code(500);
+    if (ob_get_level()) { ob_clean(); }
+    echo json_encode(['success' => false, 'message' => 'Unhandled error: ' . $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+    exit;
+});
+
+register_shutdown_function(function(){
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode(['success' => false, 'message' => 'Fatal error: ' . $e['message'], 'file' => $e['file'], 'line' => $e['line']]);
+    }
+});
 
 require_once __DIR__ . '/../config/database.php';
 
@@ -21,6 +38,7 @@ if ($emailAvailable) {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
+    if (ob_get_level()) { ob_clean(); }
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     exit;
 }
@@ -32,6 +50,7 @@ try {
     $required = ['studentId', 'fname', 'lname', 'email', 'college', 'program', 'year', 'purchasing'];
     foreach ($required as $field) {
         if (empty($input[$field])) {
+            if (ob_get_level()) { ob_clean(); }
             echo json_encode(['success' => false, 'message' => "Field '$field' is required"]);
             exit;
         }
@@ -50,6 +69,7 @@ try {
     
     // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/@umak\.edu\.ph$/', $email)) {
+        if (ob_get_level()) { ob_clean(); }
         echo json_encode(['success' => false, 'message' => 'Invalid UMak email address']);
         exit;
     }
@@ -57,38 +77,36 @@ try {
     $db = getDB();
     $db->beginTransaction();
     
-    // Check if student exists, if not create (READ QUERY)
-    $stmt = $db->prepare("SELECT student_id FROM students WHERE student_id = ?");
-    $stmt->execute([$studentId]);
-    
-    if (!$stmt->fetch()) {
-        // Insert new student (CREATE QUERY)
-        $insertStudent = $db->prepare("
-            INSERT INTO students (student_id, first_name, last_name, middle_initial, email, college, program, year_level, section)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $insertStudent->execute([$studentId, $fname, $lname, $minitial, $email, $college, $program, $year, $section]);
-    } else {
-        // Update existing student info (UPDATE)
-        $updateStudent = $db->prepare("
-            UPDATE students 
-            SET first_name = ?, last_name = ?, middle_initial = ?, email = ?, 
-                college = ?, program = ?, year_level = ?, section = ?
-            WHERE student_id = ?
-        ");
-        $updateStudent->execute([$fname, $lname, $minitial, $email, $college, $program, $year, $section, $studentId]);
-    }
+    // Upsert student: insert or update if student_id or email already exists
+    $upsertStudent = $db->prepare("
+        INSERT INTO students (student_id, first_name, last_name, middle_initial, email, college, program, year_level, section)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            first_name = VALUES(first_name),
+            last_name = VALUES(last_name),
+            middle_initial = VALUES(middle_initial),
+            email = VALUES(email),
+            college = VALUES(college),
+            program = VALUES(program),
+            year_level = VALUES(year_level),
+            section = VALUES(section)
+    ");
+    $upsertStudent->execute([$studentId, $fname, $lname, $minitial, $email, $college, $program, $year, $section]);
     
     // Generate OTP
     $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-    $expiresAt = date('Y-m-d H:i:s', strtotime('+' . OTP_EXPIRY_MINUTES . ' minutes'));
     
-    // Store OTP
+    // Delete old OTPs for this email and type to avoid duplicate key constraint
+    $deleteOldOtps = $db->prepare("DELETE FROM otp_verifications WHERE email = ? AND otp_type = 'order'");
+    $deleteOldOtps->execute([$email]);
+    
+    // Store OTP using DB time (embed integer for INTERVAL)
+    $otpMinutes = (int)(defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES : 10);
     $insertOtp = $db->prepare("
         INSERT INTO otp_verifications (email, otp_code, otp_type, expires_at)
-        VALUES (?, ?, 'order', ?)
+        VALUES (?, ?, 'order', DATE_ADD(NOW(), INTERVAL $otpMinutes MINUTE))
     ");
-    $insertOtp->execute([$email, $otp, $expiresAt]);
+    $insertOtp->execute([$email, $otp]);
     $otpId = $db->lastInsertId();
     
     $db->commit();
@@ -106,6 +124,7 @@ try {
         }
     }
     
+    if (ob_get_level()) { ob_clean(); }
     echo json_encode([
         'success' => true,
         'message' => 'OTP sent to your email',
@@ -117,6 +136,7 @@ try {
             'otp_code' => $otp
         ]
     ]);
+    exit;
     
 } catch (Exception $e) {
     if (isset($db) && $db->inTransaction()) {
@@ -124,6 +144,14 @@ try {
     }
     error_log("Create Order Error: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+    if (ob_get_level()) { ob_clean(); }
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Server error: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString()
+    ]);
+    exit;
 }
 ?>

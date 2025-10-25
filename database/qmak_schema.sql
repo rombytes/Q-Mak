@@ -59,15 +59,16 @@ VALUES
 -- --------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS `students` (
-  `student_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `student_number` VARCHAR(50) NOT NULL UNIQUE,
+  `student_id` VARCHAR(50) NOT NULL,
+  `student_number` VARCHAR(50) NULL,
   `first_name` VARCHAR(50) NOT NULL,
   `last_name` VARCHAR(50) NOT NULL,
+  `middle_initial` VARCHAR(5) NULL,
   `email` VARCHAR(100) NOT NULL UNIQUE,
   `phone` VARCHAR(20) NULL,
   `college` VARCHAR(100) NULL,
   `program` VARCHAR(100) NULL,
-  `year_level` VARCHAR(20) NULL,
+  `year_level` INT(11) NULL,
   `section` VARCHAR(20) NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -82,11 +83,13 @@ CREATE TABLE IF NOT EXISTS `students` (
 
 CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `student_id` INT(11) NOT NULL,
+  `student_id` VARCHAR(50) NOT NULL,
   `queue_number` VARCHAR(20) NOT NULL UNIQUE,
   `item_name` VARCHAR(100) NOT NULL,
   `quantity` INT(11) NOT NULL DEFAULT 1,
   `status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  `qr_code` TEXT NULL,
+  `qr_expiry` DATETIME NULL,
   `order_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `ready_time` DATETIME NULL,
   `completed_time` DATETIME NULL,
@@ -102,7 +105,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   INDEX `idx_status` (`status`),
   INDEX `idx_order_date` (`order_date`),
   INDEX `idx_is_archived` (`is_archived`),
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -112,7 +115,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
 CREATE TABLE IF NOT EXISTS `email_logs` (
   `log_id` INT(11) NOT NULL AUTO_INCREMENT,
   `order_id` INT(11) NOT NULL DEFAULT 0,
-  `student_id` INT(11) NOT NULL DEFAULT 0,
+  `student_id` VARCHAR(50) NULL,
   `email_to` VARCHAR(100) NOT NULL,
   `email_type` ENUM('otp', 'receipt', 'status_update', 'order_placed', 'order_ready', 'order_completed') NOT NULL DEFAULT 'otp',
   `subject` VARCHAR(255) NOT NULL,
@@ -129,9 +132,7 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
   INDEX `idx_student_id` (`student_id`),
   INDEX `idx_status` (`status`),
   INDEX `idx_email_type` (`email_type`),
-  INDEX `idx_is_archived` (`is_archived`),
-  FOREIGN KEY (`order_id`) REFERENCES `orders`(`order_id`) ON DELETE CASCADE,
-  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE
+  INDEX `idx_is_archived` (`is_archived`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

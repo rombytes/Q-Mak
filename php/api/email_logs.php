@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 log_id,
                 order_id,
                 student_id,
-                email_to as recipient_email,
+                recipient_email,
                 email_type,
                 subject,
                 status,
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         // Search by recipient email
         if (!empty($search)) {
-            $query .= " AND email_to LIKE ?";
+            $query .= " AND recipient_email LIKE ?";
             $params[] = "%$search%";
         }
         

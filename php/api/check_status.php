@@ -46,14 +46,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Generate OTP
         $otp = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-        $expiresAt = date('Y-m-d H:i:s', strtotime('+' . OTP_EXPIRY_MINUTES . ' minutes'));
         
-        // Store OTP
+        // Delete old OTPs for this email and type to avoid duplicate key constraint
+        $deleteOldOtps = $db->prepare("DELETE FROM otp_verifications WHERE email = ? AND otp_type = 'status'");
+        $deleteOldOtps->execute([$email]);
+        
+        // Store OTP using DB time (embed integer for INTERVAL)
+        $otpMinutes = (int)(defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES : 10);
         $insertOtp = $db->prepare("
             INSERT INTO otp_verifications (email, otp_code, otp_type, expires_at)
-            VALUES (?, ?, 'status', ?)
+            VALUES (?, ?, 'status', DATE_ADD(NOW(), INTERVAL $otpMinutes MINUTE))
         ");
-        $insertOtp->execute([$email, $otp, $expiresAt]);
+        $insertOtp->execute([$email, $otp]);
         
         // Send OTP email
         EmailService::sendOTP($email, $otp);
@@ -94,12 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 o.queue_number,
                 o.item_name as item_ordered,
                 o.status as order_status,
+                o.qr_code,
+                o.qr_expiry,
                 o.created_at,
                 o.updated_at,
                 s.student_id,
                 s.student_number,
                 s.first_name,
-                s.last_name
+                s.last_name,
+                s.email
             FROM orders o
             JOIN students s ON o.student_id = s.student_id
             WHERE s.email = ?
@@ -107,6 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ");
         $stmt->execute([$email]);
         $orders = $stmt->fetchAll();
+
+        foreach ($orders as &$row) {
+            if (empty($row['qr_code'])) {
+                $qrData = json_encode([
+                    'queue_number' => $row['queue_number'],
+                    'email' => $row['email'],
+                    'timestamp' => date('c'),
+                    'type' => 'umak_coop_order'
+                ]);
+                $row['qr_code'] = EmailService::generateQRCodeDataUri($qrData);
+            }
+        }
+        unset($row);
         
         if (empty($orders)) {
             echo json_encode(['success' => false, 'message' => 'No orders found']);

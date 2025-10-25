@@ -6,6 +6,7 @@
     <title>Order Confirmed - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/notifications.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
@@ -142,7 +143,7 @@
             return true;
         }
 
-        // Generate QR Code using API response data or fallback to Google Charts
+        // Generate QR Code using API response data or fallback to local generation, then Google Charts
         function generateQRCode() {
             const canvas = document.getElementById('qrcode');
 
@@ -161,15 +162,27 @@
                     console.log('QR code loaded from API');
                 };
                 img.onerror = function() {
-                    console.warn('QR code from API failed, using Google Charts');
-                    useGoogleChartsQR();
+                    console.warn('QR code from API failed, generating locally');
+                    if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+                        generateClientQRCode();
+                    } else {
+                        console.warn('QR library missing, attempting Google Charts');
+                        useGoogleChartsQR();
+                    }
                 };
                 img.src = qrCodeData;
                 return;
             }
 
-            // Fallback: Use Google Charts API
-            console.log('No QR code from API, using Google Charts');
+            // Prefer client-side generation if library is available
+            if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+                console.log('No QR code from API, generating locally');
+                generateClientQRCode();
+                return;
+            }
+
+            // Last resort: Use Google Charts API (may be blocked by CORS)
+            console.warn('No QR code from API and no QR library, attempting Google Charts');
             useGoogleChartsQR();
         }
 

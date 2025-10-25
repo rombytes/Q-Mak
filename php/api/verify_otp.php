@@ -5,9 +5,26 @@
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ob_start();
 
-header('Content-Type: application/json');
+set_exception_handler(function($e){
+    http_response_code(500);
+    if (ob_get_level()) { ob_clean(); }
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+    exit;
+});
+
+register_shutdown_function(function(){
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+    }
+});
+
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 
@@ -17,6 +34,7 @@ require_once __DIR__ . '/../utils/email.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
+    if (ob_get_level()) { ob_clean(); }
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     exit;
 }
@@ -29,53 +47,64 @@ try {
     $otpType = trim($input['otp_type'] ?? 'order');
     
     if (empty($email) || empty($otpCode)) {
+        if (ob_get_level()) { ob_clean(); }
         echo json_encode(['success' => false, 'message' => 'Email and OTP code are required']);
         exit;
     }
     
     $db = getDB();
     
-    // Get OTP record
-    $stmt = $db->prepare("
-        SELECT otp_id, email, otp_code, otp_type, attempts, max_attempts, is_verified, expires_at
+    // Try to match the exact OTP code first
+    $stmtByCode = $db->prepare("
+        SELECT otp_id, email, otp_code, otp_type, attempts, max_attempts, is_verified, expires_at, NOW() as server_now
         FROM otp_verifications
-        WHERE email = ? AND otp_type = ? AND is_verified = FALSE
-        ORDER BY created_at DESC
+        WHERE email = ? AND otp_type = ? AND otp_code = ? AND is_verified = FALSE
+        ORDER BY otp_id DESC
         LIMIT 1
     ");
-    $stmt->execute([$email, $otpType]);
-    $otpRecord = $stmt->fetch();
-    
-    if (!$otpRecord) {
-        echo json_encode(['success' => false, 'message' => 'No valid OTP found. Please request a new one.']);
-        exit;
-    }
-    
-    // Check if expired
-    if (strtotime($otpRecord['expires_at']) < time()) {
-        echo json_encode(['success' => false, 'message' => 'OTP has expired. Please request a new one.']);
-        exit;
-    }
-    
-    // Check attempts
-    if ($otpRecord['attempts'] >= $otpRecord['max_attempts']) {
-        echo json_encode(['success' => false, 'message' => 'Maximum attempts exceeded. Please request a new OTP.']);
-        exit;
-    }
-    
-    // Verify OTP
-    if ($otpCode !== $otpRecord['otp_code']) {
-        // Increment attempts
-        $updateAttempts = $db->prepare("UPDATE otp_verifications SET attempts = attempts + 1 WHERE otp_id = ?");
-        $updateAttempts->execute([$otpRecord['otp_id']]);
-        
-        $remainingAttempts = $otpRecord['max_attempts'] - $otpRecord['attempts'] - 1;
-        echo json_encode([
-            'success' => false,
-            'message' => 'Incorrect OTP code',
-            'remaining_attempts' => $remainingAttempts
-        ]);
-        exit;
+    $stmtByCode->execute([$email, $otpType, $otpCode]);
+    $otpByCode = $stmtByCode->fetch();
+
+    if ($otpByCode) {
+        if (strtotime($otpByCode['expires_at']) < strtotime($otpByCode['server_now'])) {
+            if (ob_get_level()) { ob_clean(); }
+            echo json_encode(['success' => false, 'message' => 'OTP has expired. Please request a new one.']);
+            exit;
+        }
+        // use this record for verification path below
+        $otpRecord = $otpByCode;
+    } else {
+        // Fallback: get the latest unverified OTP (for attempts increment on wrong code)
+        $stmtLatest = $db->prepare("
+            SELECT otp_id, email, otp_code, otp_type, attempts, max_attempts, is_verified, expires_at, NOW() as server_now
+            FROM otp_verifications
+            WHERE email = ? AND otp_type = ? AND is_verified = FALSE
+            ORDER BY otp_id DESC
+            LIMIT 1
+        ");
+        $stmtLatest->execute([$email, $otpType]);
+        $latestOtp = $stmtLatest->fetch();
+        if ($latestOtp) {
+            if ($latestOtp['attempts'] >= $latestOtp['max_attempts']) {
+                if (ob_get_level()) { ob_clean(); }
+                echo json_encode(['success' => false, 'message' => 'Maximum attempts exceeded. Please request a new OTP.']);
+                exit;
+            }
+            $updateAttempts = $db->prepare("UPDATE otp_verifications SET attempts = attempts + 1 WHERE otp_id = ?");
+            $updateAttempts->execute([$latestOtp['otp_id']]);
+            $remainingAttempts = $latestOtp['max_attempts'] - $latestOtp['attempts'] - 1;
+            if (ob_get_level()) { ob_clean(); }
+            echo json_encode([
+                'success' => false,
+                'message' => 'Incorrect OTP code',
+                'remaining_attempts' => $remainingAttempts
+            ]);
+            exit;
+        } else {
+            if (ob_get_level()) { ob_clean(); }
+            echo json_encode(['success' => false, 'message' => 'No valid OTP found. Please request a new one.']);
+            exit;
+        }
     }
     
     // OTP is correct - mark as verified
@@ -125,16 +154,19 @@ try {
         // QR expiry
         $qrExpiry = date('Y-m-d H:i:s', strtotime('+' . QR_EXPIRY_MINUTES . ' minutes'));
         
-        // Insert order
-        $insertOrder = $db->prepare("
-            INSERT INTO orders (queue_number, student_id, item_name, status)
-            VALUES (?, ?, ?, 'pending')
-        ");
-        $insertOrder->execute([
-            $queueNum,
-            $student['student_id'],
-            $orderData['purchasing']
-        ]);
+        $ordersCols = $db->query("DESCRIBE orders")->fetchAll(PDO::FETCH_ASSOC);
+        $ordersColsMap = [];
+        foreach ($ordersCols as $c) { $ordersColsMap[$c['Field']] = true; }
+        $cols = ['queue_number','student_id','item_name'];
+        $values = [$queueNum, $student['student_id'], $orderData['purchasing']];
+        $placeholders = ['?','?','?'];
+        if (isset($ordersColsMap['item_ordered'])) { $cols[] = 'item_ordered'; $values[] = $orderData['purchasing']; $placeholders[] = '?'; }
+        if (isset($ordersColsMap['estimated_wait_time'])) { $cols[] = 'estimated_wait_time'; $values[] = $waitTime; $placeholders[] = '?'; }
+        if (isset($ordersColsMap['qr_expiry'])) { $cols[] = 'qr_expiry'; $values[] = $qrExpiry; $placeholders[] = '?'; }
+        if (isset($ordersColsMap['status'])) { $cols[] = 'status'; $values[] = 'pending'; $placeholders[] = '?'; }
+        $sql = "INSERT INTO orders (" . implode(', ', $cols) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        $insertOrder = $db->prepare($sql);
+        $insertOrder->execute($values);
         
         $orderId = $db->lastInsertId();
         
@@ -146,6 +178,10 @@ try {
             'type' => 'umak_coop_order'
         ]);
         $qrCodeUri = EmailService::generateQRCodeDataUri($qrData);
+        if (isset($ordersColsMap['qr_code'])) {
+            $upd = $db->prepare("UPDATE orders SET qr_code = ? WHERE order_id = ?");
+            $upd->execute([$qrCodeUri, $orderId]);
+        }
         
         // Prepare receipt data
         $receiptData = [
@@ -175,7 +211,9 @@ try {
         $response['data'] = ['verified' => true];
     }
     
+    if (ob_get_level()) { ob_clean(); }
     echo json_encode($response);
+    exit;
     
 } catch (PDOException $e) {
     if (isset($db) && $db->inTransaction()) {
@@ -183,22 +221,26 @@ try {
     }
     error_log("Verify OTP PDO Error: " . $e->getMessage());
     http_response_code(500);
+    if (ob_get_level()) { ob_clean(); }
     echo json_encode([
         'success' => false, 
         'message' => 'Database error: ' . $e->getMessage(),
         'error_code' => $e->getCode(),
         'trace' => $e->getTraceAsString()
     ]);
+    exit;
 } catch (Exception $e) {
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();
     }
     error_log("Verify OTP Error: " . $e->getMessage());
     http_response_code(500);
+    if (ob_get_level()) { ob_clean(); }
     echo json_encode([
         'success' => false, 
         'message' => 'Server error: ' . $e->getMessage(),
         'trace' => $e->getTraceAsString()
     ]);
+    exit;
 }
 ?>

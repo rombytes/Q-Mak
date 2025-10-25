@@ -10,7 +10,8 @@ use PHPMailer\PHPMailer\Exception;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+$__autoload = __DIR__ . '/../../vendor/autoload.php';
+if (file_exists($__autoload)) { require_once $__autoload; }
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/constants.php';
 
@@ -59,6 +60,9 @@ class EmailService {
      * Core email sending function
      */
     private static function sendEmail($to, $subject, $htmlBody) {
+        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            return ['success' => false, 'error' => 'Mailer unavailable'];
+        }
         $mail = new PHPMailer(true);
         
         try {
@@ -83,7 +87,7 @@ class EmailService {
             
             $mail->send();
             return ['success' => true];
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Email Error: " . $mail->ErrorInfo);
             return ['success' => false, 'error' => $mail->ErrorInfo];
         }
@@ -93,23 +97,74 @@ class EmailService {
 
     public static function generateQRCodeDataUri($dataString) {
         try {
-            // Use Google Charts API for QR code generation (no library needed)
-            $qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' . urlencode($dataString) . '&choe=UTF-8';
-            
-            // Get image data
-            $imageData = @file_get_contents($qrUrl);
-            
-            if ($imageData === false) {
-                error_log("QR Code generation failed - Could not fetch from Google Charts API");
-                return '';
+            // Endroid: QrCode + PngWriter (v3 and v4 compatible)
+            if (class_exists('Endroid\\QrCode\\QrCode') && class_exists('Endroid\\QrCode\\Writer\\PngWriter')) {
+                $qr = null;
+                if (method_exists('Endroid\\QrCode\\QrCode', 'setSize')) {
+                    $qr = new \Endroid\QrCode\QrCode($dataString);
+                    $qr->setSize(200);
+                } elseif (method_exists('Endroid\\QrCode\\QrCode', 'create')) {
+                    // v4 without Builder: no setSize available; use default size
+                    $qr = \Endroid\QrCode\QrCode::create($dataString);
+                }
+                if ($qr) {
+                    $writer = new \Endroid\QrCode\Writer\PngWriter();
+                    $result = $writer->write($qr);
+                    $data = $result->getString();
+                    if ($data !== '') {
+                        return 'data:image/png;base64,' . base64_encode($data);
+                    }
+                }
             }
+
+            // Remote fallback via Google Charts
+            $qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' . urlencode($dataString) . '&choe=UTF-8';
+
+            if (function_exists('curl_init')) {
+                $ch = curl_init($qrUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+                $imageData = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlError = curl_error($ch);
+                curl_close($ch);
+                
+                if ($imageData !== false && $httpCode === 200 && strlen($imageData) > 100) {
+                    error_log("QR Code generated successfully via cURL");
+                    return 'data:image/png;base64,' . base64_encode($imageData);
+                } else {
+                    error_log("QR Code cURL failed: HTTP $httpCode, Error: $curlError");
+                }
+            }
+
+            // Try file_get_contents with stream context
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 10,
+                    'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                ],
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false
+                ]
+            ]);
             
-            // Convert to data URI
-            $base64 = base64_encode($imageData);
-            $dataUri = 'data:image/png;base64,' . $base64;
-            
-            return $dataUri;
-        } catch (Exception $e) {
+            $imageData = @file_get_contents($qrUrl, false, $context);
+            if ($imageData !== false && strlen($imageData) > 100) {
+                error_log("QR Code generated successfully via file_get_contents");
+                return 'data:image/png;base64,' . base64_encode($imageData);
+            } else {
+                error_log("QR Code file_get_contents failed");
+            }
+
+            // If all fails, log and return empty
+            error_log("QR Code generation failed: All methods exhausted for data: " . substr($dataString, 0, 100));
+            return '';
+        } catch (\Throwable $e) {
             error_log("QR Code Generation Error: " . $e->getMessage());
             return '';
         }
@@ -310,6 +365,29 @@ class EmailService {
 
         $statusInfo = $statusStyles[strtolower($data['status'])] ?? ['label' => strtoupper($data['status']), 'color' => '#64748b', 'bg' => '#f1f5f9', 'text' => '#374151'];
 
+        // Generate QR code for active orders
+        $qrHtml = '';
+        $activeStatuses = ['pending', 'processing', 'ready'];
+        if (in_array(strtolower($data['status']), $activeStatuses) && !empty($data['queue_number'])) {
+            $qrData = json_encode([
+                'queue_number' => $data['queue_number'],
+                'email' => $data['email'] ?? '',
+                'timestamp' => date('c'),
+                'type' => 'umak_coop_order'
+            ]);
+            $qrCodeUri = self::generateQRCodeDataUri($qrData);
+            
+            if (!empty($qrCodeUri)) {
+                $qrHtml = "
+                    <div style='text-align: center; margin: 25px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;'>
+                        <h4 style='margin: 0 0 15px; color: #1e3a8a; font-size: 16px;'>Your Order QR Code</h4>
+                        <img src='{$qrCodeUri}' alt='Order QR Code' style='width:180px; height:180px; margin: 0 auto; display: block; border: 2px solid #e2e8f0; padding: 8px; border-radius: 8px;'>
+                        <p style='font-size: 13px; color: #475569; margin-top: 12px;'>Present this QR code at the COOP counter</p>
+                        <p style='font-size: 12px; color: #64748b; margin-top: 4px;'>Queue Number: {$data['queue_number']}</p>
+                    </div>";
+            }
+        }
+
         // Build conditional content based on status
         $actionContent = '';
         switch (strtolower($data['status'])) {
@@ -395,6 +473,8 @@ class EmailService {
                         <p><strong>Item Ordered:</strong> {$data['item_ordered']}</p>
                         <p><strong>Current Status:</strong> {$statusInfo['label']}</p>
                     </div>
+
+                    {$qrHtml}
 
                     {$actionContent}
 

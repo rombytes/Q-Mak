@@ -37,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $query = "
             SELECT 
                 student_id,
-                student_number,
                 first_name,
                 last_name,
                 email,

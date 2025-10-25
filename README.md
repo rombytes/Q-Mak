@@ -42,14 +42,25 @@ Q-Mak is a comprehensive web-based queue management system designed for the Univ
 
 ## Installation
 
+### Quick Start
+
+For detailed installation instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.md)** which includes:
+- Complete setup for new GitHub users
+- Git installation and repository management
+- XAMPP installation and configuration
+- Composer dependency management
+- Database setup and configuration
+- Email configuration (Gmail/SMTP)
+- Troubleshooting common issues
+
 ### Prerequisites
 - PHP 7.4 or higher
 - MySQL 5.7 or higher
-- Apache/Nginx web server
+- Apache/Nginx web server (XAMPP recommended)
 - Composer (for dependency management)
 - SMTP server (for email functionality)
 
-### Setup Instructions
+### Basic Setup
 
 1. **Clone the Repository**
    ```bash
@@ -60,25 +71,25 @@ Q-Mak is a comprehensive web-based queue management system designed for the Univ
 2. **Install Dependencies**
    ```bash
    composer install
+   
+   # Or install required packages individually:
+   composer require phpmailer/phpmailer:^6.8
+   composer require endroid/qr-code:^4.8
    ```
 
 3. **Database Setup**
    - Import `database/qmak_schema.sql` into your MySQL database
-   - This creates the `qmak_db` database with all required tables and default data
+   - Optionally import `database/sample_data.sql` for testing
+   - See `database/README.md` for detailed database documentation
 
 4. **Configuration**
-   - Copy `php/config/database.example.php` to `php/config/database.php`
-   - Copy `php/config/email.example.php` to `php/config/email.php`
-   - Update database credentials and SMTP settings
+   - Edit `php/config/database.php` with your database and SMTP credentials
+   - Update `BASE_URL` constant to match your environment
+   - Configure email settings for OTP and notifications
 
-5. **Web Server Configuration**
-   - Ensure the project is in your web server's document root
-   - Enable PHP sessions and file uploads if needed
-
-6. **Access the Application**
+5. **Access the Application**
    - Homepage: `http://localhost/Q-Mak/homepage.html`
    - Admin Login: `http://localhost/Q-Mak/pages/admin/admin_login.html`
-   - Setup Wizard: `http://localhost/Q-Mak/QUICK_SETUP.php`
 
 ## Default Accounts
 

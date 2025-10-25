@@ -70,26 +70,18 @@ try {
         exit;
     }
     
-    $database = Database::getInstance();
-    $conn = $database->getConnection();
+    // Get database connection using the getDB function
+    $conn = getDB();
 
-    if (!$conn) {
-        ob_end_clean();
-        echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-        exit;
-    }
-    
-    // Query admin_accounts table
+    // Query admin_accounts table using PDO
     $stmt = $conn->prepare("
         SELECT admin_id, email, password, full_name, username, is_super_admin
         FROM admin_accounts
         WHERE email = ?
         LIMIT 1
     ");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $admin = $result->fetch_assoc();
+    $stmt->execute([$email]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$admin) {
         ob_end_clean();
@@ -107,8 +99,7 @@ try {
     // Update last login
     try {
         $updateStmt = $conn->prepare("UPDATE admin_accounts SET last_login = NOW() WHERE admin_id = ?");
-        $updateStmt->bind_param("i", $admin['admin_id']);
-        $updateStmt->execute();
+        $updateStmt->execute([$admin['admin_id']]);
     } catch (Exception $e) {
         // Ignore if last_login column doesn't exist
     }
@@ -136,7 +127,7 @@ try {
         ]
     ]);
     
-} catch (mysqli_sql_exception $e) {
+} catch (PDOException $e) {
     ob_end_clean();
     error_log("Admin Login Database Error: " . $e->getMessage());
     http_response_code(500);

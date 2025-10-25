@@ -62,22 +62,19 @@ try {
     }
     
     echo json_encode(['debug' => 'Connecting to database...']) . "\n";
-    $database = Database::getInstance();
-    $conn = $database->getConnection();
-    
+    $conn = getDB();
+
     if (!$conn) {
         echo json_encode(['success' => false, 'message' => 'Database connection failed']);
         exit;
     }
-    
+
     echo json_encode(['debug' => 'Database connected', 'type' => get_class($conn)]) . "\n";
-    
+
     echo json_encode(['debug' => 'Querying admin_accounts...']) . "\n";
     $stmt = $conn->prepare("SELECT admin_id, email, password, full_name, username, is_super_admin FROM admin_accounts WHERE email = ? LIMIT 1");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $admin = $result->fetch_assoc();
+    $stmt->execute([$email]);
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     
     echo json_encode(['debug' => 'Query result', 'found' => ($admin ? 'yes' : 'no')]) . "\n";
     

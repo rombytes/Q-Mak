@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $filter = $_GET['filter'] ?? 'today';
 
         $query = "
-            SELECT 
+            SELECT
                 o.order_id,
                 o.queue_number,
                 o.item_name as item_ordered,
@@ -48,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 o.created_at,
                 o.updated_at,
                 s.student_id,
-                s.student_number,
                 s.first_name,
                 s.last_name,
                 s.email,
@@ -63,6 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         if ($filter === 'today') {
             $query .= " AND DATE(o.created_at) = CURDATE()";
+        } elseif ($filter === 'history') {
+            // Show all orders for history (no date filter)
+            $query .= "";
         }
         
         $params = [];
@@ -93,8 +95,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $orders = $stmt->fetchAll();
         
         // Get statistics
+        $statsWhereClause = "";
+        if ($filter === 'today') {
+            $statsWhereClause = "WHERE DATE(created_at) = CURDATE()";
+        } elseif ($filter === 'history') {
+            $statsWhereClause = ""; // All orders for history
+        }
+
         $statsStmt = $db->query("
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
                 SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
@@ -102,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
                 SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
             FROM orders
-            WHERE DATE(created_at) = CURDATE()
+            $statsWhereClause
         ");
         $stats = $statsStmt->fetch();
         
@@ -163,8 +172,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         // Update status
         $updateStmt = $db->prepare("
-            UPDATE orders 
-            SET status = ?, 
+            UPDATE orders
+            SET status = ?,
                 updated_at = NOW(),
                 ready_time = CASE WHEN ? = 'ready' THEN NOW() ELSE ready_time END,
                 completed_time = CASE WHEN ? = 'completed' THEN NOW() ELSE completed_time END
