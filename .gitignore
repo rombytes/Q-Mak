@@ -154,6 +154,20 @@ UPLOAD_TO_GITHUB_SUMMARY.md
 WHAT_GETS_UPLOADED.md
 UPLOAD_TO_GITHUB.ps1
 
+# Development implementation guides (keep in repo for reference)
+# IMPLEMENTATION_STATUS.md
+# PHASE_2A_COMPLETE.md
+# STUDENT_DASHBOARD_IMPROVEMENTS.md
+# DATABASE_FIX_GUIDE.md
+# LATEST_FIXES.md
+# UI_UX_IMPROVEMENTS.md
+# FINAL_FIX_SUMMARY.md
+
+# Documentation files (not needed in GitHub repo)
+DEPLOYMENT_NOTES.md
+DATABASE_FIX_GUIDE.md
+database/README.md
+
 # ==========================================
 # Large Files
 # ==========================================
@@ -185,6 +199,12 @@ test_admin_dashboard.html
 
 # Password generator (contains sensitive logic)
 php/generate_password.php
+
+# Debug files
+*_debug.*
+debug_*.*
+*debug*.html
+*debug*.php
 
 # Old versions
 *.old

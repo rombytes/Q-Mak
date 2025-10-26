@@ -118,22 +118,117 @@
                 </div>
             </div>
             
+            <!-- Order Quantity -->
+            <div class="bg-blue-50 rounded-xl p-6">
+                <h4 class="text-lg font-semibold text-blue-900 mb-4">Order Quantity</h4>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">How many items would you like to order? <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-5 gap-3">
+                    <button type="button" onclick="selectQuantity(1)" id="qty1Btn" 
+                            class="py-3 px-4 border-2 border-blue-900 bg-blue-900 text-white rounded-lg font-bold hover:bg-blue-800 transition-all">
+                        1
+                    </button>
+                    <button type="button" onclick="selectQuantity(2)" id="qty2Btn" 
+                            class="py-3 px-4 border-2 border-gray-300 bg-white text-gray-700 rounded-lg font-bold hover:border-blue-900 hover:bg-blue-50 transition-all">
+                        2
+                    </button>
+                    <button type="button" onclick="selectQuantity(3)" id="qty3Btn" 
+                            class="py-3 px-4 border-2 border-gray-300 bg-white text-gray-700 rounded-lg font-bold hover:border-blue-900 hover:bg-blue-50 transition-all">
+                        3
+                    </button>
+                    <button type="button" onclick="selectQuantity(4)" id="qty4Btn" 
+                            class="py-3 px-4 border-2 border-gray-300 bg-white text-gray-700 rounded-lg font-bold hover:border-blue-900 hover:bg-blue-50 transition-all">
+                        4
+                    </button>
+                    <button type="button" onclick="selectQuantity(5)" id="qty5Btn" 
+                            class="py-3 px-4 border-2 border-gray-300 bg-white text-gray-700 rounded-lg font-bold hover:border-blue-900 hover:bg-blue-50 transition-all">
+                        5
+                    </button>
+                </div>
+            </div>
+
             <!-- Order Details -->
             <div class="bg-green-50 rounded-xl p-6">
                 <h4 class="text-lg font-semibold text-blue-900 mb-4">Order Details</h4>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Item to Order <span class="text-red-500">*</span></label>
-                    <select id="purchasing" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
-                        <option value="">Select Item</option>
-                        <option value="id lace">ID Lace</option>
-                        <option value="uniform">School Uniform</option>
-                        <option value="PE uniform">PE Uniform</option>
-                        <option value="nstp shirt">NSTP Shirt</option>
-                        <option value="patch">School Patch</option>
-                        <option value="book">Book/Manual</option>
-                        <option value="supplies">School Supplies</option>
-                        <option value="merchandise">UMak Merchandise</option>
-                    </select>
+                <div class="space-y-4">
+                    <!-- Item 1 -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Item 1 <span class="text-red-500">*</span></label>
+                        <select id="purchasing" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                            <option value="">Select Item</option>
+                            <option value="id lace">ID Lace</option>
+                            <option value="uniform">School Uniform</option>
+                            <option value="PE uniform">PE Uniform</option>
+                            <option value="nstp shirt">NSTP Shirt</option>
+                            <option value="patch">School Patch</option>
+                            <option value="book">Book/Manual</option>
+                            <option value="supplies">School Supplies</option>
+                            <option value="merchandise">UMak Merchandise</option>
+                        </select>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div id="item2Container" class="hidden">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Item 2 <span class="text-red-500">*</span></label>
+                        <select id="item2" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <option value="">Select Item</option>
+                            <option value="id lace">ID Lace</option>
+                            <option value="uniform">School Uniform</option>
+                            <option value="PE uniform">PE Uniform</option>
+                            <option value="nstp shirt">NSTP Shirt</option>
+                            <option value="patch">School Patch</option>
+                            <option value="book">Book/Manual</option>
+                            <option value="supplies">School Supplies</option>
+                            <option value="merchandise">UMak Merchandise</option>
+                        </select>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div id="item3Container" class="hidden">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Item 3 <span class="text-red-500">*</span></label>
+                        <select id="item3" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <option value="">Select Item</option>
+                            <option value="id lace">ID Lace</option>
+                            <option value="uniform">School Uniform</option>
+                            <option value="PE uniform">PE Uniform</option>
+                            <option value="nstp shirt">NSTP Shirt</option>
+                            <option value="patch">School Patch</option>
+                            <option value="book">Book/Manual</option>
+                            <option value="supplies">School Supplies</option>
+                            <option value="merchandise">UMak Merchandise</option>
+                        </select>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div id="item4Container" class="hidden">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Item 4 <span class="text-red-500">*</span></label>
+                        <select id="item4" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <option value="">Select Item</option>
+                            <option value="id lace">ID Lace</option>
+                            <option value="uniform">School Uniform</option>
+                            <option value="PE uniform">PE Uniform</option>
+                            <option value="nstp shirt">NSTP Shirt</option>
+                            <option value="patch">School Patch</option>
+                            <option value="book">Book/Manual</option>
+                            <option value="supplies">School Supplies</option>
+                            <option value="merchandise">UMak Merchandise</option>
+                        </select>
+                    </div>
+
+                    <!-- Item 5 -->
+                    <div id="item5Container" class="hidden">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Item 5 <span class="text-red-500">*</span></label>
+                        <select id="item5" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <option value="">Select Item</option>
+                            <option value="id lace">ID Lace</option>
+                            <option value="uniform">School Uniform</option>
+                            <option value="PE uniform">PE Uniform</option>
+                            <option value="nstp shirt">NSTP Shirt</option>
+                            <option value="patch">School Patch</option>
+                            <option value="book">Book/Manual</option>
+                            <option value="supplies">School Supplies</option>
+                            <option value="merchandise">UMak Merchandise</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             
@@ -157,6 +252,44 @@
 
     <script>
         const API_BASE = '../../php/api';
+        let selectedQuantity = 1;
+
+        // Quantity selector function
+        function selectQuantity(qty) {
+            selectedQuantity = qty;
+            
+            const activeClass = 'py-3 px-4 border-2 border-blue-900 bg-blue-900 text-white rounded-lg font-bold hover:bg-blue-800 transition-all';
+            const inactiveClass = 'py-3 px-4 border-2 border-gray-300 bg-white text-gray-700 rounded-lg font-bold hover:border-blue-900 hover:bg-blue-50 transition-all';
+            
+            // Update all quantity buttons
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.getElementById(`qty${i}Btn`);
+                if (btn) {
+                    btn.className = i === qty ? activeClass : inactiveClass;
+                }
+            }
+            
+            // Show/hide item containers based on quantity
+            for (let i = 2; i <= 5; i++) {
+                const container = document.getElementById(`item${i}Container`);
+                const select = document.getElementById(`item${i}`);
+                if (container && select) {
+                    if (i <= qty) {
+                        container.classList.remove('hidden');
+                        select.setAttribute('required', 'required');
+                    } else {
+                        container.classList.add('hidden');
+                        select.removeAttribute('required');
+                        select.value = '';
+                    }
+                }
+            }
+        }
+
+        // Initialize quantity selector
+        document.addEventListener('DOMContentLoaded', function() {
+            selectQuantity(1);
+        });
         
         document.getElementById('orderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -164,6 +297,17 @@
             const submitBtn = e.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Processing...';
+            
+            // Collect items based on quantity
+            const items = [];
+            items.push(document.getElementById('purchasing').value);
+            for (let i = 2; i <= selectedQuantity; i++) {
+                const itemValue = document.getElementById(`item${i}`).value;
+                if (itemValue) {
+                    items.push(itemValue);
+                }
+            }
+            const itemsOrdered = items.join(', ');
             
             // Collect form data
             const formData = {
@@ -176,7 +320,7 @@
                 program: document.getElementById('program').value,
                 year: document.getElementById('year').value,
                 section: document.getElementById('section').value,
-                purchasing: document.getElementById('purchasing').value
+                purchasing: itemsOrdered
             };
             
             try {

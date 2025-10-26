@@ -39,15 +39,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 student_id,
                 first_name,
                 last_name,
+                middle_initial,
                 email,
                 COALESCE(college, 'N/A') as college,
                 COALESCE(program, 'N/A') as program,
                 COALESCE(year_level, 'N/A') as year_level,
                 COALESCE(section, 'N/A') as section,
-                COALESCE(phone, 'N/A') as phone,
-                created_at
+                is_verified,
+                created_at,
+                last_login
             FROM students
-            WHERE 1=1
+            WHERE password IS NOT NULL
         ";
         
         $params = [];

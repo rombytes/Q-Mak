@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/notifications.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full my-8">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-3xl font-bold text-blue-900">Create Student Account</h3>
+                <p class="text-gray-600 mt-1">Join Q-Mak Order System - Fast & Easy!</p>
+            </div>
+            <a href="student_login.html" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Login">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="registrationForm" class="space-y-6">
+            <!-- Basic Information -->
+            <div class="bg-blue-50 rounded-xl p-6">
+                <h4 class="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Basic Information
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Student ID -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Student ID *</label>
+                    <input type="text" id="studentId" required
+                           placeholder="e.g., 2021-12345"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">UMak Email *</label>
+                    <input type="email" id="email" required
+                           placeholder="yourname@umak.edu.ph"
+                           pattern="[a-zA-Z0-9\.\-_]+@umak\.edu\.ph"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Must use @umak.edu.ph email</p>
+                </div>
+
+                    <!-- First Name -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">First Name *</label>
+                    <input type="text" id="firstName" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Last Name -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name *</label>
+                    <input type="text" id="lastName" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <!-- Middle Initial -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Middle Initial</label>
+                    <input type="text" id="middleInitial" maxlength="5"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Academic Information -->
+            <div class="bg-orange-50 rounded-xl p-6">
+                <h4 class="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    Academic Information
+                </h4>
+                <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- College -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">College/School/Institute *</label>
+                    <select id="college" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select College/School/Institute</option>
+                        <optgroup label="Colleges">
+                            <option value="CLAS">CLAS - College of Liberal Arts and Sciences</option>
+                            <option value="CHK">CHK - College of Hotel and Restaurant Management, Kulinarya</option>
+                            <option value="CBFS">CBFS - College of Business, Finance and Accountancy, Serbisyo</option>
+                            <option value="CCIS">CCIS - College of Computing and Information Sciences</option>
+                            <option value="CITE">CITE - College of Industrial Technology and Engineering</option>
+                            <option value="CITE-HSU">CITE-HSU - CITE Higher School of Umak</option>
+                            <option value="CGPP">CGPP - College of Governance and Public Policy</option>
+                            <option value="CCSE">CCSE - College of Community and Social Entrepreneurship</option>
+                            <option value="CET">CET - College of Education and Teaching</option>
+                            <option value="CTHM">CTHM - College of Tourism and Hospitality Management</option>
+                            <option value="CCAPS">CCAPS - College of Communication Arts and Performing Sciences</option>
+                        </optgroup>
+                        <optgroup label="Schools and Institutes">
+                            <option value="SOL">SOL - School of Law</option>
+                            <option value="IAD">IAD - Institute of Architectural Design</option>
+                            <option value="IOA">IOA - Institute of Accountancy</option>
+                            <option value="IOP">IOP - Institute of Pharmacy</option>
+                            <option value="ION">ION - Institute of Nursing</option>
+                            <option value="IIHS">IIHS - Institute of Islamic and Halal Studies</option>
+                            <option value="ITEST">ITEST - Institute of Technical Education and Skills Training</option>
+                            <option value="ISDNB">ISDNB - Institute of Sports Development and National Building</option>
+                            <option value="IOPsy">IOPsy - Institute of Psychology</option>
+                            <option value="ISW">ISW - Institute of Social Work</option>
+                            <option value="IDEM">IDEM - Institute of Disaster and Emergency Management</option>
+                        </optgroup>
+                    </select>
+                    </div>
+
+                    <!-- Program -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Program/Course *</label>
+                    <input type="text" id="program" required
+                           placeholder="e.g., Computer Engineering"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Year Level -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Year Level *</label>
+                    <select id="yearLevel" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
+                    </select>
+                    </div>
+
+                    <!-- Section -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Section</label>
+                    <input type="text" id="section" placeholder="e.g., A"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Password & Security -->
+            <div class="bg-green-50 rounded-xl p-6">
+                <h4 class="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    Password & Security
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Password -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
+                        <input type="password" id="password" required minlength="8"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">At least 8 characters</p>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm Password *</label>
+                        <input type="password" id="confirmPassword" required minlength="8"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                <button type="submit" id="submitBtn" 
+                        class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Create Account
+                </button>
+                <a href="student_login.html" 
+                   class="flex-1 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    Already have account?
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div id="otpModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+            <h2 class="text-2xl font-bold text-blue-900 mb-4">Verify Your Email</h2>
+            <p class="text-gray-600 mb-6">We've sent a 6-digit code to <span id="otpEmail" class="font-semibold"></span></p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Enter Verification Code</label>
+                <input type="text" id="otpCode" maxlength="6" pattern="[0-9]{6}"
+                       placeholder="000000"
+                       class="w-full px-4 py-3 text-center text-2xl tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <button onclick="verifyOTP()" id="verifyBtn"
+                    class="w-full bg-blue-900 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition-colors">
+                Verify & Complete Registration
+            </button>
+
+            <button onclick="closeOTPModal()"
+                    class="w-full mt-3 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition-colors">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '../../php/api';
+        let registrationEmail = '';
+
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                notificationManager.error('Passwords do not match');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
+
+            const formData = {
+                action: 'register',
+                student_id: document.getElementById('studentId').value.trim(),
+                first_name: document.getElementById('firstName').value.trim(),
+                last_name: document.getElementById('lastName').value.trim(),
+                middle_initial: document.getElementById('middleInitial').value.trim(),
+                email: document.getElementById('email').value.trim().toLowerCase(),
+                password: password,
+                college: document.getElementById('college').value,
+                program: document.getElementById('program').value.trim(),
+                year_level: document.getElementById('yearLevel').value,
+                section: document.getElementById('section').value.trim()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/student_register.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    registrationEmail = formData.email;
+                    document.getElementById('otpEmail').textContent = formData.email;
+                    document.getElementById('otpModal').classList.remove('hidden');
+                    notificationManager.success(result.message);
+                } else {
+                    // Show debug info if available
+                    if (result.debug) {
+                        console.error('Server error:', result.debug);
+                    }
+                    notificationManager.error(result.message || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                notificationManager.error('An error occurred. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        });
+
+        async function verifyOTP() {
+            const otpCode = document.getElementById('otpCode').value.trim();
+
+            if (otpCode.length !== 6) {
+                notificationManager.error('Please enter a 6-digit code');
+                return;
+            }
+
+            const verifyBtn = document.getElementById('verifyBtn');
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying...';
+
+            try {
+                const response = await fetch(`${API_BASE}/student_register.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'verify',
+                        email: registrationEmail,
+                        otp_code: otpCode
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    notificationManager.success('Account created successfully! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'student_dashboard.html';
+                    }, 1500);
+                } else {
+                    // Show debug info if available
+                    if (result.debug) {
+                        console.error('❌ Database Error:', result.debug);
+                        if (result.trace) {
+                            console.error('📍 Location:', result.trace);
+                        }
+                    }
+                    notificationManager.error(result.message || 'Verification failed');
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify & Complete Registration';
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                notificationManager.error('An error occurred. Please try again.');
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify & Complete Registration';
+            }
+        }
+
+        function closeOTPModal() {
+            document.getElementById('otpModal').classList.add('hidden');
+            document.getElementById('otpCode').value = '';
+        }
+
+        // Auto-format phone number
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.substr(0, 11);
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

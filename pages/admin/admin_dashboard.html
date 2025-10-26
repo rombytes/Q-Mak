@@ -664,6 +664,8 @@
                 document.getElementById('analyticsStartDate').valueAsDate = new Date();
                 document.getElementById('analyticsEndDate').valueAsDate = new Date();
                 fetchAnalytics();
+            } else if (tabName === 'student-records') {
+                fetchStudents(); // Fetch student data
             } else if (tabName === 'admin-management') {
                 fetchAdminAccounts();
             }
@@ -771,10 +773,15 @@
                     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
 
+                // Format items with quantity
+                const items = order.item_ordered ? order.item_ordered.split(',').map(i => i.trim()) : [];
+                const itemCount = items.length;
+                const itemDisplay = itemCount > 1 ? `<strong>${itemCount} items:</strong> ${order.item_ordered}` : order.item_ordered;
+
                 row.innerHTML = `
                     <td class="px-6 py-4">${order.queue_number}</td>
                     <td class="px-6 py-4">${order.first_name} ${order.last_name} (${order.student_id})</td>
-                    <td class="px-6 py-4">${order.item_ordered}</td>
+                    <td class="px-6 py-4">${itemDisplay}</td>
                     <td class="px-6 py-4">${createdDate}</td>
                     <td class="px-6 py-4">
                         <span class="${getStatusColor(order.order_status)} text-white px-3 py-1 rounded text-xs font-bold uppercase">
@@ -870,10 +877,15 @@
                 row.className = 'hover:bg-gray-50';
                 const createdTime = new Date(order.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 
+                // Format items with quantity
+                const items = order.item_ordered ? order.item_ordered.split(',').map(i => i.trim()) : [];
+                const itemCount = items.length;
+                const itemDisplay = itemCount > 1 ? `<strong>${itemCount} items:</strong> ${order.item_ordered}` : order.item_ordered;
+                
                 row.innerHTML = `
                     <td class="px-6 py-4">${order.queue_number}</td>
                     <td class="px-6 py-4">${order.student_id}</td>
-                    <td class="px-6 py-4">${order.item_ordered}</td>
+                    <td class="px-6 py-4">${itemDisplay}</td>
                     <td class="px-6 py-4">${createdTime}</td>
                     <td class="px-6 py-4">
                         <span class="${getStatusColor(order.order_status)} text-white px-3 py-1 rounded text-xs font-bold uppercase">

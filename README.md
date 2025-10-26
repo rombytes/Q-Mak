@@ -9,14 +9,19 @@ Q-Mak is a comprehensive web-based queue management system designed for the Univ
 ## Features
 
 ### Student Portal
+- **Multi-item ordering**: Place orders for 1-5 items simultaneously
 - Secure OTP-based order placement with email verification
 - QR code generation for order confirmation and pickup
-- Real-time order status tracking
+- Real-time order status tracking with refresh functionality
+- Order history with detailed item listings
 - Email notifications for order updates
+- Professional UI with SVG icons and modern design
 
 ### Admin Dashboard
+- **Order quantity display**: Shows "X items" count for multi-item orders
 - Real-time queue management with status updates
-- Student records management with College, Program, Year Level, and Section
+- **Student records fetching**: Automatic loading of all registered students
+- **Queue history**: Displays actual items ordered with quantity indicators
 - Comprehensive analytics and reporting with Chart.js integration
 - Email logs monitoring with search and filter capabilities
 - CSV/Excel export functionality for orders and email logs
@@ -142,11 +147,17 @@ Q-Mak/
 
 ### Core Tables
 - **admin_accounts** - Administrative user accounts with role-based access
-- **students** - Student information (ID, name, college, program, year level, section)
-- **orders** - Order records with queue numbers and status tracking
-- **email_logs** - Email delivery tracking and history
+- **students** - Student information (ID, name, email, college, program, year, section)
+  - Removed: phone column
+  - Added: email verification system
+- **orders** - Order records with queue numbers and multi-item support
+  - item_ordered: Comma-separated list of items
+  - purchasing: Alias for item_ordered
+  - estimated_wait_time: Calculated wait time
+  - QR code data URI storage
+- **email_logs** - Email delivery tracking and history with archiving
 - **services** - Available services configuration
-- **otp_verifications** - OTP codes for email verification
+- **otp_verifications** - OTP codes for email verification with attempts tracking
 - **settings** - System configuration parameters
 
 ### Key Features

@@ -171,11 +171,22 @@ class NotificationManager {
 
     // Error Notification
     error(message) {
-        this.showPushNotification('Error', {
-            body: message,
-            type: 'error',
-            tag: 'error'
-        });
+        this.showInAppNotification(message, 'error');
+    }
+
+    // Success Notification
+    success(message) {
+        this.showInAppNotification(message, 'success');
+    }
+
+    // Warning Notification
+    warning(message) {
+        this.showInAppNotification(message, 'warning');
+    }
+
+    // Info Notification
+    info(message) {
+        this.showInAppNotification(message, 'info');
     }
 }
 
