@@ -20,7 +20,7 @@
                 <h3 class="text-3xl font-bold text-blue-900">Email Verification</h3>
                 <p class="text-gray-600 mt-1">Enter your OTP code</p>
             </div>
-            <button onclick="window.location.href='../../homepage.html'" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
+            <button onclick="window.location.href='../index.html'" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -65,7 +65,7 @@
 
         if (!currentOtp || !otpMode || !userEmail) {
             alert('Session expired. Please start again.');
-            window.location.href = '../../homepage.html';
+            window.location.href = '../index.html';
         }
 
         document.getElementById('otpForm').addEventListener('submit', async function(e) {
@@ -90,7 +90,7 @@
                     requestData.order_data = orderFormData;
                 }
                 
-                const response = await fetch(`${API_BASE}/verify_otp.php`, {
+                const response = await fetch(`${API_BASE}/student/verify_otp.php`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -142,7 +142,7 @@
                         }
                         alert('Verification failed. You have run out of tries.');
                         sessionStorage.clear();
-                        window.location.href = '../../homepage.html';
+                        window.location.href = '../index.html';
                     } else {
                         if (window.notificationManager) {
                             window.notificationManager.showInAppNotification('Incorrect code. ' + otpTries + ' attempts left', 'warning');

@@ -7,8 +7,8 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET');
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../utils/email.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/email.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Step 1: Request OTP for status check

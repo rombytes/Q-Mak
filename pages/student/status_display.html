@@ -70,12 +70,12 @@
             
             if (!email) {
                 alert('Session expired. Please start again.');
-                window.location.href = '../../homepage.html';
+                window.location.href = '../index.html';
                 return;
             }
             
             try {
-                const response = await fetch(`${API_BASE}/check_status.php?email=${encodeURIComponent(email)}`);
+                const response = await fetch(`${API_BASE}/admin/check_status.php?email=${encodeURIComponent(email)}`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -126,7 +126,7 @@
                     }
                 } else {
                     alert('No orders found for this email.');
-                    window.location.href = '../../homepage.html';
+                    window.location.href = '../index.html';
                 }
             } catch (error) {
                 console.error('Error loading status:', error);
@@ -220,7 +220,7 @@
 
         function goHome() {
             sessionStorage.clear();
-            window.location.href = '../../homepage.html';
+            window.location.href = '../index.html';
         }
     </script>
 </body>

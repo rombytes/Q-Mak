@@ -674,13 +674,13 @@
         // Logout function
         async function logout() {
             sessionStorage.clear();
-            window.location.href = '../../homepage.html';
+            window.location.href = '../index.html';
         }
 
         // Fetch orders from API
         async function fetchOrders() {
             try {
-                const response = await fetch(`${API_BASE}/admin_orders.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_orders.php`, {
                     method: 'GET',
                     credentials: 'include' // Important for session cookies
                 });
@@ -707,7 +707,7 @@
         // Fetch students from API
         async function fetchStudents() {
             try {
-                const response = await fetch(`${API_BASE}/admin_students.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_students.php`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -733,7 +733,7 @@
             const search = document.getElementById('searchHistory').value;
 
             // We pass ?filter=history to get ALL orders
-            let url = `${API_BASE}/admin_orders.php?filter=history`;
+            let url = `${API_BASE}/admin/admin_orders.php?filter=history`;
             if (date) url += `&date=${date}`;
             if (status !== 'all') url += `&status=${status}`;
             if (search) url += `&search=${search}`;
@@ -812,7 +812,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE}/admin_reports.php?start=${startDate}&end=${endDate}`, {
+                const response = await fetch(`${API_BASE}/admin/admin_reports.php?start=${startDate}&end=${endDate}`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -919,7 +919,7 @@
 
         async function updateOrderStatus(orderId, newStatus) {
             try {
-                const response = await fetch(`${API_BASE}/admin_orders.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_orders.php`, {
                     method: 'PUT',
                     credentials: 'include',
                     headers: {
@@ -1142,7 +1142,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/admin_orders.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_orders.php`, {
                     method: 'PUT',
                     credentials: 'include',
                     headers: {
@@ -1223,7 +1223,7 @@
                 const status = document.getElementById('filterEmailStatus').value;
                 const search = document.getElementById('searchEmail').value;
                 
-                const response = await fetch(`${API_BASE}/email_logs.php?type=${type}&status=${status}&search=${search}&limit=100`, {
+                const response = await fetch(`${API_BASE}/admin/email_logs.php?type=${type}&status=${status}&search=${search}&limit=100`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -1342,7 +1342,7 @@
         // Fetch admin accounts
         async function fetchAdminAccounts() {
             try {
-                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_management.php`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -1422,7 +1422,7 @@
             };
             
             try {
-                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_management.php`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
@@ -1496,7 +1496,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_management.php`, {
                     method: 'PUT',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
@@ -1531,7 +1531,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/admin_management.php`, {
+                const response = await fetch(`${API_BASE}/admin/admin_management.php`, {
                     method: 'DELETE',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },

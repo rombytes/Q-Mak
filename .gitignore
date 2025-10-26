@@ -198,7 +198,7 @@ id_rsa.pub
 test_admin_dashboard.html
 
 # Password generator (contains sensitive logic)
-php/generate_password.php
+scripts/generate_password.php
 
 # Debug files
 *_debug.*

@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../utils/email.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/email.php';
 
 session_start();
 

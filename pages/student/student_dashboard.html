@@ -328,7 +328,7 @@
         // Check if logged in
         async function checkSession() {
             try {
-                const response = await fetch(`${API_BASE}/student_session.php`);
+                const response = await fetch(`${API_BASE}/student/student_session.php`);
                 const result = await response.json();
 
                 if (!result.logged_in) {
@@ -432,7 +432,7 @@
             ordersList.innerHTML = '<div class="text-center text-gray-500 py-8">Loading orders...</div>';
 
             try {
-                const response = await fetch(`${API_BASE}/check_status.php?email=${encodeURIComponent(studentData.email)}`);
+                const response = await fetch(`${API_BASE}/admin/check_status.php?email=${encodeURIComponent(studentData.email)}`);
                 const result = await response.json();
 
                 if (result.success && result.data.orders.length > 0) {
@@ -502,7 +502,7 @@
 
             try {
                 // Step 1: Create order and get OTP
-                const createResponse = await fetch(`${API_BASE}/create_order.php`, {
+                const createResponse = await fetch(`${API_BASE}/student/create_order.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
@@ -518,7 +518,7 @@
                 }
 
                 // Step 2: Auto-verify with OTP (since student is logged in)
-                const verifyResponse = await fetch(`${API_BASE}/verify_otp.php`, {
+                const verifyResponse = await fetch(`${API_BASE}/student/verify_otp.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -583,7 +583,7 @@
 
         async function logout() {
             try {
-                await fetch(`${API_BASE}/student_session.php`, {
+                await fetch(`${API_BASE}/student/student_session.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'logout' })

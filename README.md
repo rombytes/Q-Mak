@@ -93,8 +93,9 @@ For detailed installation instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.md)**
    - Configure email settings for OTP and notifications
 
 5. **Access the Application**
-   - Homepage: `http://localhost/Q-Mak/homepage.html`
+   - Homepage: `http://localhost/Q-Mak/pages/index.html`
    - Admin Login: `http://localhost/Q-Mak/pages/admin/admin_login.html`
+   - Student Login: `http://localhost/Q-Mak/pages/student/student_login.html`
 
 ## Default Accounts
 
@@ -112,34 +113,56 @@ For detailed installation instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.md)**
 
 ```
 Q-Mak/
-├── database/
-│   └── qmak_schema.sql          # Complete database schema
-├── pages/
-│   ├── admin/
+├── database/                    # Database schemas and migrations
+│   ├── qmak_schema.sql          # Complete database schema
+│   ├── migration_student_auth.sql
+│   └── sample_data.sql
+├── pages/                       # Frontend HTML pages
+│   ├── index.html               # Homepage/Landing page
+│   ├── admin/                   # Admin portal pages
 │   │   ├── admin_login.html     # Admin authentication
 │   │   └── admin_dashboard.html # Main admin interface
-│   └── student/
+│   └── student/                 # Student portal pages
+│       ├── student_login.html   # Student authentication
+│       ├── student_register.html # Account creation
+│       ├── student_dashboard.html # Student main page
+│       ├── create_order.html    # Order creation (guest)
 │       ├── order_result.html    # Order confirmation with QR
 │       └── check_status.html    # Status checking page
 ├── php/
 │   ├── api/                     # REST API endpoints
-│   │   ├── admin_orders.php     # Order management
-│   │   ├── admin_students.php   # Student records
-│   │   ├── admin_reports.php    # Analytics and reports
-│   │   ├── email_logs.php       # Email monitoring
-│   │   ├── services.php         # Service management
-│   │   ├── verify_otp.php       # OTP verification
-│   │   ├── export_orders.php    # CSV export
-│   │   ├── export_email_logs.php # Email logs export
-│   │   └── archive_manager.php  # Archive operations
+│   │   ├── admin/               # Admin API endpoints
+│   │   │   ├── admin_login.php  # Admin authentication
+│   │   │   ├── admin_orders.php # Order management
+│   │   │   ├── admin_students.php # Student records
+│   │   │   ├── admin_reports.php # Analytics and reports
+│   │   │   ├── admin_management.php # Admin accounts
+│   │   │   ├── email_logs.php   # Email monitoring
+│   │   │   ├── check_status.php # Order status checking
+│   │   │   ├── export_orders.php # CSV export
+│   │   │   └── archive_manager.php # Archive operations
+│   │   ├── student/             # Student API endpoints
+│   │   │   ├── student_login.php # Student authentication
+│   │   │   ├── student_register.php # Account creation
+│   │   │   ├── student_session.php # Session management
+│   │   │   ├── create_order.php # Order creation
+│   │   │   └── verify_otp.php   # OTP verification
+│   │   └── services.php         # Service management (general)
 │   ├── config/                  # Configuration files
 │   │   ├── database.php         # Database connection
+│   │   ├── database.example.php # Example configuration
 │   │   ├── constants.php        # System constants
-│   │   └── email.php           # Email configuration
-│   └── utils/                    # Utility functions
+│   │   └── email.example.php    # Example email config
+│   └── utils/                   # Utility functions
 │       └── email.php            # Email sending and QR generation
-├── QUICK_SETUP.php              # Installation wizard
-├── homepage.html                # Landing page
+├── scripts/                     # Setup and utility scripts
+│   ├── QUICK_SETUP.php          # Installation wizard
+│   ├── setup_database.php       # Database initialization
+│   ├── generate_password.php    # Password hash generator
+│   └── add_archive_columns.php  # Migration scripts
+├── tests/                       # Test files
+├── vendor/                      # Composer dependencies
+├── DIRECTORY_STRUCTURE.md       # Directory organization guide
 └── README.md
 ```
 
@@ -169,18 +192,28 @@ Q-Mak/
 ## API Endpoints
 
 ### Student APIs
-- `POST /php/api/verify_otp.php` - OTP verification and order creation
-- `GET /php/api/check_status.php` - Order status checking
+- `POST /php/api/student/student_login.php` - Student authentication
+- `POST /php/api/student/student_register.php` - Account registration
+- `GET /php/api/student/student_session.php` - Session validation
+- `POST /php/api/student/create_order.php` - Create new order
+- `POST /php/api/student/verify_otp.php` - OTP verification and order creation
+- `POST /php/api/student/resend_otp.php` - Resend OTP code
 
 ### Admin APIs (Authentication Required)
-- `GET /php/api/admin_orders.php` - Retrieve orders with filtering
-- `PUT /php/api/admin_orders.php` - Update order status
-- `GET /php/api/admin_students.php` - Student records management
-- `GET /php/api/admin_reports.php` - Analytics and reporting data
-- `GET /php/api/email_logs.php` - Email logs with search/filter
-- `POST /php/api/services.php` - Service management
-- `GET /php/api/export_orders.php` - Export orders to CSV
-- `POST /php/api/archive_manager.php` - Archive management operations
+- `POST /php/api/admin/admin_login.php` - Admin authentication
+- `GET /php/api/admin/admin_orders.php` - Retrieve orders with filtering
+- `PUT /php/api/admin/admin_orders.php` - Update order status
+- `GET /php/api/admin/admin_students.php` - Student records management
+- `GET /php/api/admin/admin_reports.php` - Analytics and reporting data
+- `GET /php/api/admin/admin_management.php` - Admin account management
+- `GET /php/api/admin/email_logs.php` - Email logs with search/filter
+- `GET /php/api/admin/check_status.php` - Order status checking
+- `GET /php/api/admin/export_orders.php` - Export orders to CSV
+- `GET /php/api/admin/export_email_logs.php` - Export email logs
+- `POST /php/api/admin/archive_manager.php` - Archive management operations
+
+### General APIs
+- `POST /php/api/services.php` - Service configuration management
 
 ## Security Features
 
@@ -290,12 +323,19 @@ ini_set('display_errors', 1);
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## Documentation
+
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Complete installation and setup instructions
+- **[DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md)** - Detailed directory organization guide
+- **[DATABASE_FIX_GUIDE.md](DATABASE_FIX_GUIDE.md)** - Database troubleshooting and fixes
+- **[DEPLOYMENT_NOTES.md](DEPLOYMENT_NOTES.md)** - Production deployment guidelines
+
 ## Support
 
 For issues, questions, or contributions:
 - Create an issue on GitHub
 - Contact: University of Makati Cooperative
-- Documentation: See IMPLEMENTATION_GUIDE.md for detailed setup instructions
+- Documentation: See guides above for detailed information
 
 ---
 

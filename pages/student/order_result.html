@@ -115,7 +115,7 @@
 
         if (!queueNum || !waitTime) {
             alert('Session expired. Please start again.');
-            window.location.href = '../../homepage.html';
+            window.location.href = '../index.html';
         } else {
             // Display order details
             document.getElementById('queueNum').textContent = queueNum;
@@ -344,7 +344,7 @@
 
         function goHome() {
             sessionStorage.clear();
-            window.location.href = '../../homepage.html';
+            window.location.href = '../index.html';
         }
         
         // Request notification permission on load

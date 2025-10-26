@@ -28,9 +28,9 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/constants.php';
-require_once __DIR__ . '/../utils/email.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../utils/email.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

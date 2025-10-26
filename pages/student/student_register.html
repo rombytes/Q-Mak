@@ -262,7 +262,7 @@
             };
 
             try {
-                const response = await fetch(`${API_BASE}/student_register.php`, {
+                const response = await fetch(`${API_BASE}/student/student_register.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
@@ -304,7 +304,7 @@
             verifyBtn.textContent = 'Verifying...';
 
             try {
-                const response = await fetch(`${API_BASE}/student_register.php`, {
+                const response = await fetch(`${API_BASE}/student/student_register.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
