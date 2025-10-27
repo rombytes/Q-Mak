@@ -2,26 +2,46 @@
 
 This directory contains all database-related SQL files for the Q-Mak Queue Management System.
 
-## Files
+## 📁 Files
 
 ### qmak_schema.sql
-**Complete database schema with structure and default data.**
+**Complete database schema with all tables and default data (MAIN FILE)**
 
 This file contains:
 - Database creation statement
-- All table structures with proper indexes and foreign keys
+- All 8 table structures with proper indexes and foreign keys
 - Default admin accounts (superadmin and admin)
 - Default services configuration
 - Default system settings
+- Default inventory items
 - Optimized for MySQL 5.7+ and MariaDB 10.2+
 
-**Usage:**
+**Usage for New Installation:**
 ```bash
 # Import the complete schema
 mysql -u root -p < qmak_schema.sql
 
 # Or via phpMyAdmin: Import tab > Choose file > qmak_schema.sql > Go
 ```
+
+### check_database.php
+**Automated migration checker and updater**
+
+**Safe to run on existing databases** - only adds missing tables/columns.
+
+**Usage:**
+1. Open in browser: `http://localhost/Q-Mak/database/check_database.php`
+2. Review what's missing
+3. Auto-apply migrations
+
+**Features:**
+- ✅ Checks all tables and columns
+- ✅ Adds missing structure automatically
+- ✅ Safe to run multiple times
+- ✅ Shows current database status
+- ✅ No data loss
+
+**Use this if:** You have an existing database and want to add new features (inventory system, email archiving, etc.)
 
 ### sample_data.sql
 **Optional sample/test data for development and testing.**
@@ -80,6 +100,12 @@ mysql -u root -p qmak_db < sample_data.sql
    - System-wide configuration parameters
    - Queue number prefix, expiry times, etc.
    - Can be modified via admin interface
+
+8. **inventory_items**
+   - Manages stock availability for items
+   - Controls which items can be ordered
+   - Updated by admins via dashboard
+   - Prevents out-of-stock items from being ordered
 
 ## Database Indexes
 
@@ -219,28 +245,26 @@ SHOW TABLES;
 SHOW INDEX FROM orders;
 ```
 
-## Migration Scripts
+## 🔄 Database Migration
 
-When updating database structure in production:
+### For New Installations
+Run `qmak_schema.sql` - creates everything from scratch.
 
-1. **Always backup first**
-2. **Test migration on development copy**
-3. **Use ALTER statements instead of DROP/CREATE**
+### For Existing Databases
+Run `check_database.php` in your browser:
+```
+http://localhost/Q-Mak/database/check_database.php
+```
 
-Example migration script:
-```sql
--- Add new column
-ALTER TABLE orders 
-ADD COLUMN customer_notes TEXT NULL 
-AFTER notes;
+This will:
+1. Check what's missing
+2. Add new tables (e.g., inventory_items)
+3. Add new columns (e.g., orders.quantity, orders.order_type)
+4. Preserve all your existing data
 
--- Add index
-CREATE INDEX idx_customer_notes 
-ON orders(customer_notes(100));
-
--- Modify column
-ALTER TABLE students 
-MODIFY COLUMN phone VARCHAR(20) NULL;
+**Always backup first!**
+```bash
+mysqldump -u root -p qmak_db > backup_$(date +%Y%m%d).sql
 ```
 
 ## Performance Optimization
