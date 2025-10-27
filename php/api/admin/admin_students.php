@@ -6,7 +6,7 @@
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
-header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Methods: GET, PUT, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Credentials: true');
 
@@ -82,6 +82,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         http_response_code(500);
         echo json_encode([
             'success' => false, 
+            'message' => 'Server error occurred',
+            'error' => $e->getMessage()
+        ]);
+    }
+    
+} elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    // Update student information (super admin only)
+    try {
+        // Check if user is super admin
+        if ($_SESSION['role'] !== 'super_admin') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Only super admin can edit student records']);
+            exit;
+        }
+        
+        $db = getDB();
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        $studentId = $input['student_id'] ?? '';
+        $firstName = $input['first_name'] ?? '';
+        $lastName = $input['last_name'] ?? '';
+        $email = $input['email'] ?? '';
+        $college = $input['college'] ?? null;
+        $program = $input['program'] ?? null;
+        $yearLevel = $input['year_level'] ?? null;
+        $section = $input['section'] ?? null;
+        
+        if (empty($studentId) || empty($firstName) || empty($lastName) || empty($email)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+            exit;
+        }
+        
+        // Check if student exists
+        $checkStmt = $db->prepare("SELECT student_id FROM students WHERE student_id = ?");
+        $checkStmt->execute([$studentId]);
+        if (!$checkStmt->fetch()) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Student not found']);
+            exit;
+        }
+        
+        // Update student information
+        $stmt = $db->prepare("
+            UPDATE students 
+            SET first_name = ?,
+                last_name = ?,
+                email = ?,
+                college = ?,
+                program = ?,
+                year_level = ?,
+                section = ?
+            WHERE student_id = ?
+        ");
+        
+        $stmt->execute([
+            $firstName,
+            $lastName,
+            $email,
+            $college,
+            $program,
+            $yearLevel,
+            $section,
+            $studentId
+        ]);
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'Student information updated successfully'
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("Update Student Error: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
             'message' => 'Server error occurred',
             'error' => $e->getMessage()
         ]);

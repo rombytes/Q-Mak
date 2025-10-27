@@ -2,6 +2,59 @@
 
 All notable changes to the Q-Mak Queue Management System.
 
+## [1.3.0] - 2025-01-28
+
+### Added - Inventory Management System
+- **Inventory stock management**: Admins can mark items as "In Stock" or "Out of Stock"
+- **Stock validation**: Out-of-stock items automatically disabled in order forms
+- **Visual indicators**: Grayed-out items with "(Out of Stock)" labels
+- **Enhanced admin UI**: Beautiful gradient design with icons and animations
+- **Inventory tracking**: Shows last updated timestamp for each item
+- **8 default items**: ID Lace, School Uniform, PE Uniform, NSTP Shirt, School Patch, Book/Manual, School Supplies, UMak Merchandise
+
+### Added - Admin Features
+- **Admin management tab**: Super admins can create/edit/delete admin accounts
+- **Email log archiving**: Archive, restore, and permanently delete email logs
+- **Role-based permissions**: Regular admins vs Super admins
+- **Batch operations**: Select multiple email logs for archiving/deletion
+- **Top items fix**: Individual item counting for multi-item orders
+
+### Added - Database Tools
+- **Consolidated schema**: Single `qmak_schema.sql` with all 8 tables
+- **Migration checker**: Automated `check_database.php` tool
+- **Smart migrations**: Only adds missing tables/columns, preserves data
+
+### Fixed
+- **Item counting**: Multi-item orders now counted individually (e.g., "ID Lace, NSTP Shirt" = 2 items)
+- **Admin tab visibility**: Super admin management tab now shows correctly
+- **Stock checking**: Works in both student dashboard and create order page
+
+### Changed
+- Database: Added `inventory_items` table
+- Orders: Added `quantity` and `order_type` columns
+- Email logs: Added archive tracking columns (`is_archived`, `archived_at`, `archived_by`)
+- Inventory UI: Modern gradient design with purple/blue theme
+- Database folder: Consolidated from multiple migration files to single schema
+
+### Database Changes
+```sql
+-- New table
+CREATE TABLE inventory_items (...)
+
+-- New columns
+ALTER TABLE orders ADD quantity INT(11) DEFAULT 1;
+ALTER TABLE orders ADD order_type ENUM('walk-in', 'online') DEFAULT 'online';
+ALTER TABLE email_logs ADD is_archived TINYINT(1) DEFAULT 0;
+ALTER TABLE email_logs ADD archived_at DATETIME NULL;
+ALTER TABLE email_logs ADD archived_by INT(11) NULL;
+```
+
+### Migration Path
+- **New installations**: Import `qmak_schema.sql`
+- **Existing databases**: Run `check_database.php` in browser
+
+---
+
 ## [1.2.0] - 2025-01-27
 
 ### Added

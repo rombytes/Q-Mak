@@ -92,9 +92,11 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `item_name` TEXT NULL COMMENT 'Legacy field for single items',
   `item_ordered` TEXT NULL COMMENT 'Comma-separated list of items',
   `purchasing` TEXT NULL COMMENT 'Alias for item_ordered',
+  `quantity` INT(11) NOT NULL DEFAULT 1 COMMENT 'Number of items in order',
   `notes` TEXT NULL,
   `status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
   `order_status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  `order_type` ENUM('walk-in', 'online') NOT NULL DEFAULT 'online' COMMENT 'Order source type',
   `estimated_wait_time` INT(11) DEFAULT 10 COMMENT 'Estimated wait time in minutes',
   `qr_code` LONGTEXT NULL COMMENT 'QR code data URI',
   `qr_expiry` DATETIME NULL,
@@ -106,6 +108,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   INDEX `idx_student_id` (`student_id`),
   INDEX `idx_status` (`status`),
   INDEX `idx_order_status` (`order_status`),
+  INDEX `idx_order_type` (`order_type`),
   INDEX `idx_created_at` (`created_at`),
   FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -210,5 +213,32 @@ INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
 ('otp_max_attempts', '3', 'Maximum OTP verification attempts'),
 ('email_from_name', 'UMak COOP', 'From name in emails'),
 ('email_from_address', 'coop@umak.edu.ph', 'From email address');
+
+-- --------------------------------------------------------
+-- Table structure for table `inventory_items`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `inventory_items` (
+  `item_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `item_name` VARCHAR(255) NOT NULL UNIQUE,
+  `is_in_stock` TINYINT(1) NOT NULL DEFAULT 1,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` INT(11) NULL,
+  PRIMARY KEY (`item_id`),
+  INDEX `idx_stock_status` (`is_in_stock`),
+  FOREIGN KEY (`updated_by`) REFERENCES `admin_accounts`(`admin_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert default inventory items
+INSERT INTO `inventory_items` (`item_name`, `is_in_stock`) VALUES
+('ID Lace', 1),
+('School Uniform', 1),
+('PE Uniform', 1),
+('NSTP Shirt', 1),
+('School Patch', 1),
+('Book/Manual', 1),
+('School Supplies', 1),
+('UMak Merchandise', 1)
+ON DUPLICATE KEY UPDATE item_name=item_name;
 
 COMMIT;

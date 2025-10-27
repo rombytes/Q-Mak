@@ -1,0 +1,17 @@
+# Database backups and dumps
+*.sql.backup
+*.sql.bak
+backup_*.sql
+*_backup.sql
+qmak_backup_*.sql
+
+# Local database dumps
+dump.sql
+local_*.sql
+
+# Temporary migration files
+temp_*.sql
+test_*.sql
+
+# Database editor files
+*.sql~

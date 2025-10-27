@@ -253,6 +253,59 @@
     <script>
         const API_BASE = '../../php/api';
         let selectedQuantity = 1;
+        let inventoryStock = {};
+
+        // Fetch inventory stock status
+        async function fetchInventoryStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/inventory_status.php`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    inventoryStock = result.data.stock_status;
+                    updateItemSelects();
+                }
+            } catch (error) {
+                console.error('Error fetching inventory status:', error);
+            }
+        }
+
+        // Update all item select dropdowns with stock status
+        function updateItemSelects() {
+            const selectIds = ['purchasing', 'item2', 'item3', 'item4', 'item5'];
+            
+            selectIds.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (!select) return;
+                
+                // Store original text for each option
+                Array.from(select.options).forEach(option => {
+                    if (!option.value) return; // Skip "Select Item" option
+                    
+                    // Store original text if not already stored
+                    if (!option.dataset.originalText) {
+                        option.dataset.originalText = option.textContent.trim();
+                    }
+                    
+                    const itemName = option.dataset.originalText;
+                    const isInStock = inventoryStock[itemName];
+                    
+                    if (isInStock === false) {
+                        option.disabled = true;
+                        option.textContent = itemName + ' (Out of Stock)';
+                        option.style.color = '#999';
+                        option.style.fontStyle = 'italic';
+                        option.style.backgroundColor = '#f5f5f5';
+                    } else {
+                        option.disabled = false;
+                        option.textContent = itemName;
+                        option.style.color = '';
+                        option.style.fontStyle = '';
+                        option.style.backgroundColor = '';
+                    }
+                });
+            });
+        }
 
         // Quantity selector function
         function selectQuantity(qty) {
@@ -289,6 +342,7 @@
         // Initialize quantity selector
         document.addEventListener('DOMContentLoaded', function() {
             selectQuantity(1);
+            fetchInventoryStatus();
         });
         
         document.getElementById('orderForm').addEventListener('submit', async function(e) {
