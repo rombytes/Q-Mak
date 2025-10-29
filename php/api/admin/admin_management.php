@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../utils/admin_logger.php';
 
 header('Content-Type: application/json');
 
@@ -26,10 +27,23 @@ $method = $_SERVER['REQUEST_METHOD'];
 try {
     switch ($method) {
         case 'GET':
-            // Get all admin accounts
-            $query = "SELECT admin_id, full_name, username, email, is_super_admin, created_at 
-                     FROM admin_accounts 
-                     ORDER BY created_at DESC";
+            // Get admin accounts (active or archived based on parameter)
+            $showArchived = $_GET['archived'] ?? 'false';
+            
+            if ($showArchived === 'true') {
+                $query = "SELECT admin_id, full_name, username, email, is_super_admin, created_at, 
+                                is_archived, archived_at, archived_by,
+                                (SELECT full_name FROM admin_accounts WHERE admin_id = admin_accounts.archived_by) as archived_by_name
+                         FROM admin_accounts 
+                         WHERE is_archived = 1
+                         ORDER BY archived_at DESC";
+            } else {
+                $query = "SELECT admin_id, full_name, username, email, is_super_admin, created_at 
+                         FROM admin_accounts 
+                         WHERE is_archived = 0 OR is_archived IS NULL
+                         ORDER BY created_at DESC";
+            }
+            
             $stmt = $conn->prepare($query);
             $stmt->execute();
             
@@ -84,10 +98,25 @@ try {
                 $isSuperAdmin
             ]);
             
+            $newAdminId = $conn->lastInsertId();
+            
+            // Log the action
+            logAdminAccountAction(
+                $_SESSION['admin_id'],
+                'create',
+                $newAdminId,
+                $data['full_name'],
+                [
+                    'username' => $data['username'],
+                    'email' => $data['email'],
+                    'is_super_admin' => $isSuperAdmin
+                ]
+            );
+            
             echo json_encode([
                 'success' => true,
                 'message' => 'Admin account created successfully',
-                'admin_id' => $conn->lastInsertId()
+                'admin_id' => $newAdminId
             ]);
             break;
             
@@ -149,29 +178,108 @@ try {
             $updateStmt = $conn->prepare($updateQuery);
             $updateStmt->execute($params);
             
+            // Get admin name for logging
+            $adminStmt = $conn->prepare("SELECT full_name FROM admin_accounts WHERE admin_id = ?");
+            $adminStmt->execute([$data['admin_id']]);
+            $adminName = $adminStmt->fetchColumn();
+            
+            // Log the action
+            logAdminAccountAction(
+                $_SESSION['admin_id'],
+                'update',
+                $data['admin_id'],
+                $adminName,
+                ['updated_fields' => array_keys($updateFields)]
+            );
+            
             echo json_encode(['success' => true, 'message' => 'Admin account updated successfully']);
             break;
             
         case 'DELETE':
-            // Delete admin account
+            // Archive or permanently delete admin account
             $data = json_decode(file_get_contents('php://input'), true);
+            $action = $data['action'] ?? 'archive'; // 'archive' or 'permanent_delete'
             
             if (!isset($data['admin_id'])) {
                 echo json_encode(['success' => false, 'message' => 'Admin ID required']);
                 exit;
             }
             
-            // Prevent deleting own account
+            // Prevent modifying own account
             if ($data['admin_id'] == $_SESSION['admin_id']) {
-                echo json_encode(['success' => false, 'message' => 'Cannot delete your own account']);
+                echo json_encode(['success' => false, 'message' => 'Cannot modify your own account']);
                 exit;
             }
             
-            $deleteQuery = "DELETE FROM admin_accounts WHERE admin_id = ?";
-            $deleteStmt = $conn->prepare($deleteQuery);
-            $deleteStmt->execute([$data['admin_id']]);
+            // Get admin name before deletion
+            $nameStmt = $conn->prepare("SELECT full_name FROM admin_accounts WHERE admin_id = ?");
+            $nameStmt->execute([$data['admin_id']]);
+            $adminName = $nameStmt->fetchColumn();
             
-            echo json_encode(['success' => true, 'message' => 'Admin account deleted successfully']);
+            if ($action === 'archive') {
+                // Archive admin account
+                $archiveQuery = "UPDATE admin_accounts 
+                                SET is_archived = 1, archived_at = NOW(), archived_by = ? 
+                                WHERE admin_id = ?";
+                $archiveStmt = $conn->prepare($archiveQuery);
+                $archiveStmt->execute([$_SESSION['admin_id'], $data['admin_id']]);
+                
+                // Log the action
+                logAdminAccountAction(
+                    $_SESSION['admin_id'],
+                    'archive',
+                    $data['admin_id'],
+                    $adminName
+                );
+                
+                echo json_encode(['success' => true, 'message' => 'Admin account archived successfully']);
+                
+            } elseif ($action === 'restore') {
+                // Restore archived admin account
+                $restoreQuery = "UPDATE admin_accounts 
+                                SET is_archived = 0, archived_at = NULL, archived_by = NULL 
+                                WHERE admin_id = ?";
+                $restoreStmt = $conn->prepare($restoreQuery);
+                $restoreStmt->execute([$data['admin_id']]);
+                
+                // Log the action
+                logAdminAccountAction(
+                    $_SESSION['admin_id'],
+                    'restore',
+                    $data['admin_id'],
+                    $adminName
+                );
+                
+                echo json_encode(['success' => true, 'message' => 'Admin account restored successfully']);
+                
+            } elseif ($action === 'permanent_delete') {
+                // Permanently delete (super admin only, for archived accounts)
+                $checkQuery = "SELECT is_archived FROM admin_accounts WHERE admin_id = ?";
+                $checkStmt = $conn->prepare($checkQuery);
+                $checkStmt->execute([$data['admin_id']]);
+                $isArchived = $checkStmt->fetchColumn();
+                
+                if (!$isArchived) {
+                    echo json_encode(['success' => false, 'message' => 'Can only permanently delete archived accounts']);
+                    exit;
+                }
+                
+                $deleteQuery = "DELETE FROM admin_accounts WHERE admin_id = ? AND is_archived = 1";
+                $deleteStmt = $conn->prepare($deleteQuery);
+                $deleteStmt->execute([$data['admin_id']]);
+                
+                // Log the action
+                logAdminAccountAction(
+                    $_SESSION['admin_id'],
+                    'delete',
+                    $data['admin_id'],
+                    $adminName
+                );
+                
+                echo json_encode(['success' => true, 'message' => 'Admin account permanently deleted']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            }
             break;
             
         default:

@@ -159,7 +159,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             
         } elseif ($action === 'restore') {
             // Restore logs (only super admin)
-            if ($_SESSION['role'] !== 'super_admin') {
+            // Check both is_super_admin field and role field for compatibility
+            $isSuperAdmin = (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] == 1) || 
+                           (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin');
+            
+            if (!$isSuperAdmin) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'Only super admin can restore archived logs']);
                 exit;
@@ -197,7 +201,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
     // Permanently delete email logs (only super admin)
     try {
-        if ($_SESSION['role'] !== 'super_admin') {
+        // Check both is_super_admin field and role field for compatibility
+        $isSuperAdmin = (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] == 1) || 
+                       (isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin');
+        
+        if (!$isSuperAdmin) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Only super admin can permanently delete logs']);
             exit;

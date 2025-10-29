@@ -50,12 +50,11 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">UMak Email *</label>
                     <input type="email" id="email" required
-                           placeholder="firstletter+lastname.studentnumber@umak.edu.ph"
+                           placeholder="your.email@umak.edu.ph"
                            pattern="[a-zA-Z0-9\.\-_]+@umak\.edu\.ph"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <p class="text-xs text-gray-500 mt-1">
-                        Format: <strong>firstletter+lastname.studentnumber@umak.edu.ph</strong><br>
-                        Example: jgillego.12345324@umak.edu.ph (for Juan Gillego, ID: 12345324 or A12345324)
+                        Use your official UMak email address
                     </p>
                 </div>
 
@@ -252,24 +251,33 @@
             }
 
             // Validate UMak email format based on student ID and name
-            // Format: firstLetterOfFirstName + lastName + . + studentNumber + @umak.edu.ph
-            // Example: jgillego.12345324@umak.edu.ph or ksantos.12345@umak.edu.ph
+            // Format: firstLetterOfFirstName + lastName + . + studentID + @umak.edu.ph
+            // Example: jgillego.12345324@umak.edu.ph or jfaustino.a12345404@umak.edu.ph
             
-            // Extract student number from student ID (everything after last dash or letter prefix)
-            const studentNumberMatch = studentId.match(/[a-zA-Z]?(\d+)$/);
-            if (!studentNumberMatch) {
-                notificationManager.error('Invalid Student ID format. Should contain a number (e.g., 2021-12345 or K12345324)');
+            // Extract the actual ID part (after dash if present, or entire ID if no dash)
+            // Handle formats like: 2021-12345, A12345678, K12345, etc.
+            let studentIdPart = studentId;
+            if (studentId.includes('-')) {
+                // Format like 2021-12345, extract the part after the dash
+                studentIdPart = studentId.split('-').pop();
+            }
+            // Convert to lowercase for case-insensitive comparison
+            studentIdPart = studentIdPart.toLowerCase();
+            
+            if (!studentIdPart || studentIdPart.length === 0) {
+                notificationManager.error('Invalid Student ID format');
                 return;
             }
-            const studentNumber = studentNumberMatch[1]; // Just the numbers
             
             // Build expected email format (no prefix, just dot separator)
+            // All comparisons in lowercase for case-insensitive matching
             const firstLetter = firstName.charAt(0).toLowerCase();
             const lastNameLower = lastName.toLowerCase();
-            const expectedEmailPrefix = `${firstLetter}${lastNameLower}.${studentNumber}`;
+            const expectedEmailPrefix = `${firstLetter}${lastNameLower}.${studentIdPart}`;
             const expectedEmail = `${expectedEmailPrefix}@umak.edu.ph`;
             
             // Check if email matches the expected format (case-insensitive)
+            // Both are already in lowercase from earlier trim().toLowerCase()
             if (email !== expectedEmail) {
                 notificationManager.error(`Email format doesn't match your Student ID and Name`);
                 
@@ -386,13 +394,6 @@
             document.getElementById('otpModal').classList.add('hidden');
             document.getElementById('otpCode').value = '';
         }
-
-        // Auto-format phone number
-        document.getElementById('phone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.substr(0, 11);
-            e.target.value = value;
-        });
     </script>
 </body>
 </html>

@@ -7,30 +7,90 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/notifications.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg p-8 max-w-md w-full">
-        <button onclick="goHome()" class="float-right text-gray-500 hover:text-red-600 text-2xl">&times;</button>
-        <h3 class="text-2xl font-bold text-blue-900 mb-6 text-center border-b-2 border-blue-400 pb-2">Order Status</h3>
-        <p id="orderId" class="mb-4"></p>
-        
-        <div class="text-center p-4 border border-gray-300 rounded mb-4">
-            <h4 class="text-sm text-gray-600 mb-2">Current Status:</h4>
-            <p id="statusBadge" class="px-4 py-2 rounded inline-block font-bold"></p>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+    <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-2xl w-full border border-blue-100 animate-fade-in">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-clipboard-check text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">Order Status</h3>
+                    <p class="text-sm text-gray-600">Track your order in real-time</p>
+                </div>
+            </div>
+            <button onclick="goHome()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <!-- Order Details Card -->
+        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border border-blue-100">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-blue-500"></i>
+                        Order Information
+                    </h4>
+                    <div id="orderId" class="space-y-2 text-gray-700"></div>
+                </div>
+                <div id="qrCodeWrapper" class="hidden flex flex-col items-center justify-center">
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <canvas id="qrcode" class="mx-auto"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-500 mt-2 flex items-center gap-1">
+                        <i class="fas fa-qrcode"></i>
+                        Scan to verify
+                    </p>
+                </div>
+            </div>
         </div>
         
-        <div id="qrCodeWrapper" class="hidden text-center mb-4">
-            <canvas id="qrcode" class="mx-auto border p-2 rounded-lg"></canvas>
-            <p class="text-xs text-center text-gray-500 mt-3">Scan to verify</p>
+        <!-- Status Badge -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-100">
+            <h4 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                <i class="fas fa-clock text-orange-500"></i>
+                Current Status
+            </h4>
+            <div class="text-center">
+                <p id="statusBadge" class="px-6 py-3 rounded-xl inline-block font-bold text-lg shadow-md"></p>
+            </div>
         </div>
         
-        <div class="bg-gray-100 p-4 rounded">
-            <p id="statusDesc" class="text-gray-700"></p>
+        <!-- Status Description -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-info text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-blue-900 mb-2">What's happening?</h4>
+                    <p id="statusDesc" class="text-gray-700 leading-relaxed"></p>
+                </div>
+            </div>
         </div>
         
-        <button onclick="goHome()" class="w-full mt-6 border-2 border-blue-900 text-blue-900 hover:bg-gray-100 py-3 rounded-lg font-bold">
-            Close
-        </button>
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+            <button onclick="goHome()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2">
+                <i class="fas fa-home"></i>
+                Back to Home
+            </button>
+        </div>
     </div>
 
     <script>
@@ -88,15 +148,46 @@
                     const order = result.data.orders[0];
                     const status = statusConfig[order.order_status] || statusConfig['pending'];
                     
+                    // Format items like admin dashboard - show unique items only
+                    const items = order.item_ordered ? order.item_ordered.split(',').map(i => i.trim()) : [];
+                    const itemCount = items.length;
+                    const uniqueItems = [...new Set(items)];
+                    const itemText = uniqueItems.map(item => capitalizeWords(item)).join(', ');
+                    const itemDisplay = itemCount > 1 ? `<strong>${itemCount} items:</strong> ${itemText}` : capitalizeWords(order.item_ordered);
+                    
+                    // Calculate estimated wait time
+                    const waitTime = order.estimated_wait_time || 10;
+                    const waitTimeRange = `${waitTime} - ${waitTime + 5} mins`;
+                    
                     document.getElementById('orderId').innerHTML = `
-                        <strong>Queue Number:</strong> ${order.queue_number}<br>
-                        <strong>Item:</strong> ${order.item_ordered}<br>
-                        <strong>Order Date:</strong> ${new Date(order.created_at).toLocaleString()}
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-hashtag text-blue-500 text-sm"></i>
+                            <span class="text-sm text-gray-600">Queue Number:</span>
+                            <strong class="text-blue-900">${order.queue_number}</strong>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-shopping-bag text-green-500 text-sm"></i>
+                            <span class="text-sm text-gray-600">Item:</span>
+                            <span class="text-gray-900">${itemDisplay}</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-clock text-purple-500 text-sm"></i>
+                            <span class="text-sm text-gray-600">Estimated Wait:</span>
+                            <strong class="text-purple-900">${waitTimeRange}</strong>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-calendar text-orange-500 text-sm mt-0.5"></i>
+                            <span class="text-sm text-gray-600">Order Date:</span>
+                            <span class="text-gray-900">
+                                <strong class="block">${new Date(order.created_at).toLocaleDateString()}</strong>
+                                <span class="text-sm text-gray-600">${new Date(order.created_at).toLocaleTimeString()}</span>
+                            </span>
+                        </div>
                     `;
                     
                     const statusBadge = document.getElementById('statusBadge');
                     statusBadge.textContent = status.text;
-                    statusBadge.className = status.color + ' px-4 py-2 rounded inline-block font-bold';
+                    statusBadge.className = status.color + ' px-6 py-3 rounded-xl inline-block font-bold text-lg shadow-md';
                     
                     document.getElementById('statusDesc').textContent = status.desc;
 
@@ -110,17 +201,37 @@
                     
                     // Show all orders if multiple
                     if (result.data.orders.length > 1) {
-                        const ordersHtml = result.data.orders.map(o => `
-                            <div class="border-t pt-2 mt-2">
-                                <strong>${o.queue_number}</strong> - ${o.item_ordered} 
-                                <span class="text-sm">(${statusConfig[o.order_status].text})</span>
+                        const ordersHtml = result.data.orders.map(o => {
+                            const oItems = o.item_ordered ? o.item_ordered.split(',').map(i => i.trim()) : [];
+                            const oItemCount = oItems.length;
+                            const oUniqueItems = [...new Set(oItems)];
+                            const oItemText = oUniqueItems.map(item => capitalizeWords(item)).join(', ');
+                            const oItemDisplay = oItemCount > 1 ? `${oItemCount} items: ${oItemText}` : capitalizeWords(o.item_ordered);
+                            
+                            return `
+                            <div class="bg-white rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-receipt text-blue-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-blue-900">${o.queue_number}</strong>
+                                        <p class="text-sm text-gray-600">${oItemDisplay}</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs px-3 py-1 rounded-full ${statusConfig[o.order_status].color}">${statusConfig[o.order_status].text}</span>
                             </div>
-                        `).join('');
+                        `}).join('');
                         
                         document.getElementById('statusDesc').innerHTML += `
-                            <div class="mt-4">
-                                <strong>All Your Orders (${result.data.orders.length}):</strong>
-                                ${ordersHtml}
+                            <div class="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="fas fa-list text-blue-600"></i>
+                                    <strong class="text-blue-900">All Your Orders (${result.data.orders.length})</strong>
+                                </div>
+                                <div class="space-y-2">
+                                    ${ordersHtml}
+                                </div>
                             </div>
                         `;
                     }
@@ -213,6 +324,14 @@
                 wrapper.innerHTML = '<p class="text-sm text-gray-500">QR code unavailable</p>';
             };
             img.src = qrUrl;
+        }
+
+        // Capitalize words like admin dashboard
+        function capitalizeWords(str) {
+            if (!str) return 'N/A';
+            return str.toLowerCase().split(' ').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
         }
 
         // Load status on page load

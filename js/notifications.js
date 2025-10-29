@@ -89,9 +89,24 @@ class NotificationManager {
 
     // Show in-app notification (toast)
     showInAppNotification(message, type = "info") {
-        // Remove existing notifications
-        const existing = document.querySelectorAll('.notification-toast');
-        existing.forEach(n => n.remove());
+        // Create notification container if it doesn't exist
+        let container = document.getElementById('notification-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notification-container';
+            container.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                max-width: 400px;
+                pointer-events: none;
+            `;
+            document.body.appendChild(container);
+        }
 
         const notification = document.createElement('div');
         notification.className = 'notification-toast';
@@ -119,27 +134,41 @@ class NotificationManager {
         };
 
         notification.innerHTML = `
-            <div class="flex items-center gap-3 ${colors[type]} text-white px-6 py-4 rounded-xl shadow-2xl animate-slide-in">
+            <div class="flex items-center gap-3 ${colors[type]} text-white px-6 py-4 rounded-xl shadow-2xl animate-slide-in" style="pointer-events: auto;">
                 ${icons[type]}
                 <span class="font-semibold">${message}</span>
+                <button onclick="this.closest('.notification-toast').remove()" class="ml-2 hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
         `;
 
         notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
             animation: slideIn 0.3s ease-out;
+            width: 100%;
         `;
 
-        document.body.appendChild(notification);
+        // Add to container (new notifications appear at the bottom)
+        container.appendChild(notification);
 
         // Auto remove after 5 seconds
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
+            setTimeout(() => {
+                notification.remove();
+                // Remove container if no notifications left
+                if (container.children.length === 0) {
+                    container.remove();
+                }
+            }, 300);
         }, 5000);
+
+        // Limit to max 5 notifications
+        while (container.children.length > 5) {
+            container.firstChild.remove();
+        }
     }
 
     // OTP Sent Notification

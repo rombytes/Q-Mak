@@ -9,16 +9,23 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         @import url('https://fonts.cdnfonts.com/css/metropolis-2');
         
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
         }
         
         .font-metropolis {
             font-family: 'Metropolis', sans-serif;
         }
         
+        /* Hardware-accelerated hover effects */
         .hover-lift {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            will-change: transform;
         }
         
         .hover-lift:hover {
@@ -26,17 +33,132 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
+        /* Hero background with animated blob */
         .hero-background {
             background-image: url('../images/UMak-Facade-Admin-2024.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             position: relative;
+            overflow: hidden;
         }
         
         .hero-overlay {
             background: rgba(30, 58, 138, 0.85);
             backdrop-filter: blur(2px);
+        }
+        
+        /* Animated blob effect */
+        .hero-background::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.3) 0%, transparent 70%);
+            animation: blob 7s ease-in-out infinite;
+            will-change: transform;
+        }
+        
+        @keyframes blob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* Fade-in animation for content */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        /* Modal animations */
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .modal-content {
+            animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            transition: backdrop-filter 0.3s ease;
+        }
+        
+        /* Gradient text effect */
+        .gradient-text {
+            background: linear-gradient(135deg, #1e3a8a 0%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #1e40af);
+            border-radius: 6px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #2563eb, #1e3a8a);
+        }
+        
+        /* Logo hover effects */
+        .logo-hover {
+            transition: transform 0.3s ease;
+            will-change: transform;
+        }
+        
+        .logo-hover:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Button hover scale */
+        .btn-hover {
+            transition: all 0.3s ease;
+            will-change: transform;
+        }
+        
+        .btn-hover:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        /* Link icon effects */
+        .link-icon {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        
+        .link-icon:hover {
+            transform: scale(1.15) rotate(5deg);
         }
     </style>
 </head>
@@ -45,17 +167,17 @@
         <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <img src="../images/UMAK COOP.png" alt="UMAK COOP Logo" class="h-16">
+                    <img src="../images/UMAK COOP.png" alt="UMAK COOP Logo" class="h-16 logo-hover">
                     <div class="hidden md:block">
-                        <div class="text-sm font-semibold">University of Makati</div>
-                        <div class="text-xs text-gray-300">Cooperative Order Hub</div>
+                        <div class="text-base font-bold">University of Makati</div>
+                        <div class="text-sm text-gray-300">Cooperative Order Hub</div>
                     </div>
                 </div>
                 <nav class="flex items-center gap-8">
-                    <a href="#" class="hover:text-orange-400 transition-colors font-medium">Home</a>
-                    <a href="#about" class="hover:text-orange-400 transition-colors font-medium">About</a>
-                    <a href="#contact" class="hover:text-orange-400 transition-colors font-medium">Contact</a>
-                    <button onclick="showLoginModal()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-semibold transition-all hover:shadow-lg">
+                    <a href="#" class="hover:text-orange-400 transition-all duration-300 font-medium">Home</a>
+                    <a href="#about" class="hover:text-orange-400 transition-all duration-300 font-medium">About</a>
+                    <a href="#contact" class="hover:text-orange-400 transition-all duration-300 font-medium">Contact</a>
+                    <button onclick="showLoginModal()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg btn-hover">
                         Login
                     </button>
                 </nav>
@@ -69,21 +191,21 @@
             <div class="hero-overlay absolute inset-0"></div>
             <div class="max-w-7xl mx-auto text-center relative z-10">
                 <!-- Content Box with Semi-Transparent Background -->
-                <div class="bg-white/10 backdrop-blur-md rounded-3xl p-12 shadow-2xl border border-white/20">
-                    <h1 class="text-6xl font-extrabold mb-6 leading-tight drop-shadow-lg">
+                <div class="bg-white/10 backdrop-blur-md rounded-3xl p-12 shadow-2xl border border-white/20 animate-fade-in">
+                    <h1 class="text-6xl md:text-7xl font-extrabold mb-6 leading-tight drop-shadow-lg">
                         Welcome, <span class="text-orange-400">Herons!</span>
                     </h1>
-                    <p class="text-2xl mb-4 text-white font-light drop-shadow-md">
+                    <p class="text-2xl md:text-3xl mb-4 text-white font-light drop-shadow-md">
                         Your one-stop shop for university essentials and merchandise
                     </p>
-                    <p class="text-lg mb-10 text-gray-100 drop-shadow-md">
+                    <p class="text-lg md:text-xl mb-10 text-gray-100 drop-shadow-md">
                         Order your COOP items with ease and convenience
                     </p>
-                    <div class="flex gap-4 justify-center">
-                        <button onclick="showOrderModal()" class="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg text-lg font-bold transition-all hover:shadow-2xl hover:scale-105">
+                    <div class="flex gap-4 justify-center flex-wrap">
+                        <button onclick="showOrderModal()" class="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-lg text-lg font-bold transition-all duration-300 hover:shadow-2xl btn-hover">
                             Order Now
                         </button>
-                        <button onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})" class="bg-white text-blue-900 hover:bg-gray-100 px-10 py-4 rounded-lg text-lg font-bold transition-all hover:shadow-2xl">
+                        <button onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})" class="bg-white text-blue-900 hover:bg-gray-100 px-10 py-4 rounded-lg text-lg font-bold transition-all duration-300 hover:shadow-2xl btn-hover">
                             Learn More
                         </button>
                     </div>
@@ -94,8 +216,8 @@
         <!-- About Section -->
         <div id="about" class="max-w-6xl mx-auto my-20 px-8">
             <div class="bg-white rounded-2xl shadow-xl p-12 hover-lift">
-                <h2 class="text-4xl font-bold text-blue-900 mb-8 text-center">
-                    About <span class="text-orange-500">UMak COOP</span>
+                <h2 class="text-5xl font-extrabold mb-8 text-center">
+                    About <span class="gradient-text">UMak COOP</span>
                 </h2>
                 <div class="grid md:grid-cols-2 gap-8">
                     <div>
@@ -143,8 +265,8 @@
         <!-- Contact Section -->
         <div id="contact" class="bg-gray-50 py-20 px-8">
             <div class="max-w-6xl mx-auto">
-                <h2 class="text-4xl font-bold text-blue-900 mb-12 text-center">
-                    Get in <span class="text-orange-500">Touch</span>
+                <h2 class="text-5xl font-extrabold mb-12 text-center">
+                    Get in <span class="gradient-text">Touch</span>
                 </h2>
                 <div class="grid md:grid-cols-2 gap-8">
                     <div class="bg-white rounded-2xl shadow-lg p-8 hover-lift">
@@ -205,32 +327,42 @@
             <div class="flex flex-col items-center">
                 <!-- Rise and Shine Logo -->
                 <div class="mb-8">
-                    <img src="../images/UMak-Rise-Shine-Anywhere-Logotype-White.png" alt="UMak Rise and Shine" class="h-16">
+                    <img src="../images/UMak-Rise-Shine-Anywhere-Logotype-White.png" alt="UMak Rise and Shine" class="h-16 logo-hover">
                 </div>
                 
                 <!-- University Name with Metropolis Font -->
                 <div class="text-center mb-8">
-                    <h3 class="text-2xl font-bold mb-2 font-metropolis tracking-wide">UNIVERSITY OF MAKATI</h3>
-                    <p class="text-gray-300">J.P. Rizal Extension, West Rembo, Makati City</p>
+                    <h3 class="text-3xl font-extrabold mb-2 font-metropolis tracking-wide">UNIVERSITY OF MAKATI</h3>
+                    <p class="text-gray-300 text-base">J.P. Rizal Extension, West Rembo, Makati City</p>
                 </div>
                 
                 <!-- Logos -->
                 <div class="flex items-center justify-center gap-8 mb-8">
-                    <img src="../images/UMAK.png" alt="University of Makati Logo" class="h-20">
-                    <img src="../images/MAKATI.png" alt="Makati City Logo" class="h-20">
+                    <img src="../images/UMAK.png" alt="University of Makati Logo" class="h-24 logo-hover">
+                    <img src="../images/MAKATI.png" alt="Makati City Logo" class="h-24 logo-hover">
                 </div>
                 
                 <!-- Quick Links -->
-                <div class="flex flex-wrap justify-center gap-6 mb-8 text-sm">
-                    <a href="#" class="text-gray-300 hover:text-orange-400 transition-colors">Home</a>
+                <div class="flex flex-wrap justify-center gap-6 mb-8 text-base">
+                    <a href="#" class="text-gray-300 hover:text-orange-400 transition-all duration-300 link-icon">Home</a>
                     <span class="text-gray-600">|</span>
-                    <a href="#about" class="text-gray-300 hover:text-orange-400 transition-colors">About</a>
+                    <a href="#about" class="text-gray-300 hover:text-orange-400 transition-all duration-300 link-icon">About</a>
                     <span class="text-gray-600">|</span>
-                    <a href="#contact" class="text-gray-300 hover:text-orange-400 transition-colors">Contact</a>
+                    <a href="#contact" class="text-gray-300 hover:text-orange-400 transition-all duration-300 link-icon">Contact</a>
                     <span class="text-gray-600">|</span>
-                    <a href="https://facebook.com/umak.cooperative" target="_blank" class="text-gray-300 hover:text-orange-400 transition-colors">Facebook</a>
+                    <a href="https://facebook.com/umak.cooperative" target="_blank" class="text-gray-300 hover:text-orange-400 transition-all duration-300 link-icon inline-flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        Facebook
+                    </a>
                     <span class="text-gray-600">|</span>
-                    <a href="mailto:coop@umak.edu.ph" class="text-gray-300 hover:text-orange-400 transition-colors">Email Us</a>
+                    <a href="mailto:coop@umak.edu.ph" class="text-gray-300 hover:text-orange-400 transition-all duration-300 link-icon inline-flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Email Us
+                    </a>
                 </div>
                 
                 <!-- Copyright -->
@@ -243,23 +375,23 @@
     </footer>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 p-4" onclick="closeModalOnBackdrop(event, 'loginModal')">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl modal-content">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-3xl font-bold text-blue-900">Login Portal</h3>
-                <button onclick="hideLoginModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all">
+                <h3 class="text-3xl font-extrabold gradient-text">Login Portal</h3>
+                <button onclick="hideLoginModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
-            <p class="text-gray-600 mb-6">Choose your portal to continue</p>
+            <p class="text-gray-600 mb-6 text-base">Choose your portal to continue</p>
             <div class="space-y-4">
-                <button onclick="window.location.href='student/student_login.html'" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all hover:shadow-lg hover:scale-105">
+                <button onclick="window.location.href='student/student_login.html'" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg btn-hover">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Student Login / Register
                 </button>
-                <button onclick="window.location.href='admin/admin_login.html'" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all hover:shadow-lg hover:scale-105">
+                <button onclick="window.location.href='admin/admin_login.html'" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-lg btn-hover">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     Admin Login
                 </button>
@@ -268,19 +400,19 @@
     </div>
 
     <!-- Order Modal -->
-    <div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+    <div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 p-4" onclick="closeModalOnBackdrop(event, 'orderModal')">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl modal-content">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-3xl font-bold text-blue-900">COOP Orders</h3>
-                <button onclick="hideOrderModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all">
+                <h3 class="text-3xl font-extrabold gradient-text">COOP Orders</h3>
+                <button onclick="hideOrderModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
-            <p class="text-gray-600 mb-6">What would you like to do?</p>
+            <p class="text-gray-600 mb-6 text-base">What would you like to do?</p>
             <div class="space-y-4">
-                <button onclick="window.location.href='student/student_login.html'" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-3">
+                <button onclick="window.location.href='student/student_login.html'" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold transition-all duration-300 hover:shadow-lg btn-hover flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                         <circle cx="9" cy="7" r="4" stroke-width="2"></circle>
@@ -289,13 +421,13 @@
                     </svg>
                     Student Dashboard (Login)
                 </button>
-                <button onclick="window.location.href='student/create_order.html'" class="w-full bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 py-4 rounded-xl font-bold transition-all hover:shadow-lg flex items-center justify-center gap-3">
+                <button onclick="window.location.href='student/create_order.html'" class="w-full bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 py-4 rounded-xl font-bold transition-all duration-300 hover:shadow-lg btn-hover flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Quick Order (Guest)
                 </button>
-                <button onclick="window.location.href='student/check_status.html'" class="w-full bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 py-4 rounded-xl font-bold transition-all hover:shadow-lg flex items-center justify-center gap-3">
+                <button onclick="window.location.href='student/check_status.html'" class="w-full bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 py-4 rounded-xl font-bold transition-all duration-300 hover:shadow-lg btn-hover flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
@@ -306,21 +438,90 @@
     </div>
 
     <script>
+        // Modal show functions
         function showLoginModal() {
-            document.getElementById('loginModal').classList.remove('hidden');
+            const modal = document.getElementById('loginModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
         }
 
         function hideLoginModal() {
-            document.getElementById('loginModal').classList.add('hidden');
+            const modal = document.getElementById('loginModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scroll
         }
 
         function showOrderModal() {
-            document.getElementById('orderModal').classList.remove('hidden');
+            const modal = document.getElementById('orderModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
 
         function hideOrderModal() {
-            document.getElementById('orderModal').classList.add('hidden');
+            const modal = document.getElementById('orderModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
         }
+
+        // Close modal when clicking backdrop
+        function closeModalOnBackdrop(event, modalId) {
+            if (event.target.id === modalId) {
+                if (modalId === 'loginModal') {
+                    hideLoginModal();
+                } else if (modalId === 'orderModal') {
+                    hideOrderModal();
+                }
+            }
+        }
+
+        // ESC key to close modals
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideLoginModal();
+                hideOrderModal();
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Fade-in animation on scroll (lazy-loaded)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationDelay = '0.2s';
+                    entry.target.classList.add('animate-fade-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe sections for fade-in
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('#about > div, #contact > div > div');
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
     </script>
 </body>
 </html>

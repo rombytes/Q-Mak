@@ -7,69 +7,91 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/notifications.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
         }
-        @keyframes confetti {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            animation: confetti 3s linear;
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .pulse-ring {
+            animation: pulse-ring 1.5s ease-out infinite;
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-3xl w-full">
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex items-center gap-3">
-                <div class="bg-green-100 rounded-full p-3">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+    <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-3xl w-full border border-blue-100 animate-fade-in">
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
+                        <i class="fas fa-check text-white text-3xl"></i>
+                    </div>
+                    <div class="absolute inset-0 bg-green-500 rounded-2xl pulse-ring"></div>
                 </div>
                 <div class="text-left">
-                    <h3 class="text-3xl font-bold text-green-600">Order Confirmed!</h3>
-                    <p class="text-gray-600">Your order has been placed successfully</p>
+                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent mb-1">Order Confirmed!</h3>
+                    <p class="text-gray-600 flex items-center gap-2">
+                        <i class="fas fa-circle-check text-green-500"></i>
+                        Your order has been placed successfully
+                    </p>
                 </div>
             </div>
             <button onclick="goHome()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+                <i class="fas fa-times text-xl"></i>
             </button>
         </div>
 
         <!-- QR Code and Details -->
-        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-6">
+        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-6 border border-blue-100 shadow-lg">
             <div class="flex flex-col md:flex-row items-center justify-center gap-8">
                 <!-- QR Code -->
-                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                <div class="bg-white p-6 rounded-2xl shadow-xl border border-blue-200">
                     <canvas id="qrcode" class="mx-auto"></canvas>
-                    <p class="text-xs text-center text-gray-500 mt-3">Scan to verify</p>
+                    <p class="text-xs text-center text-gray-500 mt-3 flex items-center justify-center gap-1">
+                        <i class="fas fa-qrcode"></i>
+                        Scan to verify
+                    </p>
                 </div>
                 
                 <!-- Order Details -->
-                <div class="flex-1 text-center md:text-left">
-                    <div class="mb-6">
-                        <h4 class="text-sm font-semibold text-gray-600 mb-2">Queue Number</h4>
-                        <p id="queueNum" class="text-5xl font-extrabold text-blue-900"></p>
+                <div class="flex-1 text-center md:text-left space-y-6">
+                    <div class="bg-white rounded-xl p-6 shadow-md border border-blue-100">
+                        <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-hashtag text-blue-600"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-sm font-semibold text-gray-600">Queue Number</h4>
+                                <p id="queueNum" class="text-4xl font-extrabold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent"></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-6">
-                        <h4 class="text-sm font-semibold text-gray-600 mb-2">Estimated Wait Time</h4>
-                        <p id="waitTime" class="text-3xl font-bold text-orange-500"></p>
+                    <div class="bg-white rounded-xl p-6 shadow-md border border-orange-100">
+                        <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-clock text-orange-600"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-sm font-semibold text-gray-600">Estimated Wait Time</h4>
+                                <p id="waitTime" class="text-3xl font-bold text-orange-500"></p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-xl p-4 shadow-sm">
-                        <div class="flex items-center gap-2 text-sm text-gray-600">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span>Valid for <strong>30 minutes</strong></span>
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 shadow-md text-white">
+                        <div class="flex items-center gap-2 text-sm">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Valid for <strong>30 minutes</strong> from order placement</span>
                         </div>
                     </div>
                 </div>
@@ -77,32 +99,45 @@
         </div>
 
         <!-- Instructions -->
-        <div class="bg-blue-50 rounded-xl p-6 mb-6">
-            <h4 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                What to do next:
-            </h4>
-            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
-                <li>Present this QR code at the COOP counter</li>
-                <li>Wait for your queue number to be called</li>
-                <li>Collect your order and enjoy!</li>
-            </ol>
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-200 shadow-md">
+            <div class="flex items-start gap-3 mb-4">
+                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-list-check text-white"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-blue-900 text-lg mb-3">What to do next:</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                            <div class="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-blue-600 font-bold text-sm">1</span>
+                            </div>
+                            <p class="text-gray-700 flex-1">Present this QR code at the COOP counter</p>
+                        </div>
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                            <div class="w-7 h-7 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-orange-600 font-bold text-sm">2</span>
+                            </div>
+                            <p class="text-gray-700 flex-1">Wait for your queue number to be called</p>
+                        </div>
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                            <div class="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-green-600 font-bold text-sm">3</span>
+                            </div>
+                            <p class="text-gray-700 flex-1">Collect your order and enjoy!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-4">
-            <button onclick="downloadQR()" class="flex-1 bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 py-3 rounded-xl font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
+            <button onclick="downloadQR()" class="flex-1 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-4 rounded-xl font-bold transition-all hover:shadow-xl flex items-center justify-center gap-2 group">
+                <i class="fas fa-download group-hover:scale-110 transition-transform"></i>
                 Download QR Code
             </button>
-            <button onclick="goHome()" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                </svg>
+            <button onclick="goHome()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 rounded-xl font-bold transition-all hover:shadow-xl flex items-center justify-center gap-2 group">
+                <i class="fas fa-home group-hover:scale-110 transition-transform"></i>
                 Back to Home
             </button>
         </div>
@@ -128,9 +163,6 @@
             if (window.notificationManager) {
                 window.notificationManager.orderSuccess(queueNum);
             }
-            
-            // Create confetti effect
-            createConfetti();
         }
 
         // Check if QRCode library is loaded
@@ -323,22 +355,6 @@
             
             if (window.notificationManager) {
                 window.notificationManager.showInAppNotification('QR Code downloaded!', 'success');
-            }
-        }
-
-        function createConfetti() {
-            const colors = ['#1e3a8a', '#f97316', '#10b981', '#8b5cf6', '#ec4899'];
-            for (let i = 0; i < 50; i++) {
-                setTimeout(() => {
-                    const confetti = document.createElement('div');
-                    confetti.className = 'confetti';
-                    confetti.style.left = Math.random() * 100 + '%';
-                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    confetti.style.animationDelay = Math.random() * 2 + 's';
-                    document.body.appendChild(confetti);
-                    
-                    setTimeout(() => confetti.remove(), 3000);
-                }, i * 50);
             }
         }
 

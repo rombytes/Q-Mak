@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/admin_logger.php';
 
 session_start();
 
@@ -28,11 +29,12 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Get all students with optional search
+    // Get all students with optional search and archive filter
     try {
         $db = getDB();
         
         $search = $_GET['search'] ?? '';
+        $showArchived = $_GET['archived'] ?? 'false';
         
         $query = "
             SELECT 
@@ -48,15 +50,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 is_verified,
                 created_at,
                 last_login,
+                is_archived,
+                archived_at,
+                archived_by,
+                (SELECT full_name FROM admin_accounts WHERE admin_id = students.archived_by) as archived_by_name,
                 CASE 
                     WHEN password IS NOT NULL AND password != '' THEN 1
                     ELSE 0
                 END as has_account,
                 (SELECT COUNT(*) FROM orders WHERE orders.student_id = students.student_id) as total_orders
             FROM students
+            WHERE 1=1
         ";
         
         $params = [];
+        
+        // Filter by archive status
+        if ($showArchived === 'true') {
+            $query .= " AND is_archived = 1";
+        } else {
+            $query .= " AND (is_archived = 0 OR is_archived IS NULL)";
+        }
         
         if (!empty($search)) {
             $query .= " AND (student_id LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
@@ -94,68 +108,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
     // Update student information (super admin only)
     try {
-        // Check if user is super admin
-        if ($_SESSION['role'] !== 'super_admin') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Only super admin can edit student records']);
-            exit;
-        }
-        
         $db = getDB();
         $input = json_decode(file_get_contents('php://input'), true);
+        $action = $input['action'] ?? 'update';
         
-        $studentId = $input['student_id'] ?? '';
-        $firstName = $input['first_name'] ?? '';
-        $lastName = $input['last_name'] ?? '';
-        $email = $input['email'] ?? '';
-        $college = $input['college'] ?? null;
-        $program = $input['program'] ?? null;
-        $yearLevel = $input['year_level'] ?? null;
-        $section = $input['section'] ?? null;
-        
-        if (empty($studentId) || empty($firstName) || empty($lastName) || empty($email)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Missing required fields']);
-            exit;
+        if ($action === 'archive' || $action === 'restore') {
+            // Archive or restore student (both admins can do this)
+            $studentId = $input['student_id'] ?? '';
+            
+            if (empty($studentId)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Student ID required']);
+                exit;
+            }
+            
+            // Get student name for logging
+            $nameStmt = $db->prepare("SELECT CONCAT(first_name, ' ', last_name) as name FROM students WHERE student_id = ?");
+            $nameStmt->execute([$studentId]);
+            $studentName = $nameStmt->fetchColumn();
+            
+            if ($action === 'archive') {
+                $stmt = $db->prepare("
+                    UPDATE students 
+                    SET is_archived = 1, archived_at = NOW(), archived_by = ?
+                    WHERE student_id = ?
+                ");
+                $stmt->execute([$_SESSION['admin_id'], $studentId]);
+                
+                // Log the action
+                logStudentAction($_SESSION['admin_id'], 'archive', $studentId, $studentName);
+                
+                echo json_encode(['success' => true, 'message' => 'Student archived successfully']);
+                
+            } else { // restore
+                // Only super admin can restore
+                if (!isset($_SESSION['is_super_admin']) || $_SESSION['is_super_admin'] != 1) {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'message' => 'Only super admin can restore archived students']);
+                    exit;
+                }
+                
+                $stmt = $db->prepare("
+                    UPDATE students 
+                    SET is_archived = 0, archived_at = NULL, archived_by = NULL
+                    WHERE student_id = ?
+                ");
+                $stmt->execute([$studentId]);
+                
+                // Log the action
+                logStudentAction($_SESSION['admin_id'], 'restore', $studentId, $studentName);
+                
+                echo json_encode(['success' => true, 'message' => 'Student restored successfully']);
+            }
+            
+        } else {
+            // Update student information (super admin only)
+            if (!isset($_SESSION['is_super_admin']) || $_SESSION['is_super_admin'] != 1) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Only super admin can edit student records']);
+                exit;
+            }
+            
+            $studentId = $input['student_id'] ?? '';
+            $firstName = $input['first_name'] ?? '';
+            $lastName = $input['last_name'] ?? '';
+            $email = $input['email'] ?? '';
+            $college = $input['college'] ?? null;
+            $program = $input['program'] ?? null;
+            $yearLevel = $input['year_level'] ?? null;
+            $section = $input['section'] ?? null;
+            
+            if (empty($studentId) || empty($firstName) || empty($lastName) || empty($email)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit;
+            }
+            
+            // Check if student exists
+            $checkStmt = $db->prepare("SELECT student_id FROM students WHERE student_id = ?");
+            $checkStmt->execute([$studentId]);
+            if (!$checkStmt->fetch()) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Student not found']);
+                exit;
+            }
+            
+            // Update student information
+            $stmt = $db->prepare("
+                UPDATE students 
+                SET first_name = ?,
+                    last_name = ?,
+                    email = ?,
+                    college = ?,
+                    program = ?,
+                    year_level = ?,
+                    section = ?
+                WHERE student_id = ?
+            ");
+            
+            $stmt->execute([
+                $firstName,
+                $lastName,
+                $email,
+                $college,
+                $program,
+                $yearLevel,
+                $section,
+                $studentId
+            ]);
+            
+            // Log the action
+            logStudentAction(
+                $_SESSION['admin_id'], 
+                'update', 
+                $studentId, 
+                "$firstName $lastName",
+                ['email' => $email, 'college' => $college, 'program' => $program]
+            );
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Student information updated successfully'
+            ]);
         }
-        
-        // Check if student exists
-        $checkStmt = $db->prepare("SELECT student_id FROM students WHERE student_id = ?");
-        $checkStmt->execute([$studentId]);
-        if (!$checkStmt->fetch()) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Student not found']);
-            exit;
-        }
-        
-        // Update student information
-        $stmt = $db->prepare("
-            UPDATE students 
-            SET first_name = ?,
-                last_name = ?,
-                email = ?,
-                college = ?,
-                program = ?,
-                year_level = ?,
-                section = ?
-            WHERE student_id = ?
-        ");
-        
-        $stmt->execute([
-            $firstName,
-            $lastName,
-            $email,
-            $college,
-            $program,
-            $yearLevel,
-            $section,
-            $studentId
-        ]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'Student information updated successfully'
-        ]);
         
     } catch (Exception $e) {
         error_log("Update Student Error: " . $e->getMessage());

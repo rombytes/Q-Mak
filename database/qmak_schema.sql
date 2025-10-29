@@ -24,10 +24,14 @@ CREATE TABLE IF NOT EXISTS `admin_accounts` (
   `last_login` DATETIME NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_archived` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Archive status',
+  `archived_at` DATETIME NULL,
+  `archived_by` INT(11) NULL COMMENT 'Super Admin ID who archived',
   PRIMARY KEY (`admin_id`),
   INDEX `idx_email` (`email`),
   INDEX `idx_username` (`username`),
-  INDEX `idx_is_super_admin` (`is_super_admin`)
+  INDEX `idx_is_super_admin` (`is_super_admin`),
+  INDEX `idx_is_archived` (`is_archived`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default Super Admin Account
@@ -75,10 +79,14 @@ CREATE TABLE IF NOT EXISTS `students` (
   `last_login` DATETIME NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `is_archived` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Archive status',
+  `archived_at` DATETIME NULL,
+  `archived_by` INT(11) NULL COMMENT 'Admin ID who archived',
   PRIMARY KEY (`student_id`),
   INDEX `idx_student_number` (`student_number`),
   INDEX `idx_email` (`email`),
-  INDEX `idx_is_verified` (`is_verified`)
+  INDEX `idx_is_verified` (`is_verified`),
+  INDEX `idx_is_archived` (`is_archived`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -103,6 +111,9 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `claimed_at` DATETIME NULL,
+  `is_archived` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Archive status',
+  `archived_at` DATETIME NULL,
+  `archived_by` INT(11) NULL COMMENT 'Admin ID who archived',
   PRIMARY KEY (`order_id`),
   UNIQUE KEY `queue_number` (`queue_number`),
   INDEX `idx_student_id` (`student_id`),
@@ -110,6 +121,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   INDEX `idx_order_status` (`order_status`),
   INDEX `idx_order_type` (`order_type`),
   INDEX `idx_created_at` (`created_at`),
+  INDEX `idx_is_archived` (`is_archived`),
   FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -138,6 +150,29 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
   INDEX `idx_status` (`status`),
   INDEX `idx_email_type` (`email_type`),
   INDEX `idx_is_archived` (`is_archived`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `admin_logs`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `admin_logs` (
+  `log_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `admin_id` INT(11) NOT NULL COMMENT 'Admin who performed the action',
+  `action_type` VARCHAR(50) NOT NULL COMMENT 'Type of action performed',
+  `target_type` VARCHAR(50) NULL COMMENT 'Type of target (student, admin, order, etc.)',
+  `target_id` VARCHAR(100) NULL COMMENT 'ID of the target entity',
+  `description` TEXT NOT NULL COMMENT 'Human-readable description of the action',
+  `details` JSON NULL COMMENT 'Additional JSON data about the action',
+  `ip_address` VARCHAR(45) NULL COMMENT 'IP address of the admin',
+  `user_agent` TEXT NULL COMMENT 'Browser/device information',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  INDEX `idx_admin_id` (`admin_id`),
+  INDEX `idx_action_type` (`action_type`),
+  INDEX `idx_target_type` (`target_type`),
+  INDEX `idx_created_at` (`created_at`),
+  FOREIGN KEY (`admin_id`) REFERENCES `admin_accounts`(`admin_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
