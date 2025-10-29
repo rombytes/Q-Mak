@@ -21,11 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 
 require_once __DIR__ . '/../../config/database.php';
-
-$emailAvailable = file_exists(__DIR__ . '/../../vendor/autoload.php');
-if ($emailAvailable) {
-    require_once __DIR__ . '/../../utils/email.php';
-}
+require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../utils/email_sender.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -153,13 +150,19 @@ try {
         ");
         $insertOtp->execute([$email, $otp]);
         
-        // Send OTP email
-        if ($emailAvailable) {
-            try {
-                EmailService::sendOTP($email, $otp, $firstName);
-            } catch (Exception $e) {
-                error_log("Failed to send registration OTP: " . $e->getMessage());
+        // Send OTP email using new EmailSender
+        try {
+            error_log("Attempting to send registration OTP to: $email");
+            $emailResult = EmailSender::sendOTP($email, $otp, $firstName);
+            
+            if ($emailResult['success']) {
+                error_log("✓ Registration OTP sent successfully to $email");
+            } else {
+                error_log("✗ Failed to send registration OTP: " . ($emailResult['error'] ?? 'Unknown error'));
+                error_log("Check detailed log at: " . EmailSender::getLogFilePath());
             }
+        } catch (Exception $e) {
+            error_log("✗ Exception sending registration OTP: " . $e->getMessage());
         }
         
         echo json_encode([

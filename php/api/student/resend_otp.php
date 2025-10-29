@@ -9,11 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
-
-$emailLibAvailable = file_exists(__DIR__ . '/../../vendor/autoload.php');
-if ($emailLibAvailable) {
-    require_once __DIR__ . '/../../utils/email.php';
-}
+require_once __DIR__ . '/../../config/constants.php';
+require_once __DIR__ . '/../../utils/email_sender.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -67,8 +64,19 @@ try {
     $insert = $db->prepare("INSERT INTO otp_verifications (email, otp_code, otp_type, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL $otpMinutes MINUTE))");
     $insert->execute([$email, $otp, $otpType]);
 
-    if ($emailLibAvailable) {
-        try { EmailService::sendOTP($email, $otp, $firstName); } catch (Exception $e) { }
+    // Send OTP email using new EmailSender
+    try {
+        error_log("Attempting to resend OTP email to: $email");
+        $emailResult = EmailSender::sendOTP($email, $otp, $firstName);
+        
+        if ($emailResult['success']) {
+            error_log("✓ OTP resent successfully to $email");
+        } else {
+            error_log("✗ Failed to resend OTP to $email: " . ($emailResult['error'] ?? 'Unknown error'));
+            error_log("Check detailed log at: " . EmailSender::getLogFilePath());
+        }
+    } catch (Exception $e) {
+        error_log("✗ Exception resending OTP: " . $e->getMessage());
     }
 
     echo json_encode([

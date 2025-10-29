@@ -141,31 +141,198 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- Table structure for table `services`
+-- Table structure for table `inventory_items`
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `services` (
-  `service_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `service_name` VARCHAR(100) NOT NULL,
+
+CREATE TABLE IF NOT EXISTS `inventory_items` (
+  `item_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `item_name` VARCHAR(100) NOT NULL,
   `description` TEXT NULL,
-  `estimated_time` INT(11) NOT NULL DEFAULT 10 COMMENT 'Estimated time in minutes',
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `stock_quantity` INT(11) NOT NULL DEFAULT 0 COMMENT 'Current stock level',
+  `low_stock_threshold` INT(11) NOT NULL DEFAULT 20 COMMENT 'Alert when stock falls below this',
+  `estimated_time` INT(11) NOT NULL DEFAULT 10 COMMENT 'Estimated preparation/service time in minutes',
+  `is_available` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Auto-set to 0 when stock_quantity = 0',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Admin can manually disable',
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`service_id`),
-  INDEX `idx_service_name` (`service_name`),
-  INDEX `idx_is_active` (`is_active`)
+  PRIMARY KEY (`item_id`),
+  UNIQUE KEY `unique_item_name` (`item_name`),
+  INDEX `idx_item_name` (`item_name`),
+  INDEX `idx_is_available` (`is_available`),
+  INDEX `idx_is_active` (`is_active`),
+  INDEX `idx_stock_quantity` (`stock_quantity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default services
-INSERT INTO `services` (`service_name`, `description`, `estimated_time`, `is_active`) VALUES
-('Coffee & Drinks', 'Hot and cold beverages', 5, 1),
-('Snacks & Food', 'Light meals and snacks', 10, 1),
-('School Supplies', 'Notebooks, pens, stationery', 8, 1),
-('Printing Services', 'Document printing and copying', 5, 1),
-('Books & References', 'Academic books and materials', 12, 1),
-('ID Lace', 'Student ID accessories', 5, 1),
-('School Uniform', 'Complete uniform sets', 10, 1),
-('PE Uniform', 'Physical education uniforms', 10, 1);
+-- Insert default inventory items with stock
+INSERT INTO `inventory_items` 
+(`item_name`, `description`, `stock_quantity`, `low_stock_threshold`, `estimated_time`, `is_available`, `is_active`) 
+VALUES
+('Coffee & Drinks', 'Hot and cold beverages', 150, 20, 5, 1, 1),
+('Snacks & Food', 'Light meals and snacks', 200, 20, 10, 1, 1),
+('School Supplies', 'Notebooks, pens, stationery', 180, 20, 8, 1, 1),
+('Printing Services', 'Document printing and copying', 500, 50, 5, 1, 1),
+('Books & References', 'Academic books and materials', 75, 20, 12, 1, 1),
+('ID Lace', 'Student ID accessories', 15, 20, 5, 1, 1),
+('School Uniform', 'Complete uniform sets', 30, 20, 10, 1, 1),
+('PE Uniform', 'Physical education uniforms', 0, 20, 10, 0, 1)
+ON DUPLICATE KEY UPDATE 
+  description = VALUES(description),
+  estimated_time = VALUES(estimated_time);
+
+-- --------------------------------------------------------
+-- Triggers for inventory_items
+-- --------------------------------------------------------
+
+DELIMITER $$
+
+-- Trigger on INSERT: Auto-set is_available based on stock
+CREATE TRIGGER `trg_inventory_availability_insert`
+BEFORE INSERT ON `inventory_items`
+FOR EACH ROW
+BEGIN
+  IF NEW.stock_quantity <= 0 THEN
+    SET NEW.is_available = 0;
+  ELSE
+    SET NEW.is_available = 1;
+  END IF;
+END$$
+
+-- Trigger on UPDATE: Auto-set is_available based on stock
+CREATE TRIGGER `trg_inventory_availability_update`
+BEFORE UPDATE ON `inventory_items`
+FOR EACH ROW
+BEGIN
+  IF NEW.stock_quantity <= 0 THEN
+    SET NEW.is_available = 0;
+  ELSEIF NEW.stock_quantity > 0 AND OLD.is_available = 0 THEN
+    -- Only auto-enable if admin hasn't manually disabled it
+    IF NEW.is_active = 1 THEN
+      SET NEW.is_available = 1;
+    END IF;
+  END IF;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+-- Table structure for table `stock_movement_log`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `stock_movement_log` (
+  `movement_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `item_id` INT(11) NOT NULL,
+  `movement_type` ENUM('restock', 'sale', 'adjustment', 'return') NOT NULL DEFAULT 'adjustment',
+  `quantity_change` INT(11) NOT NULL COMMENT 'Positive for additions, negative for reductions',
+  `previous_quantity` INT(11) NOT NULL,
+  `new_quantity` INT(11) NOT NULL,
+  `reason` VARCHAR(255) NULL,
+  `admin_id` INT(11) NULL COMMENT 'Admin who made the change',
+  `order_id` INT(11) NULL COMMENT 'Related order if movement is from sale',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`movement_id`),
+  INDEX `idx_item_id` (`item_id`),
+  INDEX `idx_movement_type` (`movement_type`),
+  INDEX `idx_admin_id` (`admin_id`),
+  INDEX `idx_order_id` (`order_id`),
+  FOREIGN KEY (`item_id`) REFERENCES `inventory_items`(`item_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Stored Procedure for stock adjustment
+-- --------------------------------------------------------
+
+DELIMITER $$
+
+CREATE PROCEDURE `sp_adjust_stock`(
+  IN p_item_id INT,
+  IN p_quantity_change INT,
+  IN p_movement_type VARCHAR(20),
+  IN p_reason VARCHAR(255),
+  IN p_admin_id INT
+)
+BEGIN
+  DECLARE v_current_stock INT;
+  DECLARE v_new_stock INT;
+  
+  -- Get current stock
+  SELECT stock_quantity INTO v_current_stock 
+  FROM inventory_items 
+  WHERE item_id = p_item_id;
+  
+  -- Calculate new stock
+  SET v_new_stock = v_current_stock + p_quantity_change;
+  
+  -- Prevent negative stock
+  IF v_new_stock < 0 THEN
+    SET v_new_stock = 0;
+  END IF;
+  
+  -- Update inventory
+  UPDATE inventory_items 
+  SET stock_quantity = v_new_stock 
+  WHERE item_id = p_item_id;
+  
+  -- Log the movement
+  INSERT INTO stock_movement_log 
+  (item_id, movement_type, quantity_change, previous_quantity, new_quantity, reason, admin_id)
+  VALUES 
+  (p_item_id, p_movement_type, p_quantity_change, v_current_stock, v_new_stock, p_reason, p_admin_id);
+  
+  -- Return new stock level
+  SELECT v_new_stock as new_stock_quantity;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+-- Views for inventory queries
+-- --------------------------------------------------------
+
+-- View: Low stock items
+CREATE OR REPLACE VIEW `v_low_stock_items` AS
+SELECT 
+  item_id,
+  item_name,
+  stock_quantity,
+  low_stock_threshold,
+  (stock_quantity - low_stock_threshold) as stock_difference,
+  is_available,
+  is_active
+FROM inventory_items
+WHERE stock_quantity <= low_stock_threshold
+  AND is_active = 1
+ORDER BY stock_quantity ASC;
+
+-- View: Out of stock items
+CREATE OR REPLACE VIEW `v_out_of_stock_items` AS
+SELECT 
+  item_id,
+  item_name,
+  stock_quantity,
+  is_active
+FROM inventory_items
+WHERE stock_quantity = 0
+  OR is_available = 0
+ORDER BY item_name ASC;
+
+-- View: Available items for ordering
+CREATE OR REPLACE VIEW `v_available_items` AS
+SELECT 
+  item_id,
+  item_name,
+  description,
+  stock_quantity,
+  low_stock_threshold,
+  CASE 
+    WHEN stock_quantity = 0 THEN 'Out of Stock'
+    WHEN stock_quantity <= low_stock_threshold THEN 'Low Stock'
+    ELSE 'In Stock'
+  END as stock_status,
+  estimated_time
+FROM inventory_items
+WHERE is_available = 1 
+  AND is_active = 1
+ORDER BY item_name;
 
 -- --------------------------------------------------------
 -- Table structure for table `otp_verifications`
@@ -214,31 +381,5 @@ INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
 ('email_from_name', 'UMak COOP', 'From name in emails'),
 ('email_from_address', 'coop@umak.edu.ph', 'From email address');
 
--- --------------------------------------------------------
--- Table structure for table `inventory_items`
--- --------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `inventory_items` (
-  `item_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `item_name` VARCHAR(255) NOT NULL UNIQUE,
-  `is_in_stock` TINYINT(1) NOT NULL DEFAULT 1,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `updated_by` INT(11) NULL,
-  PRIMARY KEY (`item_id`),
-  INDEX `idx_stock_status` (`is_in_stock`),
-  FOREIGN KEY (`updated_by`) REFERENCES `admin_accounts`(`admin_id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Insert default inventory items
-INSERT INTO `inventory_items` (`item_name`, `is_in_stock`) VALUES
-('ID Lace', 1),
-('School Uniform', 1),
-('PE Uniform', 1),
-('NSTP Shirt', 1),
-('School Patch', 1),
-('Book/Manual', 1),
-('School Supplies', 1),
-('UMak Merchandise', 1)
-ON DUPLICATE KEY UPDATE item_name=item_name;
-
 COMMIT;
+

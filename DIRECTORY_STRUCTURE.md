@@ -20,17 +20,18 @@ Q-Mak/
 │   └── (image files)
 │
 ├── js/                     # JavaScript files
-│   └── (JS files)
+│   ├── notifications.js   # Toast notification system
+│   └── inventory_helper.js # Inventory management utilities
 │
 ├── pages/                  # Frontend HTML pages
 │   ├── index.html         # Main homepage (formerly homepage.html)
 │   ├── admin/             # Admin pages
 │   │   ├── admin_login.html
 │   │   ├── admin_login_debug.html
-│   │   └── admin_dashboard.html
+│   │   └── admin_dashboard.html  # Includes Chart.js analytics dashboard
 │   └── student/           # Student pages
 │       ├── student_login.html
-│       ├── student_register.html
+│       ├── student_register.html  # Enhanced with email format validation
 │       ├── student_dashboard.html
 │       ├── otp_verification.html
 │       ├── create_order.html
@@ -48,7 +49,8 @@ Q-Mak/
 │   │   │   ├── admin_orders.php
 │   │   │   ├── admin_password.php
 │   │   │   ├── admin_reports.php
-│   │   │   ├── admin_students.php
+│   │   │   ├── admin_students.php  # Enhanced with has_account field
+│   │   │   ├── analytics.php       # NEW: Real-time analytics API
 │   │   │   ├── archive_manager.php
 │   │   │   ├── check_status.php
 │   │   │   ├── email_logs.php
@@ -57,25 +59,31 @@ Q-Mak/
 │   │   │   └── get_students.php
 │   │   ├── student/       # Student API endpoints
 │   │   │   ├── student_login.php
-│   │   │   ├── student_register.php
+│   │   │   ├── student_register.php  # Enhanced email validation
 │   │   │   ├── student_session.php
 │   │   │   ├── verify_otp.php
 │   │   │   ├── resend_otp.php
-│   │   │   └── create_order.php
-│   │   └── services.php   # General services API
+│   │   │   ├── create_order.php      # Enhanced with EmailSender
+│   │   │   ├── change_password.php   # NEW: Password change API
+│   │   │   ├── forgot_password.php   # NEW: Password recovery API
+│   │   │   └── update_profile.php    # NEW: Profile management API
+│   │   ├── inventory.php             # NEW: Inventory management API
+│   │   └── inventory_status.php      # Enhanced inventory status
 │   ├── config/            # Configuration files
 │   │   ├── database.php
 │   │   ├── database.example.php
 │   │   ├── email.example.php
 │   │   └── constants.php
 │   └── utils/             # Utility functions
-│       └── email.php
+│       ├── email.php        # Legacy email handler (with debug logging)
+│       └── email_sender.php # NEW: Simplified OTP email sender
 │
 ├── scripts/                # Setup and utility scripts
 │   ├── QUICK_SETUP.php
 │   ├── setup_database.php
 │   ├── add_archive_columns.php
 │   ├── generate_password.php
+│   ├── SYSTEM_CHECK.php     # NEW: Comprehensive system diagnostics
 │   └── test_error_log.php
 │
 ├── tests/                  # Test files
@@ -84,7 +92,11 @@ Q-Mak/
 │   ├── qr_test.html
 │   ├── qr_test.php
 │   ├── api_qr_test.php
-│   └── complete_qr_test.php
+│   ├── complete_qr_test.php
+│   ├── diagnose_otp_system.php  # NEW: OTP diagnostic tool
+│   ├── direct_otp_test.php      # NEW: Direct OTP backend test
+│   ├── get_email_logs.php       # NEW: Email log viewer
+│   └── OTP_TROUBLESHOOTING.md   # NEW: OTP troubleshooting guide
 │
 ├── vendor/                 # Composer dependencies
 │

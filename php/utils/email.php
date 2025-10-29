@@ -21,11 +21,17 @@ class EmailService {
      * Send OTP email
      */
     public static function sendOTP($email, $otp, $firstName = '') {
+        error_log("EmailService::sendOTP called for: $email");
         $subject = "Your UMak COOP Verification Code";
         $body = self::getOTPEmailTemplate($otp, $firstName);
         
+        error_log("EmailService::sendOTP - About to call sendEmail()");
         $result = self::sendEmail($email, $subject, $body);
+        error_log("EmailService::sendOTP - sendEmail() returned: " . json_encode($result));
+        
+        error_log("EmailService::sendOTP - About to log email");
         self::logEmail($email, 'otp', $subject, $result['success'], $result['error'] ?? null);
+        error_log("EmailService::sendOTP - Email logged successfully");
         
         return $result;
     }
@@ -60,13 +66,20 @@ class EmailService {
      * Core email sending function
      */
     private static function sendEmail($to, $subject, $htmlBody) {
+        error_log("EmailService::sendEmail - Starting for: $to");
+        error_log("EmailService::sendEmail - Subject: $subject");
+        
         if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            error_log("EmailService::sendEmail - PHPMailer class NOT found!");
             return ['success' => false, 'error' => 'Mailer unavailable'];
         }
+        error_log("EmailService::sendEmail - PHPMailer class found");
+        
         $mail = new PHPMailer(true);
         
         try {
             // Server settings
+            error_log("EmailService::sendEmail - Configuring SMTP");
             $mail->isSMTP();
             $mail->Host = SMTP_HOST;
             $mail->SMTPAuth = true;
@@ -75,9 +88,12 @@ class EmailService {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = SMTP_PORT;
             
+            error_log("EmailService::sendEmail - SMTP Config: Host=" . SMTP_HOST . ", Port=" . SMTP_PORT . ", User=" . SMTP_USERNAME);
+            
             // Recipients
             $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
             $mail->addAddress($to);
+            error_log("EmailService::sendEmail - From: " . SMTP_FROM_EMAIL . ", To: $to");
             
             // Content
             $mail->isHTML(true);
@@ -85,11 +101,15 @@ class EmailService {
             $mail->Body = $htmlBody;
             $mail->AltBody = strip_tags($htmlBody);
             
+            error_log("EmailService::sendEmail - About to send email...");
             $mail->send();
+            error_log("EmailService::sendEmail - ✓ Email sent successfully!");
             return ['success' => true];
         } catch (\Throwable $e) {
-            error_log("Email Error: " . $mail->ErrorInfo);
-            return ['success' => false, 'error' => $mail->ErrorInfo];
+            $errorInfo = $mail->ErrorInfo;
+            error_log("EmailService::sendEmail - ✗ Email Error: " . $errorInfo);
+            error_log("EmailService::sendEmail - Exception: " . $e->getMessage());
+            return ['success' => false, 'error' => $errorInfo];
         }
     }
     
@@ -497,6 +517,8 @@ class EmailService {
      */
     private static function logEmail($email, $type, $subject, $success, $error = null) {
         try {
+            error_log("EmailService::logEmail - Starting for: $email, type: $type, success: " . ($success ? 'true' : 'false'));
+            
             $db = getDB();
             
             // Get order_id and student_id if available (for receipt and status_update emails)
@@ -509,6 +531,7 @@ class EmailService {
             $student = $studentStmt->fetch();
             if ($student) {
                 $studentId = $student['student_id'];
+                error_log("EmailService::logEmail - Found student_id: $studentId");
                 
                 // Get most recent order for this student
                 $orderStmt = $db->prepare("SELECT order_id FROM orders WHERE student_id = ? ORDER BY created_at DESC LIMIT 1");
@@ -516,7 +539,10 @@ class EmailService {
                 $order = $orderStmt->fetch();
                 if ($order) {
                     $orderId = $order['order_id'];
+                    error_log("EmailService::logEmail - Found order_id: $orderId");
                 }
+            } else {
+                error_log("EmailService::logEmail - Student not found for email: $email");
             }
             
             $stmt = $db->prepare("
@@ -526,8 +552,11 @@ class EmailService {
             $status = $success ? 'sent' : 'failed';
             $message = substr($subject, 0, 255); // Use subject as message preview
             $stmt->execute([$orderId, $studentId, $email, $type, $subject, $message, $status, $error]);
+            error_log("EmailService::logEmail - Email log inserted successfully");
         } catch (Exception $e) {
-            error_log("Failed to log email: " . $e->getMessage());
+            error_log("EmailService::logEmail - Failed to log email: " . $e->getMessage());
+            error_log("EmailService::logEmail - Trace: " . $e->getTraceAsString());
+            // Don't throw - logging failure shouldn't break email sending
         }
     }
 }

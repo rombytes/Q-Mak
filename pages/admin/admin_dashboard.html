@@ -6,6 +6,8 @@
     <title>Admin Dashboard - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="flex h-screen">
     <!-- Sidebar -->
@@ -42,8 +44,8 @@
                 </li>
                 <li onclick="showTab('service-config')" id="tab-service-config" class="px-6 py-4 cursor-pointer transition border-l-4 border-transparent hover:bg-gray-700">
                     <div class="flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Service Config
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        Inventory Management
                     </div>
                 </li>
                 <li onclick="showTab('email-logs')" id="tab-email-logs" class="px-6 py-4 cursor-pointer transition border-l-4 border-transparent hover:bg-gray-700">
@@ -211,11 +213,11 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Student ID</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Full Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Account Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Total Orders</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">College</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Program</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Year Level</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Section</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Action</th>
                                 </tr>
                             </thead>
@@ -226,110 +228,182 @@
                 </div>
             </div>
 
-            <!-- Service Config Tab -->
+            <!-- Inventory Management Tab -->
             <div id="content-service-config" class="tab-content hidden">
-                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Service & Time Configuration</h2>
-                <div class="bg-white rounded-lg shadow p-6 mb-6">
-                    <h3 class="text-xl font-bold text-blue-900 mb-4">Add New Service</h3>
-                    <form id="addServiceForm" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block font-bold mb-1">Service Name *</label>
-                                <input type="text" id="newServiceName" required class="w-full border border-gray-300 rounded p-2" placeholder="e.g., School Uniform" />
-                            </div>
-                            <div>
-                                <label class="block font-bold mb-1">Estimated Time (mins) *</label>
-                                <input type="number" id="newServiceTime" required min="1" value="10" class="w-full border border-gray-300 rounded p-2" />
-                            </div>
-                        </div>
-                        <button type="submit" class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
-                            Add Service
-                        </button>
-                    </form>
-                    <div id="addServiceMessage" class="mt-4 text-sm font-medium"></div>
-                </div>
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-blue-900 mb-4">Current Services</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Service ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Service Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Estimated Time (mins)</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="servicesTableBody" class="divide-y divide-gray-200">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">
+                    <i class="fas fa-boxes mr-2"></i>Inventory Management
+                </h2>
                 
-                <!-- Inventory Management Section -->
-                <div class="bg-gradient-to-br from-purple-900 to-blue-900 rounded-lg shadow-lg p-6 mt-6 mb-6">
-                    <div class="flex items-center gap-3 mb-4">
-                        <svg class="w-8 h-8 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                        </svg>
-                        <div>
-                            <h3 class="text-2xl font-bold text-white">Inventory Management</h3>
-                            <p class="text-purple-200 text-sm">Control stock availability for student orders</p>
-                        </div>
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="text-sm text-gray-600 mb-1">Total Items</div>
+                        <div class="text-2xl font-bold" id="totalItems">0</div>
                     </div>
-                    <form id="addInventoryItemForm" class="space-y-4 bg-white/10 backdrop-blur rounded-lg p-4">
-                        <div>
-                            <label class="block font-bold mb-2 text-white">Add New Item to Inventory</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="newInventoryItemName" required 
-                                       class="flex-1 border border-purple-200 rounded p-3 focus:ring-2 focus:ring-purple-300 focus:border-purple-300" 
-                                       placeholder="e.g., ID Lace, School Uniform" />
-                                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded font-bold whitespace-nowrap transition-all hover:scale-105">
-                                    Add Item
-                                </button>
-                            </div>
-                        </div>
-                        <div id="addInventoryMessage" class="text-sm font-medium"></div>
-                    </form>
+                    <div class="bg-green-50 p-6 rounded-lg shadow border-l-4 border-green-500">
+                        <div class="text-sm text-gray-600 mb-1">In Stock</div>
+                        <div class="text-2xl font-bold text-green-700" id="inStockCount">0</div>
+                    </div>
+                    <div class="bg-yellow-50 p-6 rounded-lg shadow border-l-4 border-yellow-500">
+                        <div class="text-sm text-gray-600 mb-1">Low Stock</div>
+                        <div class="text-2xl font-bold text-yellow-700" id="lowStockCount">0</div>
+                    </div>
+                    <div class="bg-red-50 p-6 rounded-lg shadow border-l-4 border-red-500">
+                        <div class="text-sm text-gray-600 mb-1">Out of Stock</div>
+                        <div class="text-2xl font-bold text-red-700" id="outOfStockCount">0</div>
+                    </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-6 bg-gradient-to-r from-blue-900 to-purple-900">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-2xl font-bold text-white mb-2">Inventory Stock Status</h3>
-                                <p class="text-blue-100 text-sm">Manage availability of items for ordering</p>
-                            </div>
-                            <div class="flex gap-3 text-sm">
-                                <div class="bg-white/20 backdrop-blur rounded-lg px-4 py-2">
-                                    <span class="text-green-300 font-bold">●</span>
-                                    <span class="text-white ml-1">In Stock</span>
-                                </div>
-                                <div class="bg-white/20 backdrop-blur rounded-lg px-4 py-2">
-                                    <span class="text-red-300 font-bold">●</span>
-                                    <span class="text-white ml-1">Out of Stock</span>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Add Item Button -->
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-600">Manage stock levels and item availability</p>
+                    </div>
+                    <button onclick="showAddItemModal()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-lg transition-all hover:shadow-xl">
+                        <i class="fas fa-plus mr-2"></i>Add New Item
+                    </button>
+                </div>
+
+                <!-- Inventory Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <input type="text" id="inventorySearchInput" placeholder="Search items..." 
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               oninput="filterInventoryItems()">
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-gray-100 text-gray-700">
                                 <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">Item Name</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">Stock Status</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">Last Updated</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">Actions</th>
+                                    <th class="px-6 py-3 text-left">Item Name</th>
+                                    <th class="px-6 py-3 text-center">Stock</th>
+                                    <th class="px-6 py-3 text-center">Low Stock Alert</th>
+                                    <th class="px-6 py-3 text-center">Est. Time (min)</th>
+                                    <th class="px-6 py-3 text-center">Status</th>
+                                    <th class="px-6 py-3 text-center">Available</th>
+                                    <th class="px-6 py-3 text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="inventoryTableBody" class="divide-y divide-gray-200">
+                            <tbody id="inventoryTableBody">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p>Loading inventory...</p>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
+                <!-- Add/Edit Item Modal -->
+                <div id="itemModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                    <div class="modal-content" style="background: white; padding: 2rem; border-radius: 1rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold" id="modalTitle">Add New Item</h2>
+                            <button onclick="closeItemModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <form id="itemForm" onsubmit="saveInventoryItem(event)">
+                            <input type="hidden" id="itemId">
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-semibold mb-2">Item Name *</label>
+                                <input type="text" id="itemName" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-semibold mb-2">Description</label>
+                                <textarea id="itemDescription" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-gray-700 font-semibold mb-2">Stock Quantity *</label>
+                                    <input type="number" id="stockQuantity" min="0" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 font-semibold mb-2">Low Stock Alert At</label>
+                                    <input type="number" id="lowStockThreshold" min="1" value="20" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-semibold mb-2">Estimated Time (minutes) *</label>
+                                <input type="number" id="estimatedTime" min="1" value="10" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="isActive" checked class="mr-2">
+                                    <span class="text-gray-700">Active (visible to students)</span>
+                                </label>
+                            </div>
+
+                            <div class="flex gap-4">
+                                <button type="button" onclick="closeItemModal()" class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                                    <i class="fas fa-save mr-2"></i>Save Item
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Stock Adjustment Modal -->
+                <div id="stockModal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                    <div class="modal-content" style="background: white; padding: 2rem; border-radius: 1rem; max-width: 500px; width: 90%;">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Adjust Stock</h2>
+                            <button onclick="closeStockModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <form id="stockForm" onsubmit="adjustInventoryStock(event)">
+                            <input type="hidden" id="stockItemId">
+                            
+                            <div class="mb-4">
+                                <p class="text-gray-700 font-semibold" id="stockItemName"></p>
+                                <p class="text-sm text-gray-500">Current Stock: <span id="currentStock" class="font-bold"></span></p>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-gray-700 font-semibold mb-2">New Stock Quantity *</label>
+                                <input type="number" id="newStockQuantity" min="0" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div class="mb-6">
+                                <label class="block text-gray-700 font-semibold mb-2">Reason</label>
+                                <input type="text" id="stockReason" placeholder="e.g., Restock, Inventory count" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+
+                            <div class="flex gap-4">
+                                <button type="button" onclick="closeStockModal()" class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                                    <i class="fas fa-check mr-2"></i>Update Stock
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <style>
+                    .modal.active { display: flex !important; }
+                    .stock-badge {
+                        padding: 4px 12px;
+                        border-radius: 12px;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                    }
+                    .stock-in { background-color: #d1fae5; color: #065f46; }
+                    .stock-low { background-color: #fef3c7; color: #92400e; }
+                    .stock-out { background-color: #fee2e2; color: #991b1b; }
+                </style>
             </div>
 
             <!-- Edit Service Modal -->
@@ -684,113 +758,154 @@
             </div>
 
             <div id="content-analytics" class="tab-content hidden">
-                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">Analytics & Reports</h2>
+                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">
+                    <i class="fas fa-chart-line mr-2"></i>Order Analytics Dashboard
+                </h2>
                 
-                <!-- Period Selector -->
-                <div class="bg-white p-4 rounded-lg shadow mb-6">
-                    <div class="flex flex-col gap-4">
-                        <div class="flex items-center gap-4">
-                            <label class="text-sm font-medium text-gray-700">Quick Period:</label>
-                            <div class="flex gap-2">
-                                <button onclick="setAnalyticsPeriod('daily')" id="btn-daily" class="px-4 py-2 rounded font-bold bg-blue-900 text-white">Daily</button>
-                                <button onclick="setAnalyticsPeriod('weekly')" id="btn-weekly" class="px-4 py-2 rounded font-bold bg-gray-200 text-gray-700 hover:bg-gray-300">Weekly</button>
-                                <button onclick="setAnalyticsPeriod('monthly')" id="btn-monthly" class="px-4 py-2 rounded font-bold bg-gray-200 text-gray-700 hover:bg-gray-300">Monthly</button>
-                                <button onclick="setAnalyticsPeriod('yearly')" id="btn-yearly" class="px-4 py-2 rounded font-bold bg-gray-200 text-gray-700 hover:bg-gray-300">Yearly</button>
-                                <button onclick="setAnalyticsPeriod('custom')" id="btn-custom" class="px-4 py-2 rounded font-bold bg-gray-200 text-gray-700 hover:bg-gray-300">Custom Range</button>
-                            </div>
-                        </div>
-                        <div id="customDateRange" class="hidden grid grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                                <input type="date" id="customStartDate" class="w-full border border-gray-300 rounded p-2">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                                <input type="date" id="customEndDate" class="w-full border border-gray-300 rounded p-2">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-transparent mb-1">Apply</label>
-                                <button onclick="applyCustomDateRange()" class="w-full bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded font-bold">
-                                    Apply Range
+                <!-- Control Panel -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6">
+                    <div class="flex gap-4 items-center flex-wrap">
+                        <button onclick="toggleRealtimeAnalytics()" id="realtimeBtn" 
+                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            <i class="fas fa-play mr-2"></i>Start Real-time
+                        </button>
+                        <button onclick="refreshAnalyticsData()" 
+                                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh Data
+                        </button>
+                        <button onclick="resetAnalyticsCharts()" 
+                                class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                            <i class="fas fa-redo mr-2"></i>Reset
+                        </button>
+                        
+                        <!-- Date Range Filter -->
+                        <div class="flex gap-2 items-center border-l pl-4">
+                            <label class="text-sm font-semibold text-gray-700">
+                                <i class="fas fa-calendar mr-1"></i>Period:
+                            </label>
+                            <select id="analyticsDateFilter" onchange="changeDateFilter(this.value)" 
+                                    class="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="daily">Today</option>
+                                <option value="weekly">This Week</option>
+                                <option value="monthly">This Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                            
+                            <!-- Custom Date Range Inputs (Hidden by default) -->
+                            <div id="customDateRange" class="hidden flex gap-2 items-center">
+                                <input type="date" id="startDate" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                <span class="text-gray-500">to</span>
+                                <input type="date" id="endDate" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                <button onclick="applyCustomDateRange()" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm">
+                                    Apply
                                 </button>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow text-center">
-                        <h4 class="text-gray-600 mb-2">Total Orders</h4>
-                        <p class="text-5xl font-bold text-blue-600" id="analyticsTotalOrders">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow text-center">
-                        <h4 class="text-gray-600 mb-2">Total Completed</h4>
-                        <p class="text-5xl font-bold text-green-600" id="analyticsTotalCompleted">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow text-center">
-                        <h4 class="text-gray-600 mb-2">Top Item</h4>
-                        <p class="text-2xl font-bold text-orange-500" id="analyticsTopItem">N/A</p>
-                    </div>
-                </div>
-
-                <!-- Chart -->
-                <div class="bg-white rounded-lg shadow p-6 mb-8">
-                    <h3 class="text-xl font-bold text-blue-900 mb-4">Orders Trend</h3>
-                    <canvas id="ordersChart" height="80"></canvas>
-                </div>
-
-                <!-- Order Status Breakdown and Product Quantities -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold text-blue-900 mb-4">Order Status Breakdown</h3>
-                            <p class="text-sm text-gray-500" id="statusDateRange">Loading...</p>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-gray-100">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Count</th>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">%</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="analyticsStatusBody" class="divide-y divide-gray-200">
-                                    </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold text-blue-900 mb-4">Product Quantities</h3>
-                            <p class="text-sm text-gray-500" id="productDateRange">Loading...</p>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead class="bg-gray-100">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Product</th>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Qty Sold</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="analyticsProductQtyBody" class="divide-y divide-gray-200">
-                                    </tbody>
-                            </table>
+                        
+                        <div class="ml-auto text-sm text-gray-600">
+                            <span id="analyticsUpdateTime">Last updated: --:--:--</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Top Items - Enhanced Layout -->
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="p-6 bg-gradient-to-r from-blue-900 to-blue-700">
-                        <h3 class="text-2xl font-bold text-white mb-2">Top Ordered Items</h3>
-                        <p class="text-blue-100 text-sm">Most popular items in this period</p>
-                    </div>
-                    <div class="p-6">
-                        <div id="analyticsTopItemsBody" class="space-y-3">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Orders</p>
+                                <p class="text-3xl font-bold text-blue-600" id="analyticsTotalOrders">0</p>
+                            </div>
+                            <div class="text-4xl text-blue-600">
+                                <i class="fas fa-box"></i>
+                            </div>
                         </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Pending</p>
+                                <p class="text-3xl font-bold text-yellow-600" id="analyticsPendingOrders">0</p>
+                            </div>
+                            <div class="text-4xl text-yellow-600">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Completed</p>
+                                <p class="text-3xl font-bold text-green-600" id="analyticsCompletedOrders">0</p>
+                            </div>
+                            <div class="text-4xl text-green-600">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Avg Wait Time</p>
+                                <p class="text-3xl font-bold text-purple-600" id="analyticsAvgWaitTime">0m</p>
+                            </div>
+                            <div class="text-4xl text-purple-600">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Orders Over Time (Line Chart) -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold mb-4">
+                            <i class="fas fa-chart-line text-blue-600 mr-2"></i>Orders Over Time
+                        </h2>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="analyticsOrdersTimeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Order Status Distribution (Pie Chart) -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold mb-4">
+                            <i class="fas fa-chart-pie text-blue-600 mr-2"></i>Status Distribution
+                        </h2>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="analyticsStatusPieChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Items Demand (Bar Chart) -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold mb-4">
+                            <i class="fas fa-chart-bar text-blue-600 mr-2"></i>Popular Items
+                        </h2>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="analyticsItemsBarChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Hourly Activity (Animated Bar Chart) -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h2 class="text-xl font-bold mb-4">
+                            <i class="fas fa-clock text-blue-600 mr-2"></i>Hourly Activity
+                        </h2>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="analyticsHourlyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Activity Feed -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-4">
+                        <i class="fas fa-stream text-blue-600 mr-2"></i>Live Order Stream
+                    </h2>
+                    <div id="analyticsActivityFeed" class="space-y-2 max-h-64 overflow-y-auto scroll-smooth">
+                        <p class="text-gray-500 text-sm">Waiting for data...</p>
                     </div>
                 </div>
             </div>
@@ -809,6 +924,11 @@
         let showingArchivedLogs = false;
         let selectedLogIds = [];
         let inventoryStock = {};
+        
+        // Analytics variables
+        let realtimeAnalyticsInterval = null;
+        let isRealtimeAnalytics = false;
+        let analyticsCharts = {};
 
         // Check if admin is logged in
         if (!sessionStorage.getItem('adminLoggedIn')) {
@@ -844,7 +964,8 @@
             if (tabName === 'queue-history') {
                 fetchHistory(); // Fetch history data
             } else if (tabName === 'analytics') {
-                fetchAnalyticsByPeriod(currentAnalyticsPeriod);
+                initAnalyticsCharts();
+                generateAnalyticsData();
             } else if (tabName === 'student-records') {
                 fetchStudents(); // Fetch student data
             } else if (tabName === 'admin-management') {
@@ -920,17 +1041,24 @@
             studentsData.forEach(student => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
+                
+                // Determine account status
+                const hasAccount = student.has_account == 1;
+                const accountStatusBadge = hasAccount 
+                    ? '<span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Registered</span>'
+                    : '<span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>Guest Only</span>';
+                
                 row.innerHTML = `
-                    <td class="px-6 py-4">${student.student_id || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.first_name || ''} ${student.last_name || ''}</td>
-                    <td class="px-6 py-4">${student.college || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.program || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.year_level || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.section || 'N/A'}</td>
+                    <td class="px-6 py-4 font-mono text-sm">${student.student_id || 'N/A'}</td>
+                    <td class="px-6 py-4 font-semibold">${student.first_name || ''} ${student.last_name || ''}</td>
                     <td class="px-6 py-4">${student.email || 'N/A'}</td>
+                    <td class="px-6 py-4">${accountStatusBadge}</td>
+                    <td class="px-6 py-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded font-bold text-sm">${student.total_orders || 0}</span></td>
+                    <td class="px-6 py-4 text-sm">${student.college || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm">${student.program || 'N/A'}</td>
                     <td class="px-6 py-4">
-                        <button onclick="viewStudentDetails('${student.student_id}')" class="text-blue-600 hover:text-blue-800 font-bold">
-                            View
+                        <button onclick="viewStudentDetails('${student.student_id}')" class="text-blue-600 hover:text-blue-800 font-bold text-sm">
+                            View Details
                         </button>
                     </td>
                 `;
@@ -965,17 +1093,24 @@
             filtered.forEach(student => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
+                
+                // Determine account status
+                const hasAccount = student.has_account == 1;
+                const accountStatusBadge = hasAccount 
+                    ? '<span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Registered</span>'
+                    : '<span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>Guest Only</span>';
+                
                 row.innerHTML = `
-                    <td class="px-6 py-4">${student.student_id || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.first_name || ''} ${student.last_name || ''}</td>
-                    <td class="px-6 py-4">${student.college || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.program || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.year_level || 'N/A'}</td>
-                    <td class="px-6 py-4">${student.section || 'N/A'}</td>
+                    <td class="px-6 py-4 font-mono text-sm">${student.student_id || 'N/A'}</td>
+                    <td class="px-6 py-4 font-semibold">${student.first_name || ''} ${student.last_name || ''}</td>
                     <td class="px-6 py-4">${student.email || 'N/A'}</td>
+                    <td class="px-6 py-4">${accountStatusBadge}</td>
+                    <td class="px-6 py-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded font-bold text-sm">${student.total_orders || 0}</span></td>
+                    <td class="px-6 py-4 text-sm">${student.college || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm">${student.program || 'N/A'}</td>
                     <td class="px-6 py-4">
-                        <button onclick="viewStudentDetails('${student.student_id}')" class="text-blue-600 hover:text-blue-800 font-bold">
-                            View
+                        <button onclick="viewStudentDetails('${student.student_id}')" class="text-blue-600 hover:text-blue-800 font-bold text-sm">
+                            View Details
                         </button>
                     </td>
                 `;
@@ -2271,8 +2406,12 @@
                 const response = await fetch(`${API_BASE}/inventory_status.php`);
                 const result = await response.json();
                 
-                if (result.success) {
-                    inventoryStock = result.data.stock_status;
+                if (result.success && result.data.items) {
+                    // Convert items array to lookup object for backward compatibility
+                    inventoryStock = {};
+                    result.data.items.forEach(item => {
+                        inventoryStock[item.item_name] = item.is_available && item.stock_quantity > 0;
+                    });
                 }
             } catch (error) {
                 console.error('Error fetching inventory status:', error);
@@ -2522,364 +2661,706 @@
             }
         }
 
-        // Service Management Functions
-        async function fetchServices() {
-            try {
-                const response = await fetch(`${API_BASE}/services.php`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    displayServices(result.data.services);
-                }
-            } catch (error) {
-                console.error('Error fetching services:', error);
-            }
-        }
-
-        function displayServices(services) {
-            const tbody = document.getElementById('servicesTableBody');
-            tbody.innerHTML = '';
-            
-            if (services.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No services found</td></tr>';
+        // ============================================
+        // ANALYTICS DASHBOARD FUNCTIONS
+        // ============================================
+        
+        // Initialize analytics charts
+        function initAnalyticsCharts() {
+            // Only initialize if not already done
+            if (Object.keys(analyticsCharts).length > 0) {
                 return;
             }
             
-            services.forEach(service => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
-                
-                const statusColor = service.is_active == 1 ? 'bg-green-500' : 'bg-gray-500';
-                const statusText = service.is_active == 1 ? 'Active' : 'Inactive';
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4">${service.service_id}</td>
-                    <td class="px-6 py-4">${service.service_name}</td>
-                    <td class="px-6 py-4">${service.estimated_time}</td>
-                    <td class="px-6 py-4">
-                        <span class="${statusColor} text-white px-3 py-1 rounded text-xs font-bold">
-                            ${statusText}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex gap-2">
-                            <button onclick='editService(${JSON.stringify(service)})' class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
-                                Edit
-                            </button>
-                            <button onclick="deleteService(${service.service_id}, '${service.service_name}')" class="border-2 border-red-600 text-red-600 hover:bg-red-50 px-4 py-1 rounded text-sm font-bold">
-                                Delete
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
+            // Orders Over Time (Line Chart)
+            const ordersTimeCtx = document.getElementById('analyticsOrdersTimeChart').getContext('2d');
+            analyticsCharts.ordersTime = new Chart(ordersTimeCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Orders',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 750,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Status Pie Chart
+            const statusPieCtx = document.getElementById('analyticsStatusPieChart').getContext('2d');
+            analyticsCharts.statusPie = new Chart(statusPieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Processing', 'Ready', 'Completed', 'Cancelled'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgb(234, 179, 8)',  // Yellow
+                            'rgb(59, 130, 246)',  // Blue
+                            'rgb(139, 92, 246)',  // Purple
+                            'rgb(34, 197, 94)',   // Green
+                            'rgb(239, 68, 68)'    // Red
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Items Bar Chart
+            const itemsBarCtx = document.getElementById('analyticsItemsBarChart').getContext('2d');
+            analyticsCharts.itemsBar = new Chart(itemsBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Number of Orders',
+                        data: [],
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(234, 179, 8, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(239, 68, 68)',
+                            'rgb(34, 197, 94)',
+                            'rgb(59, 130, 246)',
+                            'rgb(234, 179, 8)',
+                            'rgb(139, 92, 246)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' orders';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Hourly Activity Chart
+            const hourlyCtx = document.getElementById('analyticsHourlyChart').getContext('2d');
+            analyticsCharts.hourly = new Chart(hourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'Orders per Hour',
+                        data: Array(24).fill(0),
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
             });
         }
 
-        // Add service form handler
-        document.getElementById('addServiceForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const messageEl = document.getElementById('addServiceMessage');
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Adding...';
-            messageEl.textContent = '';
-            
-            const formData = {
-                service_name: document.getElementById('newServiceName').value,
-                estimated_time: parseInt(document.getElementById('newServiceTime').value)
-            };
-            
+        // Fetch analytics data from API
+        async function generateAnalyticsData() {
             try {
-                const response = await fetch(`${API_BASE}/services.php`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                
+                const response = await fetch(`${API_BASE}/admin/analytics.php`);
                 const result = await response.json();
                 
-                if (result.success) {
-                    messageEl.textContent = 'Service added successfully!';
-                    messageEl.className = 'mt-4 text-sm font-medium text-green-600';
-                    e.target.reset();
-                    await fetchServices();
-                } else {
-                    messageEl.textContent = `Error: ${result.message}`;
-                    messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+                if (!result.success) {
+                    console.error('API Error:', result.error);
+                    return;
                 }
-            } catch (error) {
-                console.error('Error adding service:', error);
-                messageEl.textContent = 'A connection error occurred.';
-                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Add Service';
-            }
-        });
+                
+                const data = result.data;
+                const now = new Date();
+                const timeLabel = now.toLocaleTimeString();
+                
+                // Update stats cards
+                document.getElementById('analyticsTotalOrders').textContent = data.total_orders;
+                document.getElementById('analyticsPendingOrders').textContent = data.status_distribution.pending;
+                document.getElementById('analyticsCompletedOrders').textContent = data.status_distribution.completed;
+                document.getElementById('analyticsAvgWaitTime').textContent = `${data.avg_wait_time}m`;
 
-        function editService(service) {
-            document.getElementById('editServiceId').value = service.service_id;
-            document.getElementById('editServiceName').value = service.service_name;
-            document.getElementById('editServiceTime').value = service.estimated_time;
-            document.getElementById('editServiceActive').checked = service.is_active == 1;
-            
-            const modal = document.getElementById('editServiceModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+                // Update status pie chart
+                analyticsCharts.statusPie.data.datasets[0].data = [
+                    data.status_distribution.pending,
+                    data.status_distribution.processing,
+                    data.status_distribution.ready,
+                    data.status_distribution.completed,
+                    data.status_distribution.cancelled
+                ];
+                analyticsCharts.statusPie.update();
+
+                // Update hourly activity chart
+                analyticsCharts.hourly.data.datasets[0].data = data.orders_over_time;
+                analyticsCharts.hourly.update();
+
+                // Update popular items bar chart
+                if (data.popular_items && data.popular_items.length > 0) {
+                    analyticsCharts.itemsBar.data.labels = data.popular_items.map(item => item.item);
+                    analyticsCharts.itemsBar.data.datasets[0].data = data.popular_items.map(item => item.count);
+                    analyticsCharts.itemsBar.update();
+                }
+
+                // Update orders over time line chart (by day)
+                if (data.orders_by_day && data.orders_by_day.length > 0) {
+                    analyticsCharts.ordersTime.data.labels = data.orders_by_day.map(d => {
+                        const date = new Date(d.date);
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    });
+                    analyticsCharts.ordersTime.data.datasets[0].data = data.orders_by_day.map(d => d.count);
+                    analyticsCharts.ordersTime.update();
+                }
+
+                // Update activity feed
+                if (data.recent_activity && data.recent_activity.length > 0) {
+                    const feed = document.getElementById('analyticsActivityFeed');
+                    feed.innerHTML = ''; // Clear existing
+                    data.recent_activity.slice(0, 10).forEach(activity => {
+                        const time = new Date(activity.time);
+                        const statusColors = {
+                            'pending': 'yellow',
+                            'processing': 'blue',
+                            'ready': 'purple',
+                            'completed': 'green',
+                            'cancelled': 'red'
+                        };
+                        const statusIcons = {
+                            'pending': '<i class="fas fa-hourglass-half text-yellow-600"></i>',
+                            'processing': '<i class="fas fa-cog text-blue-600"></i>',
+                            'ready': '<i class="fas fa-check-circle text-purple-600"></i>',
+                            'completed': '<i class="fas fa-trophy text-green-600"></i>',
+                            'cancelled': '<i class="fas fa-times-circle text-red-600"></i>'
+                        };
+                        const color = statusColors[activity.status] || 'gray';
+                        addAnalyticsActivityItem(
+                            `${statusIcons[activity.status] || '<i class="fas fa-box"></i>'} Order ${activity.queue_number} - ${activity.student_name} - <span class="text-${color}-600 font-semibold">${activity.status}</span>`,
+                            time.toLocaleTimeString()
+                        );
+                    });
+                }
+
+                // Update timestamp
+                document.getElementById('analyticsUpdateTime').textContent = `Last updated: ${timeLabel}`;
+                
+            } catch (error) {
+                console.error('Error fetching analytics data:', error);
+                addAnalyticsActivityItem('<i class="fas fa-exclamation-triangle text-red-600"></i> Error fetching data from API');
+            }
         }
 
-        function closeEditServiceModal() {
-            const modal = document.getElementById('editServiceModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.getElementById('editServiceMessage').textContent = '';
+        // Add item to analytics activity feed
+        function addAnalyticsActivityItem(message, time = null) {
+            const feed = document.getElementById('analyticsActivityFeed');
+            const item = document.createElement('div');
+            item.className = 'p-3 bg-blue-50 rounded border-l-4 border-blue-500 text-sm animate-fade-in';
+            const timestamp = time || new Date().toLocaleTimeString();
+            item.innerHTML = `<span class="font-semibold">${timestamp}</span> - ${message}`;
+            
+            // Limit to 10 items
+            if (feed.children.length >= 10) {
+                feed.removeChild(feed.lastChild);
+            }
+            
+            // Remove "Waiting for data..." message if it exists
+            if (feed.firstChild && feed.firstChild.tagName === 'P') {
+                feed.removeChild(feed.firstChild);
+            }
+            
+            // Insert at the top
+            feed.insertBefore(item, feed.firstChild);
+            
+            // Keep scroll position at top (don't auto-scroll)
+            feed.scrollTop = 0;
         }
 
-        // Edit service form handler
-        document.getElementById('editServiceForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Toggle real-time analytics
+        function toggleRealtimeAnalytics() {
+            isRealtimeAnalytics = !isRealtimeAnalytics;
+            const btn = document.getElementById('realtimeBtn');
             
-            const messageEl = document.getElementById('editServiceMessage');
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Updating...';
-            messageEl.textContent = '';
-            
-            const formData = {
-                service_id: document.getElementById('editServiceId').value,
-                service_name: document.getElementById('editServiceName').value,
-                estimated_time: parseInt(document.getElementById('editServiceTime').value),
-                is_active: document.getElementById('editServiceActive').checked ? 1 : 0
-            };
-            
-            try {
-                const response = await fetch(`${API_BASE}/services.php`, {
-                    method: 'PUT',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    messageEl.textContent = 'Service updated successfully!';
-                    messageEl.className = 'mt-4 text-sm font-medium text-green-600';
-                    await fetchServices();
-                    setTimeout(closeEditServiceModal, 1500);
-                } else {
-                    messageEl.textContent = `Error: ${result.message}`;
-                    messageEl.className = 'mt-4 text-sm font-medium text-red-600';
-                }
-            } catch (error) {
-                console.error('Error updating service:', error);
-                messageEl.textContent = 'A connection error occurred.';
-                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Update';
+            if (isRealtimeAnalytics) {
+                btn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause Real-time';
+                btn.className = 'bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700';
+                realtimeAnalyticsInterval = setInterval(generateAnalyticsData, 2000);
+            } else {
+                btn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Real-time';
+                btn.className = 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700';
+                clearInterval(realtimeAnalyticsInterval);
             }
-        });
+        }
 
-        async function deleteService(serviceId, serviceName) {
-            if (!confirm(`Are you sure you want to delete service: ${serviceName}?\n\nThis action cannot be undone.`)) {
+        // Refresh analytics data manually
+        function refreshAnalyticsData() {
+            generateAnalyticsData();
+            addAnalyticsActivityItem('<i class="fas fa-sync-alt text-blue-600"></i> Data refreshed manually');
+        }
+
+        // Reset all analytics charts
+        function resetAnalyticsCharts() {
+            analyticsCharts.ordersTime.data.labels = [];
+            analyticsCharts.ordersTime.data.datasets[0].data = [];
+            analyticsCharts.ordersTime.update();
+            
+            analyticsCharts.statusPie.data.datasets[0].data = [0, 0, 0, 0, 0];
+            analyticsCharts.statusPie.update();
+            
+            analyticsCharts.itemsBar.data.datasets[0].data = [];
+            analyticsCharts.itemsBar.update();
+            
+            analyticsCharts.hourly.data.datasets[0].data = Array(24).fill(0);
+            analyticsCharts.hourly.update();
+            
+            document.getElementById('analyticsActivityFeed').innerHTML = '<p class="text-gray-500 text-sm">Waiting for data...</p>';
+            addAnalyticsActivityItem('<i class="fas fa-redo text-gray-600"></i> Charts reset');
+        }
+
+        // Change date filter
+        function changeDateFilter(value) {
+            const customDateRange = document.getElementById('customDateRange');
+            
+            if (value === 'custom') {
+                customDateRange.classList.remove('hidden');
+                // Set default dates (last 7 days to today)
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - 7);
+                
+                document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+                document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            } else {
+                customDateRange.classList.add('hidden');
+                currentAnalyticsPeriod = value;
+                generateAnalyticsData();
+                addAnalyticsActivityItem(`<i class="fas fa-calendar text-blue-600"></i> Filter changed to: ${value}`);
+            }
+        }
+
+        // Apply custom date range
+        function applyCustomDateRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
                 return;
             }
             
-            try {
-                const response = await fetch(`${API_BASE}/services.php`, {
-                    method: 'DELETE',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ service_id: serviceId })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showNotification('Service deleted successfully', 'success');
-                    await fetchServices();
-                } else {
-                    alert(`Error: ${result.message}`);
-                }
-            } catch (error) {
-                console.error('Error deleting service:', error);
-                alert('A connection error occurred.');
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Start date must be before end date');
+                return;
             }
+            
+            currentAnalyticsPeriod = 'custom';
+            generateAnalyticsData();
+            addAnalyticsActivityItem(`<i class="fas fa-calendar text-blue-600"></i> Custom range: ${startDate} to ${endDate}`);
         }
+
+        // ============================================
+        // END ANALYTICS DASHBOARD FUNCTIONS
+        // ============================================
 
         // Clean up on page unload
         window.addEventListener('beforeunload', () => {
             stopAutoRefresh();
         });
 
-        // Inventory Management Functions
-        // Add inventory item form handler
-        document.getElementById('addInventoryItemForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const messageEl = document.getElementById('addInventoryMessage');
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Adding...';
-            messageEl.textContent = '';
-            
-            const formData = {
-                item_name: document.getElementById('newInventoryItemName').value
-            };
-            
-            try {
-                const response = await fetch(`${API_BASE}/admin/inventory.php`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    messageEl.textContent = 'Item added successfully!';
-                    messageEl.className = 'mt-4 text-sm font-medium text-green-600';
-                    e.target.reset();
-                    await fetchInventoryItems();
-                } else {
-                    messageEl.textContent = `Error: ${result.message}`;
-                    messageEl.className = 'mt-4 text-sm font-medium text-red-600';
-                }
-            } catch (error) {
-                console.error('Error adding item:', error);
-                messageEl.textContent = 'A connection error occurred.';
-                messageEl.className = 'mt-4 text-sm font-medium text-red-600';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Add Item';
-            }
-        });
+        // ============================================
+        // INVENTORY MANAGEMENT FUNCTIONS
+        // ============================================
+        
+        let inventoryData = [];
+        const INVENTORY_API_URL = '../../php/api/inventory.php';
 
-        async function fetchInventoryItems() {
+        // Load inventory on page load
+        async function loadInventory() {
             try {
-                const response = await fetch(`${API_BASE}/admin/inventory.php`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
+                const response = await fetch(INVENTORY_API_URL);
                 const result = await response.json();
                 
                 if (result.success) {
-                    displayInventoryItems(result.data.items);
+                    inventoryData = result.data.items;
+                    renderInventory();
+                    updateInventoryStats();
+                } else {
+                    console.error('Failed to load inventory:', result.message);
                 }
             } catch (error) {
-                console.error('Error fetching inventory:', error);
+                console.error('Error loading inventory:', error);
             }
         }
 
-        function displayInventoryItems(items) {
+        function renderInventory(items = inventoryData) {
             const tbody = document.getElementById('inventoryTableBody');
-            tbody.innerHTML = '';
             
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center"><div class="text-gray-400"><svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg><p class="text-lg font-semibold">No items in inventory</p><p class="text-sm">Add your first item using the form above</p></div></td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-2"></i>
+                            <p>No items found</p>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
-            
-            items.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-blue-50 transition-colors';
+
+            tbody.innerHTML = items.map(item => {
+                const stockBadge = getInventoryStockBadge(item.stock_quantity, item.low_stock_threshold);
+                const availableBadge = item.is_available == 1 
+                    ? '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">✓ Available</span>'
+                    : '<span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">✗ Unavailable</span>';
                 
-                const statusColor = item.is_in_stock == 1 ? 'bg-green-500' : 'bg-red-500';
-                const statusText = item.is_in_stock == 1 ? 'In Stock' : 'Out of Stock';
-                const statusIcon = item.is_in_stock == 1 ? '✓' : '✕';
-                
-                const btn = item.is_in_stock == 1 ? 
-                    'bg-red-50 border-red-600 text-red-600 hover:bg-red-600 hover:text-white' : 
-                    'bg-green-50 border-green-600 text-green-600 hover:bg-green-600 hover:text-white';
-                const btnText = item.is_in_stock == 1 ? 'Mark Out of Stock' : 'Mark In Stock';
-                
-                const updatedAt = item.updated_at ? new Date(item.updated_at).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }) : 'Never';
-                
-                row.innerHTML = `
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <span class="bg-blue-100 text-blue-900 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                                ${index + 1}
-                            </span>
-                            <span class="font-bold text-gray-900">${item.item_name}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="${statusColor} text-white px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-2">
-                            ${statusIcon} ${statusText}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">
-                        ${updatedAt}
-                    </td>
-                    <td class="px-6 py-4">
-                        <button onclick="toggleStockStatus(${item.item_id}, ${item.is_in_stock})" 
-                                class="border-2 ${btn} px-5 py-2 rounded-lg text-sm font-bold transition-all transform hover:scale-105">
-                            ${btnText}
-                        </button>
-                    </td>
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-gray-800">${item.item_name}</div>
+                            ${item.description ? `<div class="text-sm text-gray-500">${item.description}</div>` : ''}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="font-bold text-lg">${item.stock_quantity}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center text-gray-600">${item.low_stock_threshold}</td>
+                        <td class="px-6 py-4 text-center text-gray-600">${item.estimated_time}</td>
+                        <td class="px-6 py-4 text-center">${stockBadge}</td>
+                        <td class="px-6 py-4 text-center">${availableBadge}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex justify-center gap-2">
+                                <button onclick="showEditItemModal(${item.item_id})" 
+                                        class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm"
+                                        title="Edit Item">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="showStockModal(${item.item_id})" 
+                                        class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm"
+                                        title="Adjust Stock">
+                                    <i class="fas fa-boxes"></i>
+                                </button>
+                                <button onclick="toggleItemAvailability(${item.item_id}, ${item.is_available})" 
+                                        class="px-3 py-1 ${item.is_available == 1 ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded text-sm"
+                                        title="${item.is_available == 1 ? 'Mark Out of Stock' : 'Mark Available'}">
+                                    <i class="fas fa-${item.is_available == 1 ? 'ban' : 'check'}"></i>
+                                </button>
+                                <button onclick="deleteInventoryItem(${item.item_id}, '${item.item_name}')" 
+                                        class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm"
+                                        title="Delete Item">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
-            });
+            }).join('');
         }
 
-        async function toggleStockStatus(itemId, currentStatus) {
-            const newStatus = currentStatus == 1 ? 0 : 1;
-            const actionText = newStatus == 1 ? 'mark this item as IN STOCK' : 'mark this item as OUT OF STOCK';
-            
-            if (!confirm(`Are you sure you want to ${actionText}?`)) {
-                return;
+        function getInventoryStockBadge(quantity, threshold) {
+            if (quantity === 0) {
+                return '<span class="stock-badge stock-out">Out of Stock</span>';
+            } else if (quantity <= threshold) {
+                return `<span class="stock-badge stock-low">Low Stock</span>`;
+            } else {
+                return '<span class="stock-badge stock-in">In Stock</span>';
             }
+        }
+
+        function updateInventoryStats() {
+            const total = inventoryData.length;
+            const inStock = inventoryData.filter(i => i.stock_quantity > i.low_stock_threshold).length;
+            const lowStock = inventoryData.filter(i => i.stock_quantity > 0 && i.stock_quantity <= i.low_stock_threshold).length;
+            const outOfStock = inventoryData.filter(i => i.stock_quantity === 0).length;
+
+            document.getElementById('totalItems').textContent = total;
+            document.getElementById('inStockCount').textContent = inStock;
+            document.getElementById('lowStockCount').textContent = lowStock;
+            document.getElementById('outOfStockCount').textContent = outOfStock;
+        }
+
+        function filterInventoryItems() {
+            const search = document.getElementById('inventorySearchInput').value.toLowerCase();
+            const filtered = inventoryData.filter(item => 
+                item.item_name.toLowerCase().includes(search) ||
+                (item.description && item.description.toLowerCase().includes(search))
+            );
+            renderInventory(filtered);
+        }
+
+        // Modal Functions
+        function showAddItemModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Item';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemId').value = '';
+            document.getElementById('isActive').checked = true;
+            document.getElementById('itemModal').classList.add('active');
+            document.getElementById('itemModal').style.display = 'flex';
+        }
+
+        function showEditItemModal(itemId) {
+            const item = inventoryData.find(i => i.item_id === itemId);
+            if (!item) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Item';
+            document.getElementById('itemId').value = item.item_id;
+            document.getElementById('itemName').value = item.item_name;
+            document.getElementById('itemDescription').value = item.description || '';
+            document.getElementById('stockQuantity').value = item.stock_quantity;
+            document.getElementById('lowStockThreshold').value = item.low_stock_threshold;
+            document.getElementById('estimatedTime').value = item.estimated_time;
+            document.getElementById('isActive').checked = item.is_active == 1;
+            document.getElementById('itemModal').classList.add('active');
+            document.getElementById('itemModal').style.display = 'flex';
+        }
+
+        function closeItemModal() {
+            document.getElementById('itemModal').classList.remove('active');
+            document.getElementById('itemModal').style.display = 'none';
+        }
+
+        function showStockModal(itemId) {
+            const item = inventoryData.find(i => i.item_id === itemId);
+            if (!item) return;
+
+            document.getElementById('stockItemId').value = item.item_id;
+            document.getElementById('stockItemName').textContent = item.item_name;
+            document.getElementById('currentStock').textContent = item.stock_quantity;
+            document.getElementById('newStockQuantity').value = item.stock_quantity;
+            document.getElementById('stockReason').value = '';
+            document.getElementById('stockModal').classList.add('active');
+            document.getElementById('stockModal').style.display = 'flex';
+        }
+
+        function closeStockModal() {
+            document.getElementById('stockModal').classList.remove('active');
+            document.getElementById('stockModal').style.display = 'none';
+        }
+
+        // CRUD Operations
+        async function saveInventoryItem(event) {
+            event.preventDefault();
             
+            const itemId = document.getElementById('itemId').value;
+            const data = {
+                item_name: document.getElementById('itemName').value,
+                description: document.getElementById('itemDescription').value,
+                stock_quantity: parseInt(document.getElementById('stockQuantity').value),
+                low_stock_threshold: parseInt(document.getElementById('lowStockThreshold').value),
+                estimated_time: parseInt(document.getElementById('estimatedTime').value),
+                is_active: document.getElementById('isActive').checked ? 1 : 0
+            };
+
             try {
-                const response = await fetch(`${API_BASE}/admin/inventory.php`, {
+                const method = itemId ? 'PUT' : 'POST';
+                if (itemId) data.item_id = parseInt(itemId);
+
+                const response = await fetch(INVENTORY_API_URL, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(itemId ? 'Item updated successfully' : 'Item added successfully', 'success');
+                    closeItemModal();
+                    loadInventory();
+                } else {
+                    showNotification(result.message || 'Failed to save item', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving item:', error);
+                showNotification('Error saving item. Please try again.', 'error');
+            }
+        }
+
+        async function adjustInventoryStock(event) {
+            event.preventDefault();
+            
+            const itemId = parseInt(document.getElementById('stockItemId').value);
+            const newQuantity = parseInt(document.getElementById('newStockQuantity').value);
+            const reason = document.getElementById('stockReason').value;
+
+            try {
+                const response = await fetch(INVENTORY_API_URL, {
                     method: 'PUT',
-                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         item_id: itemId,
-                        is_in_stock: newStatus
+                        stock_quantity: newQuantity,
+                        stock_reason: reason || 'Manual stock adjustment'
                     })
                 });
-                
+
                 const result = await response.json();
                 
                 if (result.success) {
-                    showNotification('Stock status updated successfully', 'success');
-                    await fetchInventoryItems();
+                    showNotification('Stock updated successfully', 'success');
+                    closeStockModal();
+                    loadInventory();
                 } else {
-                    alert(`Error: ${result.message}`);
+                    showNotification(result.message || 'Failed to update stock', 'error');
                 }
             } catch (error) {
-                console.error('Error updating stock status:', error);
-                alert('A connection error occurred.');
+                console.error('Error updating stock:', error);
+                showNotification('Error updating stock. Please try again.', 'error');
             }
         }
+
+        async function toggleItemAvailability(itemId, currentStatus) {
+            const newStatus = currentStatus == 1 ? 0 : 1;
+            const action = newStatus == 1 ? 'available' : 'out of stock';
+            
+            if (!confirm(`Mark this item as ${action}?`)) return;
+
+            try {
+                const response = await fetch(INVENTORY_API_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        item_id: itemId,
+                        is_available: newStatus
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`Item marked as ${action}`, 'success');
+                    loadInventory();
+                } else {
+                    showNotification(result.message || 'Failed to update availability', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating availability:', error);
+                showNotification('Error updating availability. Please try again.', 'error');
+            }
+        }
+
+        async function deleteInventoryItem(itemId, itemName) {
+            if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) return;
+
+            try {
+                const response = await fetch(INVENTORY_API_URL, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: itemId })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Item deleted successfully', 'success');
+                    loadInventory();
+                } else {
+                    showNotification(result.message || 'Failed to delete item', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                showNotification('Error deleting item. Please try again.', 'error');
+            }
+        }
+
+        // ============================================
+        // END INVENTORY MANAGEMENT FUNCTIONS
+        // ============================================
 
         // Start the dashboard
         checkSuperAdminAccess(); // Show admin management tab for super admin
         initializeDashboard();
-        fetchServices(); // Load services on init
-        fetchInventoryItems(); // Load inventory on init
+        loadInventory(); // Load inventory management data
     </script>
+
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+    </style>
 </body>
 </html>

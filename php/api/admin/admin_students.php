@@ -47,9 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 COALESCE(section, 'N/A') as section,
                 is_verified,
                 created_at,
-                last_login
+                last_login,
+                CASE 
+                    WHEN password IS NOT NULL AND password != '' THEN 1
+                    ELSE 0
+                END as has_account,
+                (SELECT COUNT(*) FROM orders WHERE orders.student_id = students.student_id) as total_orders
             FROM students
-            WHERE password IS NOT NULL
         ";
         
         $params = [];

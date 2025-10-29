@@ -6,6 +6,7 @@
     <title>Create Order - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/notifications.js"></script>
+    <script src="../../js/inventory_helper.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
@@ -261,8 +262,12 @@
                 const response = await fetch(`${API_BASE}/inventory_status.php`);
                 const result = await response.json();
                 
-                if (result.success) {
-                    inventoryStock = result.data.stock_status;
+                if (result.success && result.data.items) {
+                    // Convert items array to lookup object for backward compatibility
+                    inventoryStock = {};
+                    result.data.items.forEach(item => {
+                        inventoryStock[item.item_name] = item.is_available && item.stock_quantity > 0;
+                    });
                     updateItemSelects();
                 }
             } catch (error) {
@@ -342,8 +347,17 @@
         // Initialize quantity selector
         document.addEventListener('DOMContentLoaded', function() {
             selectQuantity(1);
-            fetchInventoryStatus();
+            loadInventoryItems();
         });
+        
+        async function loadInventoryItems() {
+            // Populate all item select dropdowns with inventory
+            await populateInventorySelect('purchasing', false);
+            await populateInventorySelect('item2', false);
+            await populateInventorySelect('item3', false);
+            await populateInventorySelect('item4', false);
+            await populateInventorySelect('item5', false);
+        }
         
         document.getElementById('orderForm').addEventListener('submit', async function(e) {
             e.preventDefault();

@@ -20,27 +20,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
         $db = getDB();
         
-        // Get only in-stock items for public access
+        // Get items with availability status
         $stmt = $db->query("
             SELECT 
+                item_id,
                 item_name,
-                is_in_stock
+                stock_quantity,
+                low_stock_threshold,
+                is_available,
+                CASE 
+                    WHEN stock_quantity = 0 THEN 'out_of_stock'
+                    WHEN stock_quantity <= low_stock_threshold THEN 'low_stock'
+                    ELSE 'in_stock'
+                END as stock_level
             FROM inventory_items
+            WHERE is_active = 1
             ORDER BY item_name ASC
         ");
         
         $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Create lookup map
-        $stockStatus = [];
+        // Create detailed item info
+        $itemsData = [];
         foreach ($items as $item) {
-            $stockStatus[$item['item_name']] = (bool)$item['is_in_stock'];
+            $itemsData[] = [
+                'item_id' => $item['item_id'],
+                'item_name' => $item['item_name'],
+                'stock_quantity' => (int)$item['stock_quantity'],
+                'is_available' => (bool)$item['is_available'],
+                'stock_level' => $item['stock_level']
+            ];
         }
         
         echo json_encode([
             'success' => true,
             'data' => [
-                'stock_status' => $stockStatus
+                'items' => $itemsData,
+                'total' => count($itemsData)
             ]
         ]);
         

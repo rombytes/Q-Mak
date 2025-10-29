@@ -29,12 +29,10 @@ register_shutdown_function(function(){
 });
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/constants.php';
 
-// Check if PHPMailer is available
-$emailAvailable = file_exists(__DIR__ . '/../../vendor/autoload.php');
-if ($emailAvailable) {
-    require_once __DIR__ . '/../../utils/email.php';
-}
+// Load new email sender
+require_once __DIR__ . '/../../utils/email_sender.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -68,13 +66,40 @@ try {
     $purchasing = trim($input['purchasing']);
     
     // Validate email format
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/@umak\.edu\.ph$/', $email)) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         if (ob_get_level()) { ob_clean(); }
-        echo json_encode(['success' => false, 'message' => 'Invalid UMak email address']);
+        echo json_encode(['success' => false, 'message' => 'Invalid email format. Please enter a valid email address.']);
+        exit;
+    }
+    
+    // Validate UMak email domain
+    if (!preg_match('/@umak\.edu\.ph$/i', $email)) {
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode(['success' => false, 'message' => 'Only UMak email addresses (@umak.edu.ph) are allowed.']);
         exit;
     }
     
     $db = getDB();
+    
+    // Check if email is already registered to a different student ID
+    try {
+        $checkEmail = $db->prepare("SELECT student_id, first_name, last_name FROM students WHERE email = ? AND student_id != ?");
+        $checkEmail->execute([$email, $studentId]);
+        $existingStudent = $checkEmail->fetch();
+        
+        if ($existingStudent) {
+            if (ob_get_level()) { ob_clean(); }
+            echo json_encode([
+                'success' => false, 
+                'message' => 'This email is already registered to another student account. Please use your registered email or contact admin.'
+            ]);
+            exit;
+        }
+    } catch (PDOException $e) {
+        error_log("Email check error: " . $e->getMessage());
+        // Continue if check fails - will be handled by unique constraint
+    }
+    
     $db->beginTransaction();
     
     // Upsert student: insert or update if student_id or email already exists
@@ -111,17 +136,22 @@ try {
     
     $db->commit();
     
-    // Send OTP email (if PHPMailer is available)
-    if ($emailAvailable) {
-        try {
-            $emailResult = EmailService::sendOTP($email, $otp, $fname);
-            if (!$emailResult['success']) {
-                error_log("Failed to send OTP email: " . ($emailResult['error'] ?? 'Unknown error'));
-            }
-        } catch (Exception $emailError) {
-            error_log("Email service error: " . $emailError->getMessage());
-            // Continue anyway - OTP is still in response for development
+    // Send OTP email using new EmailSender
+    try {
+        error_log("Attempting to send OTP email to: $email");
+        $emailResult = EmailSender::sendOTP($email, $otp, $fname);
+        
+        if ($emailResult['success']) {
+            error_log("✓ OTP email sent successfully to $email");
+        } else {
+            error_log("✗ Failed to send OTP email to $email: " . ($emailResult['error'] ?? 'Unknown error'));
+            error_log("Check detailed log at: " . EmailSender::getLogFilePath());
         }
+        // Continue anyway - OTP is in response for development
+    } catch (Exception $emailError) {
+        error_log("✗ Exception sending OTP email: " . $emailError->getMessage());
+        error_log("Stack trace: " . $emailError->getTraceAsString());
+        // Continue anyway
     }
     
     if (ob_get_level()) { ob_clean(); }
