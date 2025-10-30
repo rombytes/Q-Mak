@@ -11,7 +11,10 @@ Q-Mak/
 │   ├── qmak_schema.sql
 │   ├── migration_student_auth.sql
 │   ├── fix_orders_table.sql
-│   └── sample_data.sql
+│   ├── sample_data.sql
+│   ├── check_database.php           # Database structure checker
+│   ├── fix_database.php             # Automated database fixes
+│   └── README.md
 │
 ├── docs/                   # Documentation files
 │   └── (documentation files)
@@ -20,24 +23,26 @@ Q-Mak/
 │   └── (image files)
 │
 ├── js/                     # JavaScript files
-│   ├── notifications.js   # Toast notification system
-│   └── inventory_helper.js # Inventory management utilities
+│   ├── modal_utils.js     # NEW: Custom modal system (showAlert/showConfirm)
+│   ├── notifications.js   # Toast notification system with stacking
+│   ├── inventory_helper.js # Inventory management utilities
+│   └── admin_archive_functions.js # Archive operation utilities
 │
 ├── pages/                  # Frontend HTML pages
 │   ├── index.html         # Main homepage (formerly homepage.html)
 │   ├── admin/             # Admin pages
 │   │   ├── admin_login.html
 │   │   ├── admin_login_debug.html
-│   │   └── admin_dashboard.html  # Includes Chart.js analytics dashboard
+│   │   └── admin_dashboard.html  # Enhanced with custom modals & notifications
 │   └── student/           # Student pages
 │       ├── student_login.html
 │       ├── student_register.html  # Enhanced with email format validation
 │       ├── student_dashboard.html
-│       ├── otp_verification.html
-│       ├── create_order.html
-│       ├── order_result.html
-│       ├── check_status.html
-│       └── status_display.html
+│       ├── otp_verification.html  # UPDATED: Uses modal_utils.js
+│       ├── create_order.html      # UPDATED: Uses modal_utils.js
+│       ├── order_result.html      # UPDATED: Uses modal_utils.js
+│       ├── check_status.html      # UPDATED: Uses modal_utils.js
+│       └── status_display.html    # UPDATED: Uses modal_utils.js
 │
 ├── php/                    # Backend PHP files
 │   ├── api/               # API endpoints
@@ -49,9 +54,10 @@ Q-Mak/
 │   │   │   ├── admin_orders.php
 │   │   │   ├── admin_password.php
 │   │   │   ├── admin_reports.php
-│   │   │   ├── admin_students.php  # Enhanced with has_account field
-│   │   │   ├── analytics.php       # NEW: Real-time analytics API
+│   │   │   ├── admin_students.php  # ENHANCED: Debug logging & session checks
+│   │   │   ├── analytics.php       # Real-time analytics API
 │   │   │   ├── archive_manager.php
+│   │   │   ├── check_session.php   # NEW: Session debug endpoint
 │   │   │   ├── check_status.php
 │   │   │   ├── email_logs.php
 │   │   │   ├── export_email_logs.php
@@ -113,9 +119,40 @@ Q-Mak/
 └── SETUP_GUIDE.md
 ```
 
-## Key Changes
+## Recent Updates (October 2025)
 
-### Moved Files
+### New Features
+- **Custom Modal System** (`js/modal_utils.js`)
+  - Replaces browser alerts/confirms throughout the application
+  - Promise-based showAlert() and showConfirm() functions
+  - Professional UI with icons, backdrop blur, and animations
+  - Danger mode for destructive actions
+
+- **Enhanced Notification System** (`js/notifications.js`)
+  - Stacked toast notifications with auto-dismiss
+  - Color-coded by type (success, error, warning, info)
+  - Smooth slide-in/out animations
+  - Non-blocking user feedback
+
+- **Debug Tools**
+  - `database/check_admin_permissions.php` - Visual admin permission checker
+  - `php/api/admin/check_session.php` - Session debug endpoint
+  - Auto-session check on admin dashboard load
+  - Comprehensive logging in admin_students.php
+
+### Updated Files
+- **All Student Pages**: Now use modal_utils.js instead of browser alerts
+  - create_order.html, check_status.html, otp_verification.html
+  - status_display.html, order_result.html
+
+- **Admin Dashboard**: Enhanced with 50+ modal replacements
+  - All archive/restore operations use custom modals
+  - All delete operations use danger mode confirmations
+  - Auto-session debugging on page load
+
+### Key Changes
+
+#### Moved Files
 - `homepage.html` → `pages/index.html`
 - `QUICK_SETUP.php` → `scripts/QUICK_SETUP.php`
 - `setup_database.php` → `scripts/setup_database.php`
@@ -123,10 +160,15 @@ Q-Mak/
 - `test_error_log.php` → `scripts/test_error_log.php`
 - `php/generate_password.php` → `scripts/generate_password.php`
 
-### Reorganized API Endpoints
+#### Reorganized API Endpoints
 - Admin API files moved to `php/api/admin/`
 - Student API files moved to `php/api/student/`
 - General services remain in `php/api/services.php`
+
+#### Session Management Notes
+- PHP sessions are shared across all tabs in the same browser
+- Logging in as different admins in duplicated tabs will overwrite the session
+- Use different browsers or incognito windows for multi-user testing
 
 ## Path Updates Required
 

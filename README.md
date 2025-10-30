@@ -28,6 +28,7 @@ Q-Mak is a comprehensive web-based queue management system designed for the Univ
 - Archive management system for data organization
 - Service configuration and management
 - Role-based access control (Admin/Super Admin)
+- **Session debugging tools**: Auto-check PHP session on page load
 
 ### Advanced Features
 - QR code generation using Google Charts API
@@ -38,12 +39,16 @@ Q-Mak is a comprehensive web-based queue management system designed for the Univ
 
 ## Technology Stack
 
-- **Frontend:** HTML5, TailwindCSS, JavaScript
+- **Frontend:** HTML5, TailwindCSS, JavaScript (Vanilla JS)
 - **Backend:** PHP 7.4+
 - **Database:** MySQL 5.7+
 - **Web Server:** Apache/Nginx
 - **External APIs:** Google Charts API (QR codes)
-- **Libraries:** PHPMailer, Chart.js
+- **Libraries:** 
+  - PHPMailer (Email automation)
+  - Chart.js (Analytics dashboard)
+  - Custom modal_utils.js (Modal system)
+  - Custom notifications.js (Toast notifications)
 
 ## Installation
 
@@ -115,8 +120,16 @@ For detailed installation instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.md)**
 Q-Mak/
 ├── database/                    # Database schemas and migrations
 │   ├── qmak_schema.sql          # Complete database schema
+│   ├── fix_database.php         # Automated database fixes
+│   ├── check_admin_permissions.php  # Debug admin permissions
 │   ├── migration_student_auth.sql
-│   └── sample_data.sql
+│   ├── sample_data.sql
+│   └── README.md
+├── js/                          # JavaScript utilities
+│   ├── modal_utils.js           # Custom modal system (NEW)
+│   ├── notifications.js         # Toast notification system
+│   ├── inventory_helper.js      # Inventory management utilities
+│   └── admin_archive_functions.js # Archive operations
 ├── pages/                       # Frontend HTML pages
 │   ├── index.html               # Homepage/Landing page
 │   ├── admin/                   # Admin portal pages
@@ -126,9 +139,11 @@ Q-Mak/
 │       ├── student_login.html   # Student authentication
 │       ├── student_register.html # Account creation
 │       ├── student_dashboard.html # Student main page
-│       ├── create_order.html    # Order creation (guest)
+│       ├── create_order.html    # Order creation
 │       ├── order_result.html    # Order confirmation with QR
-│       └── check_status.html    # Status checking page
+│       ├── check_status.html    # Status checking
+│       ├── status_display.html  # Status display
+│       └── otp_verification.html # OTP verification
 ├── php/
 │   ├── api/                     # REST API endpoints
 │   │   ├── admin/               # Admin API endpoints
@@ -139,6 +154,7 @@ Q-Mak/
 │   │   │   ├── admin_management.php # Admin accounts
 │   │   │   ├── email_logs.php   # Email monitoring
 │   │   │   ├── check_status.php # Order status checking
+│   │   │   ├── check_session.php # Session debug endpoint (NEW)
 │   │   │   ├── export_orders.php # CSV export
 │   │   │   └── archive_manager.php # Archive operations
 │   │   ├── student/             # Student API endpoints
@@ -264,7 +280,7 @@ define('OTP_MAX_ATTEMPTS', 3);
 - Order and queue management
 - Student records access
 - Report generation
-- Archive management (restore/view)
+- Archive management (view)
 
 ### Student
 - Order placement with OTP verification

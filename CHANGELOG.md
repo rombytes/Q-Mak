@@ -1,6 +1,110 @@
 # Changelog
 
-All notable changes to the Q-Mak Queue Management System.
+All notable changes to Q-Mak Queue Management System will be documented in this file.
+
+## [1.9.0] - 2025-10-30
+
+### Changed - Export UI Redesign 🎨
+- **Hidden Checkboxes by Default**: Cleaner interface with checkboxes hidden until needed
+  - Checkboxes only appear when entering "export mode"
+  - Single "Export" button replaces multiple export buttons
+  - Removed redundant "Export to Excel" buttons
+  
+- **New Export Workflow**:
+  1. Click "Export" button → Checkboxes appear
+  2. Choose "Export All" or select specific items
+  3. Click "Export Selected (X)" for chosen records
+  4. Click "Cancel" to exit export mode
+  5. Auto-exit after export completes
+
+- **Smart Selection Mode**:
+  - `enterStudentExportMode()` / `exitStudentExportMode()` functions
+  - `enterAdminLogExportMode()` / `exitAdminLogExportMode()` functions
+  - Real-time counter in button: "Export Selected (3)"
+  - Automatic cleanup after export
+
+### Fixed
+- ✅ Export no longer fails when no items selected (removed that requirement)
+- ✅ Removed confusion from multiple export buttons
+- ✅ Interface less cluttered with checkboxes hidden by default
+
+### UI Improvements
+- Action buttons appear/disappear based on export mode
+- "View Archived" button hides during export mode (Student Records)
+- Cancel button provides clear exit from selection
+- Consistent workflow across Student Records and Admin Logs
+
+### Backend
+- No changes required - existing export APIs work perfectly
+- `export_students.php` continues to support GET/POST
+- `export_admin_logs.php` continues to support GET/POST
+
+### Documentation
+- Created `EXPORT_UI_REDESIGN.md` with full implementation details
+
+## [1.8.1] - 2025-10-30
+
+### Added - Export with Selection Feature
+- **Selective Export**: Choose specific records to export with checkboxes
+  - Added checkbox column to Student Records table
+  - Added checkbox column to Admin Logs table
+  - "Select All" checkbox in table headers
+  - Real-time selection counter (e.g., "5 selected")
+  - "Export Selected" button appears when items are selected
+  - Works alongside existing "Export All" functionality
+
+### Updated - Export Functionality
+- **Export Students**: Can now export ALL or SELECTED students
+- **Export Admin Logs**: Can now export ALL or SELECTED logs (Super Admin only)
+- Both GET (export all) and POST (export selected) request methods supported
+- Backend validates selected IDs and handles both scenarios
+
+### UI Improvements
+- Selection buttons auto-appear/disappear based on selection
+- Visual feedback with selection counter
+- Familiar interface matching email logs pattern
+- Renamed "Export to Excel" to "Export All" in admin logs for clarity
+
+## [1.8.0] - 2025-10-30
+
+### Added - Export to Excel Feature
+- **Student Records Export**: Export student data to Excel (CSV format)
+  - Accessible by all admins and super admins
+  - Includes personal info, academic details, order history, and archive status
+  - Respects search filters and archived view
+  - File: `php/api/admin/export_students.php`
+
+- **Email Logs Export**: Export email delivery logs to Excel
+  - Accessible by all admins and super admins
+  - Includes email details, status, timestamps, and error messages
+  - Respects type, status, and search filters
+  - Button integration added to Email Logs tab
+
+- **Admin Logs Export**: Export admin activity logs to Excel (Super Admin Only)
+  - Accessible only by super admins
+  - Includes complete admin activity history with IP addresses
+  - Button visible only to super admins
+  - Respects all filter options (admin, action type, date, search)
+  - File: `php/api/admin/export_admin_logs.php`
+
+### Features
+- UTF-8 BOM encoding for proper Excel compatibility
+- Timestamp-based file naming (e.g., `students_2025-10-30_143052.csv`)
+- All exports logged in admin_logs for audit trail
+- Filter-aware exports (exports only filtered data)
+- Professional green button design with Excel icon
+- Security checks for authentication and authorization
+
+### Documentation
+- Added `EXPORT_TO_EXCEL_FEATURE.md` - Complete technical documentation
+- Added `EXPORT_QUICK_REFERENCE.md` - Quick usage guide
+- Added `EXPORT_IMPLEMENTATION_SUMMARY.md` - Implementation overview
+- Added `EXPORT_BUTTON_LOCATIONS.md` - Visual button location guide
+
+### Security
+- All exports require admin authentication
+- Admin logs export restricted to super admins (returns 403 for regular admins)
+- All export actions logged with admin ID, IP address, and record count
 
 ## [1.3.0] - 2025-01-28
 

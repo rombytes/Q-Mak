@@ -19,7 +19,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/admin_logger.php';
 
-session_start();
+// Configure session before starting it
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.use_strict_mode', '1');
+    session_start();
+}
+
+// Debug: Log session data on every request
+error_log("=== admin_students.php Session Debug ===");
+error_log("Session ID: " . session_id());
+error_log("Session data: " . json_encode($_SESSION));
+error_log("is_super_admin value: " . ($_SESSION['is_super_admin'] ?? 'NOT SET'));
+error_log("is_super_admin type: " . gettype($_SESSION['is_super_admin'] ?? null));
+error_log("=======================================");
 
 // Check admin authentication
 if (!isset($_SESSION['admin_id'])) {
@@ -141,24 +155,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 echo json_encode(['success' => true, 'message' => 'Student archived successfully']);
                 
             } else { // restore
-                // Only super admin can restore
-                if (!isset($_SESSION['is_super_admin']) || $_SESSION['is_super_admin'] != 1) {
+                // Check if super admin - log everything for debugging
+                $sessionData = [
+                    'admin_id' => $_SESSION['admin_id'] ?? 'not set',
+                    'is_super_admin' => $_SESSION['is_super_admin'] ?? 'not set',
+                    'admin_email' => $_SESSION['admin_email'] ?? 'not set',
+                    'session_id' => session_id()
+                ];
+                error_log("Restore attempt - Session data: " . json_encode($sessionData));
+                
+                // Check super admin permission
+                if (!isset($_SESSION['is_super_admin'])) {
                     http_response_code(403);
-                    echo json_encode(['success' => false, 'message' => 'Only super admin can restore archived students']);
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'Session data missing. Please re-login.',
+                        'debug' => $sessionData
+                    ]);
                     exit;
                 }
                 
+                // Convert to int for comparison
+                $isSuperAdmin = (int)$_SESSION['is_super_admin'];
+                
+                if ($isSuperAdmin !== 1) {
+                    http_response_code(403);
+                    error_log("Restore denied - is_super_admin value: " . var_export($_SESSION['is_super_admin'], true) . " (converted: $isSuperAdmin)");
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => 'Only super admin can restore archived students. Your permission level: ' . $isSuperAdmin,
+                        'debug' => $sessionData
+                    ]);
+                    exit;
+                }
+                
+                // Perform restore
                 $stmt = $db->prepare("
                     UPDATE students 
                     SET is_archived = 0, archived_at = NULL, archived_by = NULL
                     WHERE student_id = ?
                 ");
-                $stmt->execute([$studentId]);
+                $result = $stmt->execute([$studentId]);
                 
-                // Log the action
-                logStudentAction($_SESSION['admin_id'], 'restore', $studentId, $studentName);
-                
-                echo json_encode(['success' => true, 'message' => 'Student restored successfully']);
+                if ($result && $stmt->rowCount() > 0) {
+                    // Log the action
+                    logStudentAction($_SESSION['admin_id'], 'restore', $studentId, $studentName);
+                    
+                    echo json_encode(['success' => true, 'message' => 'Student restored successfully']);
+                } else if ($result) {
+                    echo json_encode(['success' => false, 'message' => 'Student not found or already restored']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Failed to restore student in database']);
+                }
             }
             
         } else {

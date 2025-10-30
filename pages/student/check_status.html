@@ -6,6 +6,7 @@
     <title>Check Order Status - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/notifications.js"></script>
+    <script src="../../js/modal_utils.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body {
@@ -82,7 +83,7 @@
                         window.notificationManager.otpSent(email);
                     }
                     
-                    alert('OTP has been sent to your email: ' + email);
+                    await showAlert('OTP has been sent to your email: ' + email, 'success');
                     console.log('Development OTP:', result.data.otp_code);
                     
                     // Redirect to OTP page
@@ -93,14 +94,14 @@
                     if (window.notificationManager) {
                         window.notificationManager.error(result.message || 'Failed to send OTP');
                     }
-                    alert(result.message || 'Failed to send OTP. Please try again.');
+                    await showAlert(result.message || 'Failed to send OTP. Please try again.', 'error');
                 }
             } catch (error) {
                 console.error('Check status error:', error);
                 if (window.notificationManager) {
                     window.notificationManager.error('Connection error. Please try again.');
                 }
-                alert('An error occurred. Please check your connection and try again.');
+                await showAlert('An error occurred. Please check your connection and try again.', 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Submit';

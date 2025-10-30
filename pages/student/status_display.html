@@ -6,6 +6,7 @@
     <title>Order Status - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/notifications.js"></script>
+    <script src="../../js/modal_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -129,7 +130,7 @@
             const email = sessionStorage.getItem('checkStatusEmail');
             
             if (!email) {
-                alert('Session expired. Please start again.');
+                await showAlert('Session expired. Please start again.', 'warning');
                 window.location.href = '../index.html';
                 return;
             }
@@ -236,7 +237,7 @@
                         `;
                     }
                 } else {
-                    alert('No orders found for this email.');
+                    await showAlert('No orders found for this email.', 'info');
                     window.location.href = '../index.html';
                 }
             } catch (error) {
@@ -244,7 +245,7 @@
                 if (window.notificationManager) {
                     window.notificationManager.error('Failed to load order status: ' + error.message);
                 } else {
-                    alert('Failed to load order status. Please try again.');
+                    await showAlert('Failed to load order status. Please try again.', 'error');
                 }
             }
         }

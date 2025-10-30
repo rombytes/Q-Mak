@@ -15,11 +15,23 @@ if (!isset($_SESSION['admin_id'])) {
 try {
     $db = getDB();
     
-    // Get filters
-    $startDate = $_GET['start_date'] ?? '';
-    $endDate = $_GET['end_date'] ?? '';
-    $status = $_GET['status'] ?? 'all';
-    $type = $_GET['type'] ?? 'all';
+    // Support both GET and POST methods
+    $requestMethod = $_SERVER['REQUEST_METHOD'];
+    
+    if ($requestMethod === 'POST') {
+        // Get POST data
+        $input = json_decode(file_get_contents('php://input'), true);
+        $type = $input['type'] ?? 'all';
+        $status = $input['status'] ?? 'all';
+        $search = $input['search'] ?? '';
+        $isArchived = $input['is_archived'] ?? 0;
+    } else {
+        // Get GET parameters
+        $type = $_GET['type'] ?? 'all';
+        $status = $_GET['status'] ?? 'all';
+        $search = $_GET['search'] ?? '';
+        $isArchived = $_GET['is_archived'] ?? 0;
+    }
     
     $query = "
         SELECT 
@@ -30,24 +42,21 @@ try {
             el.status,
             el.sent_at,
             el.error_message,
+            el.is_archived,
             CONCAT(s.first_name, ' ', s.last_name) as student_name,
-            o.queue_number
+            o.queue_number,
+            o.item_ordered
         FROM email_logs el
         LEFT JOIN students s ON el.student_id = s.student_id
         LEFT JOIN orders o ON el.order_id = o.order_id
-        WHERE 1=1
+        WHERE el.is_archived = ?
     ";
     
-    $params = [];
+    $params = [$isArchived];
     
-    if (!empty($startDate)) {
-        $query .= " AND DATE(el.created_at) >= ?";
-        $params[] = $startDate;
-    }
-    
-    if (!empty($endDate)) {
-        $query .= " AND DATE(el.created_at) <= ?";
-        $params[] = $endDate;
+    if ($type !== 'all') {
+        $query .= " AND el.email_type = ?";
+        $params[] = $type;
     }
     
     if ($status !== 'all') {
@@ -55,12 +64,14 @@ try {
         $params[] = $status;
     }
     
-    if ($type !== 'all') {
-        $query .= " AND el.email_type = ?";
-        $params[] = $type;
+    if (!empty($search)) {
+        $query .= " AND (el.email_to LIKE ? OR CONCAT(s.first_name, ' ', s.last_name) LIKE ?)";
+        $searchParam = "%$search%";
+        $params[] = $searchParam;
+        $params[] = $searchParam;
     }
     
-    $query .= " ORDER BY el.created_at DESC";
+    $query .= " ORDER BY el.sent_at DESC";
     
     $stmt = $db->prepare($query);
     $stmt->execute($params);
@@ -82,11 +93,13 @@ try {
         'Email To',
         'Student Name',
         'Queue Number',
+        'Item Ordered',
         'Email Type',
         'Subject',
         'Status',
         'Sent At',
-        'Error Message'
+        'Error Message',
+        'Archived'
     ]);
     
     // Add data
@@ -96,11 +109,13 @@ try {
             $log['email_to'],
             $log['student_name'] ?? 'N/A',
             $log['queue_number'] ?? 'N/A',
-            $log['email_type'],
+            $log['item_ordered'] ?? 'N/A',
+            ucfirst($log['email_type']),
             $log['subject'],
-            $log['status'],
+            ucfirst($log['status']),
             $log['sent_at'] ?? 'Not sent',
-            $log['error_message'] ?? ''
+            $log['error_message'] ?? '',
+            $log['is_archived'] ? 'Yes' : 'No'
         ]);
     }
     

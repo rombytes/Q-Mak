@@ -297,18 +297,64 @@
                 </div>
                 
                 <!-- Filters and Actions -->
-                <div class="glass-effect rounded-2xl shadow-md p-6 mb-6 border border-gray-100">
-                    <div class="flex gap-4 items-center">
+                <div class="glass-effect rounded-2xl shadow-md p-6 mb-6 border border-gray-100" style="overflow: visible; position: relative; z-index: 10;">
+                    <div class="flex gap-4 items-center mb-4" style="overflow: visible;">
                         <input type="text" id="searchStudent" placeholder="Search by Student ID or Email..." 
-                               class="flex-1 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" onkeyup="filterStudents()" />
-                        <button onclick="toggleArchivedStudentsView()" id="viewArchivedStudentsBtn" 
-                                class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl font-semibold whitespace-nowrap shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
-                            <i class="fas fa-archive mr-2"></i>View Archived
+                               class="flex-1 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" onkeyup="filterStudents()" style="position: relative; z-index: 1;" />
+                        
+                        <!-- Kebab Menu -->
+                        <div class="relative" id="studentKebabMenu" style="z-index: 100;">
+                            <button type="button" onclick="toggleStudentMenu()" id="studentMenuBtn"
+                                    class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300">
+                                <i class="fas fa-ellipsis-v text-xl"></i>
+                            </button>
+                            <div id="studentMenuDropdown" class="hidden bg-white shadow-2xl border border-gray-200" style="position: absolute; right: 0; top: 100%; margin-top: 0.5rem; width: 14rem; z-index: 10000; border-radius: 0.75rem; overflow: visible;">
+                                <button type="button" onclick="enterStudentExportMode(); toggleStudentMenu()" class="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-100" style="border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem;">
+                                    <i class="fas fa-file-excel text-green-600 w-5"></i>
+                                    <span class="font-semibold text-gray-700">Export to Excel</span>
+                                </button>
+                                <button type="button" onclick="enterStudentArchiveMode(); toggleStudentMenu()" id="archiveStudentsBtnMenu" class="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-100">
+                                    <i class="fas fa-archive text-blue-900 w-5"></i>
+                                    <span class="font-semibold text-gray-700">Archive Students</span>
+                                </button>
+                                <button type="button" onclick="toggleArchivedStudentsView(); toggleStudentMenu()" id="viewArchivedStudentsBtnMenu" class="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3" style="border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;">
+                                    <i class="fas fa-folder-open text-gray-600 w-5"></i>
+                                    <span class="font-semibold text-gray-700">View Archived</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="studentActions" class="hidden flex gap-2">
+                        <button onclick="exportAllStudents()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-file-excel mr-2"></i>Export All
+                        </button>
+                        <button onclick="exportSelectedStudents()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-check-square mr-2"></i>Export Selected (<span id="selectedStudentCount">0</span>)
+                        </button>
+                        <button onclick="exitStudentExportMode()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-times mr-2"></i>Cancel
+                        </button>
+                    </div>
+                    <div id="studentArchiveActions" class="hidden flex gap-2">
+                        <button onclick="archiveAllStudents()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-archive mr-2"></i>Archive All
+                        </button>
+                        <button onclick="archiveSelectedStudents()" class="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-check-square mr-2"></i>Archive Selected (<span id="selectedStudentArchiveCount">0</span>)
+                        </button>
+                        <button onclick="restoreAllStudents()" id="restoreAllStudentsBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-undo mr-2"></i>Restore All
+                        </button>
+                        <button onclick="restoreSelectedStudents()" id="restoreSelectedStudentsBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-check-square mr-2"></i>Restore Selected (<span id="selectedStudentRestoreCount">0</span>)
+                        </button>
+                        <button onclick="exitStudentArchiveMode()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-times mr-2"></i>Cancel
                         </button>
                     </div>
                 </div>
                 
-                <div class="glass-effect rounded-2xl shadow-md overflow-hidden border border-gray-100">
+                <div class="glass-effect rounded-2xl shadow-md overflow-hidden border border-gray-100" style="position: relative; z-index: 1;">
                     <div class="p-6 bg-gradient-to-r from-blue-50 to-orange-50 border-b border-gray-100">
                         <h3 class="text-xl font-semibold text-blue-900" id="studentsTableTitle">Active Students</h3>
                     </div>
@@ -316,6 +362,9 @@
                         <table class="w-full">
                             <thead class="bg-gradient-to-r from-gray-50 to-blue-50">
                                 <tr>
+                                    <th class="px-6 py-4 text-left student-checkbox-column hidden">
+                                        <input type="checkbox" id="selectAllStudents" onchange="toggleSelectAllStudents()" class="w-4 h-4">
+                                    </th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Student ID</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Full Name</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
@@ -598,41 +647,68 @@
                 </div>
                 
                 <!-- Filters and Actions -->
-                <div class="glass-effect rounded-2xl shadow-md p-6 mb-6 border border-gray-100">
-                    <div class="grid grid-cols-4 gap-4 mb-4">
-                        <select id="filterEmailType" onchange="fetchEmailLogs()" class="border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+                <div class="glass-effect rounded-2xl shadow-md p-6 mb-6 border border-gray-100" style="overflow: visible; position: relative; z-index: 10;">
+                    <div class="flex gap-4 items-center mb-4" style="overflow: visible;">
+                        <select id="filterEmailType" onchange="fetchEmailLogs()" class="border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" style="position: relative; z-index: 1;">
                             <option value="all">All Types</option>
                             <option value="otp">OTP</option>
                             <option value="receipt">Receipt</option>
                             <option value="status_update">Status Update</option>
                         </select>
-                        <select id="filterEmailStatus" onchange="fetchEmailLogs()" class="border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+                        <select id="filterEmailStatus" onchange="fetchEmailLogs()" class="border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" style="position: relative; z-index: 1;">
                             <option value="all">All Status</option>
                             <option value="sent">Sent</option>
                             <option value="failed">Failed</option>
                         </select>
                         <input type="text" id="searchEmail" placeholder="Search by email..." 
-                               onkeyup="fetchEmailLogs()" class="border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" />
-                        <button onclick="toggleArchivedView()" id="viewArchivedBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-bold">
-                            View Archived
-                        </button>
+                               onkeyup="fetchEmailLogs()" class="flex-1 border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" style="position: relative; z-index: 1;" />
+                        
+                        <!-- Kebab Menu -->
+                        <div class="relative" id="emailKebabMenu" style="z-index: 100;">
+                            <button type="button" onclick="toggleEmailMenu()" id="emailMenuBtn"
+                                    class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300">
+                                <i class="fas fa-ellipsis-v text-xl"></i>
+                            </button>
+                            <div id="emailMenuDropdown" class="hidden bg-white shadow-2xl border border-gray-200" style="position: absolute; right: 0; top: 100%; margin-top: 0.5rem; width: 14rem; z-index: 10000; border-radius: 0.75rem; overflow: visible;">
+                                <button type="button" onclick="exportEmailLogsToExcel(); toggleEmailMenu()" class="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-100" style="border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem;">
+                                    <i class="fas fa-file-excel text-green-600 w-5"></i>
+                                    <span class="font-semibold text-gray-700">Export to Excel</span>
+                                </button>
+                                <button type="button" onclick="enterEmailArchiveMode(); toggleEmailMenu()" id="archiveEmailLogsBtnMenu" class="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3 border-b border-gray-100">
+                                    <i class="fas fa-archive text-blue-900 w-5"></i>
+                                    <span class="font-semibold text-gray-700">Archive Logs</span>
+                                </button>
+                                <button type="button" onclick="toggleArchivedView(); toggleEmailMenu()" id="viewArchivedBtnMenu" class="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3" style="border-bottom-left-radius: 0.75rem; border-bottom-right-radius: 0.75rem;">
+                                    <i class="fas fa-folder-open text-gray-600 w-5"></i>
+                                    <span class="font-semibold text-gray-700">View Archived</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div id="emailLogActions" class="hidden flex gap-2">
-                        <button onclick="archiveSelectedLogs()" id="archiveLogsBtn" class="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded font-bold text-sm">
-                            Archive Selected
+                        <button onclick="archiveAllEmailLogs()" id="archiveAllBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-archive mr-2"></i>Archive All
                         </button>
-                        <button onclick="restoreSelectedLogs()" id="restoreLogsBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-sm">
-                            Restore Selected (Super Admin)
+                        <button onclick="archiveSelectedLogs()" id="archiveLogsBtn" class="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-check-square mr-2"></i>Archive Selected (<span id="selectedCount">0</span>)
                         </button>
-                        <button onclick="deleteSelectedLogs()" id="deleteLogsBtn" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold text-sm">
-                            Permanently Delete (Super Admin)
+                        <button onclick="restoreAllEmailLogs()" id="restoreAllBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-undo mr-2"></i>Restore All
                         </button>
-                        <span id="selectedCount" class="text-sm text-gray-600 flex items-center ml-2"></span>
+                        <button onclick="restoreSelectedLogs()" id="restoreLogsBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-check-square mr-2"></i>Restore Selected (<span id="selectedCountRestore">0</span>)
+                        </button>
+                        <button onclick="deleteSelectedLogs()" id="deleteLogsBtn" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-trash mr-2"></i>Delete Selected (<span id="selectedCountDelete">0</span>)
+                        </button>
+                        <button onclick="exitEmailArchiveMode()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                            <i class="fas fa-times mr-2"></i>Cancel
+                        </button>
                     </div>
                 </div>
                 
                 <!-- Email Logs Table -->
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-white rounded-lg shadow overflow-hidden" style="position: relative; z-index: 1;">
                     <div class="p-6">
                         <h3 class="text-xl font-bold text-blue-900 mb-4" id="emailLogsTableTitle">Email History</h3>
                     </div>
@@ -640,7 +716,7 @@
                         <table class="w-full">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="px-6 py-3 text-left">
+                                    <th class="px-6 py-3 text-left email-log-checkbox-column hidden">
                                         <input type="checkbox" id="selectAllLogs" onchange="toggleSelectAllLogs()" class="w-4 h-4">
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase">Log ID</th>
@@ -983,9 +1059,20 @@
                                     class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
                                 <i class="fas fa-redo mr-2"></i>Reset Filters
                             </button>
-                            <button onclick="exportLogsToCSV()" 
+                            <button onclick="enterAdminLogExportMode()" id="startAdminLogExportBtn"
                                     class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-file-export mr-2"></i>Export to CSV
+                                <i class="fas fa-file-excel mr-2"></i>Export
+                            </button>
+                        </div>
+                        <div id="adminLogActions" class="hidden mt-4 flex gap-2">
+                            <button onclick="exportAllAdminLogs()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
+                                <i class="fas fa-file-excel mr-2"></i>Export All
+                            </button>
+                            <button onclick="exportSelectedAdminLogs()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
+                                <i class="fas fa-check-square mr-2"></i>Export Selected (<span id="selectedAdminLogCount">0</span>)
+                            </button>
+                            <button onclick="exitAdminLogExportMode()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
+                                <i class="fas fa-times mr-2"></i>Cancel
                             </button>
                         </div>
                     </div>
@@ -1001,6 +1088,9 @@
                             <table class="w-full">
                                 <thead class="bg-gradient-to-r from-gray-100 to-gray-200">
                                     <tr>
+                                        <th class="px-6 py-4 text-left admin-log-checkbox-column hidden">
+                                            <input type="checkbox" id="selectAllAdminLogs" onchange="toggleSelectAllAdminLogs()" class="w-4 h-4">
+                                        </th>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
                                             <i class="fas fa-clock mr-1"></i>Time
                                         </th>
@@ -1092,6 +1182,9 @@
                             <button onclick="switchStudentTab('info')" id="student-tab-info" class="px-4 py-2 rounded font-bold bg-gray-200 text-gray-700 hover:bg-gray-300">
                                 Student Info
                             </button>
+                            <button onclick="switchStudentTab('breakdown')" id="student-tab-breakdown" class="px-4 py-2 rounded font-bold bg-gray-200 text-gray-700 hover:bg-gray-300">
+                                Order Breakdown
+                            </button>
                             <button onclick="switchStudentTab('history')" id="student-tab-history" class="px-4 py-2 rounded font-bold bg-gray-200 text-gray-700 hover:bg-gray-300">
                                 Order History
                             </button>
@@ -1107,6 +1200,11 @@
                         <!-- Student Info Tab -->
                         <div id="student-content-info" class="student-tab-content hidden">
                             <div id="studentInfoContent"></div>
+                        </div>
+                        
+                        <!-- Order Breakdown Tab -->
+                        <div id="student-content-breakdown" class="student-tab-content hidden">
+                            <div id="studentOrderBreakdown"></div>
                         </div>
                         
                         <!-- Order History Tab -->
@@ -1429,6 +1527,32 @@
             window.location.href = '../index.html';
         }
 
+        // Debug function to check PHP session
+        async function checkPHPSession() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/check_session.php`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                console.log('=== PHP SESSION CHECK ===');
+                console.log('Session Active:', result.session_active);
+                console.log('Session ID:', result.session_id);
+                console.log('Session Data:', result.session_data);
+                console.log('JavaScript sessionStorage:', JSON.parse(sessionStorage.getItem('adminData')));
+                console.log('========================');
+                return result;
+            } catch (error) {
+                console.error('Session check error:', error);
+            }
+        }
+
+        // Auto-check session on page load
+        setTimeout(() => {
+            console.log('%c⚠️ Checking PHP Session...', 'color: orange; font-weight: bold; font-size: 14px;');
+            checkPHPSession();
+        }, 1000);
+
         // Fetch orders from API
         async function fetchOrders() {
             try {
@@ -1484,7 +1608,7 @@
             tbody.innerHTML = '';
 
             if (!studentsData || studentsData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">No students found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-500">No students found</td></tr>';
                 return;
             }
 
@@ -1501,6 +1625,9 @@
                     : '<span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>Guest Only</span>';
                 
                 row.innerHTML = `
+                    <td class="px-6 py-4 student-checkbox-column hidden">
+                        <input type="checkbox" class="student-checkbox w-4 h-4" data-student-id="${student.student_id}" onchange="handleStudentCheckbox()">
+                    </td>
                     <td class="px-6 py-4 font-mono text-sm">${student.student_id || 'N/A'}</td>
                     <td class="px-6 py-4 font-semibold">${student.first_name || ''} ${student.last_name || ''}</td>
                     <td class="px-6 py-4">${student.email || 'N/A'}</td>
@@ -1514,17 +1641,6 @@
                                     class="text-blue-600 hover:text-blue-800 font-bold text-sm">
                                 <i class="fas fa-eye mr-1"></i>View
                             </button>
-                            ${!showingArchivedStudents ? `
-                                <button onclick="archiveStudent('${student.student_id}', '${student.first_name} ${student.last_name}')" 
-                                        class="text-orange-600 hover:text-orange-800 font-bold text-sm">
-                                    <i class="fas fa-archive mr-1"></i>Archive
-                                </button>
-                            ` : `
-                                <button onclick="restoreStudent('${student.student_id}', '${student.first_name} ${student.last_name}')" 
-                                        class="text-green-600 hover:text-green-800 font-bold text-sm ${adminData && (adminData.is_super_admin == 0 || !adminData.is_super_admin) ? 'hidden' : ''}">
-                                    <i class="fas fa-undo mr-1"></i>Restore
-                                </button>
-                            `}
                         </div>
                     </td>
                 `;
@@ -1552,7 +1668,7 @@
             tbody.innerHTML = '';
 
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">No matching students found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gray-500">No matching students found</td></tr>';
                 return;
             }
 
@@ -1567,6 +1683,9 @@
                     : '<span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>Guest Only</span>';
                 
                 row.innerHTML = `
+                    <td class="px-6 py-4 student-checkbox-column hidden">
+                        <input type="checkbox" class="student-checkbox w-4 h-4" data-student-id="${student.student_id}" onchange="handleStudentCheckbox()">
+                    </td>
                     <td class="px-6 py-4 font-mono text-sm">${student.student_id || 'N/A'}</td>
                     <td class="px-6 py-4 font-semibold">${student.first_name || ''} ${student.last_name || ''}</td>
                     <td class="px-6 py-4">${student.email || 'N/A'}</td>
@@ -1603,6 +1722,7 @@
             // Load student data
             await loadStudentCurrentOrder(studentId);
             loadStudentInfo(student);
+            await loadStudentOrderBreakdown(studentId);
             await loadStudentOrderHistory(studentId);
         }
 
@@ -1615,7 +1735,7 @@
         // Switch student modal tabs
         function switchStudentTab(tabName) {
             // Update button styles
-            ['current', 'info', 'history'].forEach(tab => {
+            ['current', 'info', 'breakdown', 'history'].forEach(tab => {
                 const btn = document.getElementById(`student-tab-${tab}`);
                 const content = document.getElementById(`student-content-${tab}`);
                 if (tab === tabName) {
@@ -1823,6 +1943,154 @@
             }
         }
 
+        // Load student order breakdown
+        async function loadStudentOrderBreakdown(studentId) {
+            const container = document.getElementById('studentOrderBreakdown');
+            container.innerHTML = '<p class="text-center text-gray-500">Loading...</p>';
+            
+            // Get all orders for this student
+            const studentOrders = ordersData.filter(o => o.student_id === studentId);
+            
+            // Calculate breakdown by status
+            const breakdown = {
+                completed: studentOrders.filter(o => o.order_status === 'completed').length,
+                cancelled: studentOrders.filter(o => o.order_status === 'cancelled').length,
+                pending: studentOrders.filter(o => o.order_status === 'pending').length,
+                processing: studentOrders.filter(o => o.order_status === 'processing').length,
+                ready: studentOrders.filter(o => o.order_status === 'ready').length,
+                total: studentOrders.length
+            };
+            
+            // Calculate breakdown by item (split comma-separated items)
+            const itemBreakdown = {};
+            studentOrders.forEach(order => {
+                const itemsString = order.item_ordered || 'Unknown';
+                // Split by comma and process each item separately
+                const items = itemsString.split(',').map(i => i.trim());
+                items.forEach(item => {
+                    itemBreakdown[item] = (itemBreakdown[item] || 0) + 1;
+                });
+            });
+            
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Total Orders Summary -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                        <h4 class="text-2xl font-bold text-blue-900 mb-2">Total Orders</h4>
+                        <p class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">${breakdown.total}</p>
+                    </div>
+                    
+                    <!-- Status Breakdown -->
+                    <div>
+                        <h4 class="text-xl font-bold text-blue-900 mb-4">
+                            <i class="fas fa-chart-pie mr-2"></i>Order Status Breakdown
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="bg-white rounded-xl p-4 border-l-4 border-green-500 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600 font-semibold">Completed</p>
+                                        <p class="text-3xl font-bold text-green-600">${breakdown.completed}</p>
+                                    </div>
+                                    <div class="bg-green-100 p-3 rounded-full">
+                                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-4 border-l-4 border-red-500 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600 font-semibold">Cancelled</p>
+                                        <p class="text-3xl font-bold text-red-600">${breakdown.cancelled}</p>
+                                    </div>
+                                    <div class="bg-red-100 p-3 rounded-full">
+                                        <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-4 border-l-4 border-orange-500 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600 font-semibold">Pending</p>
+                                        <p class="text-3xl font-bold text-orange-600">${breakdown.pending}</p>
+                                    </div>
+                                    <div class="bg-orange-100 p-3 rounded-full">
+                                        <i class="fas fa-clock text-orange-600 text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-4 border-l-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600 font-semibold">Processing</p>
+                                        <p class="text-3xl font-bold text-blue-600">${breakdown.processing}</p>
+                                    </div>
+                                    <div class="bg-blue-100 p-3 rounded-full">
+                                        <i class="fas fa-spinner text-blue-600 text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-4 border-l-4 border-indigo-500 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600 font-semibold">Ready</p>
+                                        <p class="text-3xl font-bold text-indigo-600">${breakdown.ready}</p>
+                                    </div>
+                                    <div class="bg-indigo-100 p-3 rounded-full">
+                                        <i class="fas fa-bell text-indigo-600 text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Items Breakdown -->
+                    <div>
+                        <h4 class="text-xl font-bold text-blue-900 mb-4">
+                            <i class="fas fa-box mr-2"></i>Most Ordered Items
+                        </h4>
+                        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Item</th>
+                                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase">Orders</th>
+                                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase">Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${Object.entries(itemBreakdown)
+                                        .sort((a, b) => b[1] - a[1])
+                                        .map(([item, count]) => {
+                                            const percentage = ((count / breakdown.total) * 100).toFixed(1);
+                                            return `
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-6 py-4 font-semibold text-gray-800">${item}</td>
+                                                    <td class="px-6 py-4 text-center">
+                                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold">${count}</span>
+                                                    </td>
+                                                    <td class="px-6 py-4 text-center">
+                                                        <span class="text-gray-600 font-semibold">${percentage}%</span>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (breakdown.total === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-inbox text-5xl mb-3 text-gray-300"></i><p class="text-lg">No orders found for this student</p></div>';
+            }
+        }
+
         // Load student order history
         async function loadStudentOrderHistory(studentId) {
             const container = document.getElementById('studentOrderHistory');
@@ -1992,17 +2260,17 @@
         }
 
         // Apply custom date range
-        function applyCustomDateRange() {
+        async function applyCustomDateRange() {
             const startDate = document.getElementById('customStartDate').value;
             const endDate = document.getElementById('customEndDate').value;
             
             if (!startDate || !endDate) {
-                alert('Please select both start and end dates.');
+                await showAlert('Please select both start and end dates.', 'warning');
                 return;
             }
             
             if (new Date(startDate) > new Date(endDate)) {
-                alert('Start date must be before end date.');
+                await showAlert('Start date must be before end date.', 'warning');
                 return;
             }
             
@@ -2394,11 +2662,11 @@
                     
                     showNotification(`Order ${queueNumber} ${statusLabels[newStatus]}!`, 'success');
                 } else {
-                    alert(result.message || 'Failed to update order status');
+                    await showAlert(result.message || 'Failed to update order status', 'error');
                 }
             } catch (error) {
                 console.error('Error updating order status:', error);
-                alert('An error occurred while updating the order status');
+                await showAlert('An error occurred while updating the order status', 'error');
             }
         }
 
@@ -2508,7 +2776,7 @@
         
         async function processQueue(newStatus) {
             if (!currentQueueOrder) {
-                alert('No order in queue to process');
+                await showAlert('No order in queue to process', 'warning');
                 return;
             }
             
@@ -2519,7 +2787,8 @@
                 'cancelled': 'Cancel this order? This action cannot be undone.'
             };
             
-            if (!confirm(confirmMessages[newStatus])) {
+            const confirmed = await showConfirm(confirmMessages[newStatus]);
+            if (!confirmed) {
                 return;
             }
             
@@ -2555,21 +2824,22 @@
                     
                     showNotification(`Order ${queueNumber} ${statusLabels[newStatus]}!`, 'success');
                 } else {
-                    alert(result.message || 'Failed to update order status');
+                    await showAlert(result.message || 'Failed to update order status', 'error');
                 }
             } catch (error) {
                 console.error('Error updating order status:', error);
-                alert('An error occurred while updating the order status');
+                await showAlert('An error occurred while updating the order status', 'error');
             }
         }
         
-        function skipQueue() {
+        async function skipQueue() {
             if (!currentQueueOrder) {
-                alert('No order in queue to skip');
+                await showAlert('No order in queue to skip', 'warning');
                 return;
             }
             
-            if (!confirm('Skip this order? It will remain in the queue but move to the end.')) {
+            const confirmed = await showConfirm('Skip this order? It will remain in the queue but move to the end.');
+            if (!confirmed) {
                 return;
             }
             
@@ -2584,21 +2854,207 @@
         }
         
         function showNotification(message, type = 'success') {
-            const colors = {
-                'success': 'bg-green-500',
-                'error': 'bg-red-500',
-                'info': 'bg-blue-500'
-            };
-            
+            // Create notification container if it doesn't exist
+            let container = document.getElementById('notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notification-container';
+                container.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    max-width: 400px;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(container);
+            }
+
             const notification = document.createElement('div');
-            notification.className = `fixed top-20 right-8 ${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-fade-in`;
-            notification.textContent = message;
+            notification.className = 'notification-toast';
             
-            document.body.appendChild(notification);
-            
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-orange-500',
+                info: 'bg-blue-500'
+            };
+
+            const icons = {
+                success: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                          </svg>`,
+                error: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>`,
+                warning: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                          </svg>`,
+                info: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                       </svg>`
+            };
+
+            notification.innerHTML = `
+                <div class="flex items-center gap-3 ${colors[type]} text-white px-6 py-4 rounded-xl shadow-2xl animate-slide-in" style="pointer-events: auto;">
+                    ${icons[type]}
+                    <span class="font-semibold">${message}</span>
+                    <button onclick="this.closest('.notification-toast').remove()" class="ml-2 hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            notification.style.cssText = `
+                animation: slideIn 0.3s ease-out;
+                width: 100%;
+            `;
+
+            // Add to container (new notifications appear at the bottom)
+            container.appendChild(notification);
+
+            // Auto remove after 5 seconds
             setTimeout(() => {
-                notification.remove();
-            }, 3000);
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    notification.remove();
+                    // Remove container if no notifications left
+                    if (container.children.length === 0) {
+                        container.remove();
+                    }
+                }, 300);
+            }, 5000);
+
+            // Limit to max 5 notifications
+            while (container.children.length > 5) {
+                container.firstChild.remove();
+            }
+        }
+
+        // Custom Alert Modal
+        function showAlert(message, type = 'info') {
+            return new Promise((resolve) => {
+                const modal = document.createElement('div');
+                modal.className = 'custom-modal-overlay';
+                
+                const icons = {
+                    success: `<svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              </svg>`,
+                    error: `<svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>`,
+                    warning: `<svg class="w-12 h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                              </svg>`,
+                    info: `<svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                           </svg>`
+                };
+                
+                modal.innerHTML = `
+                    <div class="custom-modal-content animate-modal-in">
+                        <div class="flex flex-col items-center text-center p-6">
+                            <div class="mb-4">
+                                ${icons[type] || icons.info}
+                            </div>
+                            <p class="text-gray-700 text-lg mb-6 whitespace-pre-line">${message}</p>
+                            <button onclick="this.closest('.custom-modal-overlay').remove()" 
+                                    class="px-8 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        resolve();
+                    }
+                };
+                
+                modal.querySelector('button').onclick = () => {
+                    modal.remove();
+                    resolve();
+                };
+                
+                document.body.appendChild(modal);
+            });
+        }
+
+        // Custom Confirm Modal
+        function showConfirm(message, options = {}) {
+            return new Promise((resolve) => {
+                const {
+                    confirmText = 'Confirm',
+                    cancelText = 'Cancel',
+                    type = 'warning',
+                    danger = false
+                } = options;
+                
+                const modal = document.createElement('div');
+                modal.className = 'custom-modal-overlay';
+                
+                const icons = {
+                    warning: `<svg class="w-12 h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                              </svg>`,
+                    danger: `<svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                             </svg>`,
+                    info: `<svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                           </svg>`
+                };
+                
+                const confirmButtonClass = danger 
+                    ? 'px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl'
+                    : 'px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl';
+                
+                modal.innerHTML = `
+                    <div class="custom-modal-content animate-modal-in">
+                        <div class="flex flex-col items-center text-center p-6">
+                            <div class="mb-4">
+                                ${icons[danger ? 'danger' : type]}
+                            </div>
+                            <p class="text-gray-700 text-lg mb-6 whitespace-pre-line">${message}</p>
+                            <div class="flex gap-3">
+                                <button class="cancel-btn px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all duration-200">
+                                    ${cancelText}
+                                </button>
+                                <button class="confirm-btn ${confirmButtonClass}">
+                                    ${confirmText}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        resolve(false);
+                    }
+                };
+                
+                modal.querySelector('.cancel-btn').onclick = () => {
+                    modal.remove();
+                    resolve(false);
+                };
+                
+                modal.querySelector('.confirm-btn').onclick = () => {
+                    modal.remove();
+                    resolve(true);
+                };
+                
+                document.body.appendChild(modal);
+            });
         }
 
         // Fetch email logs from API
@@ -2659,7 +3115,7 @@
                 };
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 email-log-checkbox-column hidden">
                         <input type="checkbox" class="log-checkbox w-4 h-4" data-log-id="${log.log_id}" onchange="handleLogCheckbox()">
                     </td>
                     <td class="px-6 py-4">${log.log_id || 'N/A'}</td>
@@ -2701,30 +3157,30 @@
         // Toggle archived view
         function toggleArchivedView() {
             showingArchivedLogs = !showingArchivedLogs;
-            const btn = document.getElementById('viewArchivedBtn');
+            const viewArchivedBtn = document.getElementById('viewArchivedBtnMenu');
+            const archiveBtn = document.getElementById('archiveEmailLogsBtnMenu');
             const title = document.getElementById('emailLogsTableTitle');
-            const archiveBtn = document.getElementById('archiveLogsBtn');
             const adminData = JSON.parse(sessionStorage.getItem('adminData'));
             const isSuperAdmin = adminData && adminData.is_super_admin == 1;
             
             if (showingArchivedLogs) {
-                btn.textContent = 'View Active';
-                btn.className = 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold';
-                title.textContent = 'Archived Email Logs';
-                // Hide archive button, show restore/delete for super admin only
-                archiveBtn.classList.add('hidden');
-                if (isSuperAdmin) {
-                    document.getElementById('restoreLogsBtn').classList.remove('hidden');
-                    document.getElementById('deleteLogsBtn').classList.remove('hidden');
+                // Viewing archived logs
+                if (viewArchivedBtn) {
+                    viewArchivedBtn.innerHTML = '<i class="fas fa-eye text-green-600 w-5"></i><span class="font-semibold text-gray-700">View Active</span>';
                 }
+                if (archiveBtn) {
+                    archiveBtn.innerHTML = '<i class="fas fa-undo text-green-600 w-5"></i><span class="font-semibold text-gray-700">Restore Logs</span>';
+                }
+                title.textContent = 'Archived Email Logs';
             } else {
-                btn.textContent = 'View Archived';
-                btn.className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-bold';
+                // Viewing active logs
+                if (viewArchivedBtn) {
+                    viewArchivedBtn.innerHTML = '<i class="fas fa-folder-open text-gray-600 w-5"></i><span class="font-semibold text-gray-700">View Archived</span>';
+                }
+                if (archiveBtn) {
+                    archiveBtn.innerHTML = '<i class="fas fa-archive text-blue-900 w-5"></i><span class="font-semibold text-gray-700">Archive Logs</span>';
+                }
                 title.textContent = 'Email History';
-                // Show archive button for all admins
-                archiveBtn.classList.remove('hidden');
-                document.getElementById('restoreLogsBtn').classList.add('hidden');
-                document.getElementById('deleteLogsBtn').classList.add('hidden');
             }
             fetchEmailLogs();
         }
@@ -2748,26 +3204,176 @@
         // Update selected count display
         function updateSelectedCount() {
             const count = selectedLogIds.length;
-            const countEl = document.getElementById('selectedCount');
-            const actionsEl = document.getElementById('emailLogActions');
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('selectedCountRestore').textContent = count;
+            document.getElementById('selectedCountDelete').textContent = count;
+        }
+
+        /**
+         * Enter email archive mode - show checkboxes and action buttons
+         */
+        function enterEmailArchiveMode() {
+            // Show checkbox column
+            document.querySelectorAll('.email-log-checkbox-column').forEach(el => {
+                el.classList.remove('hidden');
+            });
             
-            if (count > 0) {
-                countEl.textContent = `${count} selected`;
-                actionsEl.classList.remove('hidden');
+            // Determine which buttons to show based on archive status
+            const adminData = JSON.parse(sessionStorage.getItem('adminData'));
+            const isSuperAdmin = adminData && adminData.is_super_admin == 1;
+            
+            if (showingArchivedLogs) {
+                // In archived view - show restore/delete buttons
+                document.getElementById('archiveAllBtn').classList.add('hidden');
+                document.getElementById('archiveLogsBtn').classList.add('hidden');
+                document.getElementById('restoreAllBtn').classList.remove('hidden');
+                document.getElementById('restoreLogsBtn').classList.remove('hidden');
+                if (isSuperAdmin) {
+                    document.getElementById('deleteLogsBtn').classList.remove('hidden');
+                }
             } else {
-                countEl.textContent = '';
-                actionsEl.classList.add('hidden');
+                // In active view - show archive buttons
+                document.getElementById('archiveAllBtn').classList.remove('hidden');
+                document.getElementById('archiveLogsBtn').classList.remove('hidden');
+                document.getElementById('restoreAllBtn').classList.add('hidden');
+                document.getElementById('restoreLogsBtn').classList.add('hidden');
+                document.getElementById('deleteLogsBtn').classList.add('hidden');
+            }
+            
+            // Show action panel, hide kebab menu
+            document.getElementById('emailLogActions').classList.remove('hidden');
+            document.getElementById('emailKebabMenu').classList.add('hidden');
+            
+            // Reset selection
+            selectedLogIds = [];
+            document.getElementById('selectAllLogs').checked = false;
+            updateSelectedCount();
+        }
+
+        /**
+         * Exit email archive mode - hide checkboxes and action buttons
+         */
+        function exitEmailArchiveMode() {
+            // Hide checkbox column
+            document.querySelectorAll('.email-log-checkbox-column').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Hide action panel, show kebab menu
+            document.getElementById('emailLogActions').classList.add('hidden');
+            document.getElementById('emailKebabMenu').classList.remove('hidden');
+            
+            // Reset selection
+            selectedLogIds = [];
+            document.getElementById('selectAllLogs').checked = false;
+            document.querySelectorAll('.log-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }
+
+        /**
+         * Archive all email logs (no selection needed)
+         */
+        async function archiveAllEmailLogs() {
+            // Get all visible log IDs
+            const allLogIds = Array.from(document.querySelectorAll('.log-checkbox'))
+                .map(cb => cb.dataset.logId);
+            
+            if (allLogIds.length === 0) {
+                showNotification('No active logs to archive', 'warning');
+                return;
+            }
+            
+            const confirmed = await showConfirm(`Archive all ${allLogIds.length} visible email logs?`);
+            if (!confirmed) {
+                return;
+            }
+            
+            try {
+                
+                const response = await fetch(`${API_BASE}/admin/email_logs.php`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'archive',
+                        log_ids: allLogIds
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`Archived ${allLogIds.length} log(s) successfully`, 'success');
+                    exitEmailArchiveMode();
+                    fetchEmailLogs();
+                } else {
+                    await showAlert(result.message || 'Failed to archive logs', 'error');
+                }
+            } catch (error) {
+                console.error('Error archiving logs:', error);
+                await showAlert('Error archiving logs', 'error');
+            }
+        }
+
+        /**
+         * Restore all email logs (no selection needed)
+         */
+        async function restoreAllEmailLogs() {
+            const adminData = JSON.parse(sessionStorage.getItem('adminData'));
+            if (!adminData || adminData.is_super_admin != 1) {
+                showNotification('Only super admins can restore logs', 'error');
+                return;
+            }
+            
+            const allLogIds = Array.from(document.querySelectorAll('.log-checkbox'))
+                .map(cb => cb.dataset.logId);
+            
+            if (allLogIds.length === 0) {
+                showNotification('No archived logs to restore', 'warning');
+                return;
+            }
+            
+            const confirmed = await showConfirm(`Restore all ${allLogIds.length} visible email logs?`);
+            if (!confirmed) {
+                return;
+            }
+            
+            try {
+                
+                const response = await fetch(`${API_BASE}/admin/email_logs.php`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'restore',
+                        log_ids: allLogIds
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`Restored ${allLogIds.length} log(s) successfully`, 'success');
+                    exitEmailArchiveMode();
+                    fetchEmailLogs();
+                } else {
+                    await showAlert(result.message || 'Failed to restore logs', 'error');
+                }
+            } catch (error) {
+                console.error('Error restoring logs:', error);
+                await showAlert('Error restoring logs', 'error');
             }
         }
 
         // Archive selected logs
         async function archiveSelectedLogs() {
             if (selectedLogIds.length === 0) {
-                alert('Please select logs to archive');
+                showNotification('Please select logs to archive', 'warning');
                 return;
             }
             
-            if (!confirm(`Archive ${selectedLogIds.length} log(s)?`)) {
+            const confirmed = await showConfirm(`Archive ${selectedLogIds.length} log(s)?`);
+            if (!confirmed) {
                 return;
             }
             
@@ -2785,31 +3391,33 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showNotification('Logs archived successfully', 'success');
+                    showNotification(`Archived ${selectedLogIds.length} log(s) successfully`, 'success');
+                    exitEmailArchiveMode();
                     fetchEmailLogs();
                 } else {
-                    alert(result.message || 'Failed to archive logs');
+                    await showAlert(result.message || 'Failed to archive logs', 'error');
                 }
             } catch (error) {
                 console.error('Error archiving logs:', error);
-                alert('Error archiving logs');
+                await showAlert('Error archiving logs', 'error');
             }
         }
 
         // Restore selected logs (super admin only)
         async function restoreSelectedLogs() {
             const adminData = JSON.parse(sessionStorage.getItem('adminData'));
-            if (!adminData || adminData.is_super_admin == 0 || !adminData.is_super_admin) {
-                alert('Only super admin can restore archived logs');
+            if (!adminData || adminData.is_super_admin != 1) {
+                showNotification('Only super admin can restore archived logs', 'error');
                 return;
             }
             
             if (selectedLogIds.length === 0) {
-                alert('Please select logs to restore');
+                showNotification('Please select logs to restore', 'warning');
                 return;
             }
             
-            if (!confirm(`Restore ${selectedLogIds.length} log(s)?`)) {
+            const confirmed = await showConfirm(`Restore ${selectedLogIds.length} log(s)?`);
+            if (!confirmed) {
                 return;
             }
             
@@ -2827,14 +3435,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showNotification('Logs restored successfully', 'success');
+                    showNotification(`Restored ${selectedLogIds.length} log(s) successfully`, 'success');
+                    exitEmailArchiveMode();
                     fetchEmailLogs();
                 } else {
-                    alert(result.message || 'Failed to restore logs');
+                    await showAlert(result.message || 'Failed to restore logs', 'error');
                 }
             } catch (error) {
                 console.error('Error restoring logs:', error);
-                alert('Error restoring logs');
+                await showAlert('Error restoring logs', 'error');
             }
         }
 
@@ -2842,21 +3451,29 @@
         async function deleteSelectedLogs() {
             const adminData = JSON.parse(sessionStorage.getItem('adminData'));
             if (!adminData || adminData.is_super_admin == 0 || !adminData.is_super_admin) {
-                alert('Only super admin can permanently delete logs');
+                showNotification('Only super admin can permanently delete logs', 'error');
                 return;
             }
             
             if (selectedLogIds.length === 0) {
-                alert('Please select logs to delete');
+                showNotification('Please select logs to delete', 'warning');
                 return;
             }
             
-            if (!confirm(`PERMANENTLY DELETE ${selectedLogIds.length} log(s)? This action CANNOT be undone!`)) {
+            const confirmed1 = await showConfirm(
+                `PERMANENTLY DELETE ${selectedLogIds.length} log(s)?\n\nThis action CANNOT be undone!`,
+                { danger: true, confirmText: 'Delete', cancelText: 'Cancel' }
+            );
+            if (!confirmed1) {
                 return;
             }
             
             // Second confirmation for deletion
-            if (!confirm('Are you absolutely sure? This will permanently remove these logs from the database.')) {
+            const confirmed2 = await showConfirm(
+                'Are you absolutely sure?\n\nThis will permanently remove these logs from the database.',
+                { danger: true, confirmText: 'Yes, Delete Forever', cancelText: 'Cancel' }
+            );
+            if (!confirmed2) {
                 return;
             }
             
@@ -2873,14 +3490,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showNotification('Logs permanently deleted', 'success');
+                    showNotification(`Permanently deleted ${selectedLogIds.length} log(s)`, 'success');
+                    exitEmailArchiveMode();
                     fetchEmailLogs();
                 } else {
-                    alert(result.message || 'Failed to delete logs');
+                    showNotification(result.message || 'Failed to delete logs', 'error');
                 }
             } catch (error) {
                 console.error('Error deleting logs:', error);
-                alert('Error deleting logs');
+                showNotification('Error deleting logs', 'error');
             }
         }
 
@@ -2937,6 +3555,17 @@
             const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
             if (adminData && adminData.is_super_admin == 1) {
                 document.getElementById('tab-admin-management').classList.remove('hidden');
+                // Show export admin logs button for super admin
+                const exportAdminLogsBtn = document.getElementById('exportAdminLogsBtn');
+                if (exportAdminLogsBtn) {
+                    exportAdminLogsBtn.classList.remove('hidden');
+                }
+            } else {
+                // Hide export admin logs button for regular admin
+                const exportAdminLogsBtn = document.getElementById('exportAdminLogsBtn');
+                if (exportAdminLogsBtn) {
+                    exportAdminLogsBtn.classList.add('hidden');
+                }
             }
         }
 
@@ -3156,7 +3785,11 @@
 
         // Delete admin
         async function deleteAdmin(adminId, fullName) {
-            if (!confirm(`Are you sure you want to delete admin account: ${fullName}?\n\nThis action cannot be undone.`)) {
+            const confirmed = await showConfirm(
+                `Are you sure you want to delete admin account: ${fullName}?\n\nThis action cannot be undone.`,
+                { danger: true, confirmText: 'Delete', cancelText: 'Cancel' }
+            );
+            if (!confirmed) {
                 return;
             }
             
@@ -3174,11 +3807,11 @@
                     showNotification('Admin account deleted successfully', 'success');
                     await fetchAdminAccounts();
                 } else {
-                    alert(`Error: ${result.message}`);
+                    await showAlert(`Error: ${result.message}`, 'error');
                 }
             } catch (error) {
                 console.error('Error deleting admin:', error);
-                alert('A connection error occurred.');
+                await showAlert('A connection error occurred.', 'error');
             }
         }
 
@@ -3814,7 +4447,8 @@
             const newStatus = currentStatus == 1 ? 0 : 1;
             const action = newStatus == 1 ? 'available' : 'out of stock';
             
-            if (!confirm(`Mark this item as ${action}?`)) return;
+            const confirmed = await showConfirm(`Mark this item as ${action}?`);
+            if (!confirmed) return;
 
             try {
                 const response = await fetch(INVENTORY_API_URL, {
@@ -3841,7 +4475,11 @@
         }
 
         async function deleteInventoryItem(itemId, itemName) {
-            if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) return;
+            const confirmed = await showConfirm(
+                `Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`,
+                { danger: true, confirmText: 'Delete', cancelText: 'Cancel' }
+            );
+            if (!confirmed) return;
 
             try {
                 const response = await fetch(INVENTORY_API_URL, {
@@ -3877,16 +4515,27 @@
          */
         async function toggleArchivedStudentsView() {
             showingArchivedStudents = !showingArchivedStudents;
-            const btn = document.getElementById('viewArchivedStudentsBtn');
+            const viewArchivedBtn = document.getElementById('viewArchivedStudentsBtnMenu');
+            const archiveBtn = document.getElementById('archiveStudentsBtnMenu');
             const title = document.getElementById('studentsTableTitle');
             
             if (showingArchivedStudents) {
-                btn.innerHTML = '<i class="fas fa-eye mr-2"></i>View Active';
-                btn.className = 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold whitespace-nowrap';
+                // Viewing archived students
+                if (viewArchivedBtn) {
+                    viewArchivedBtn.innerHTML = '<i class="fas fa-eye text-green-600 w-5"></i><span class="font-semibold text-gray-700">View Active</span>';
+                }
+                if (archiveBtn) {
+                    archiveBtn.innerHTML = '<i class="fas fa-undo text-green-600 w-5"></i><span class="font-semibold text-gray-700">Restore Students</span>';
+                }
                 title.textContent = 'Archived Students';
             } else {
-                btn.innerHTML = '<i class="fas fa-archive mr-2"></i>View Archived';
-                btn.className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-bold whitespace-nowrap';
+                // Viewing active students
+                if (viewArchivedBtn) {
+                    viewArchivedBtn.innerHTML = '<i class="fas fa-folder-open text-gray-600 w-5"></i><span class="font-semibold text-gray-700">View Archived</span>';
+                }
+                if (archiveBtn) {
+                    archiveBtn.innerHTML = '<i class="fas fa-archive text-blue-900 w-5"></i><span class="font-semibold text-gray-700">Archive Students</span>';
+                }
                 title.textContent = 'Active Students';
             }
             
@@ -3897,7 +4546,10 @@
          * Archive a student record
          */
         async function archiveStudent(studentId, studentName) {
-            if (!confirm(`Archive student record: ${studentName}?\n\nThis will hide the student from the active list.`)) {
+            const confirmed = await showConfirm(
+                `Archive student record: ${studentName}?\n\nThis will hide the student from the active list.`
+            );
+            if (!confirmed) {
                 return;
             }
             
@@ -3918,11 +4570,11 @@
                     showNotification('Student archived successfully', 'success');
                     await fetchStudents();
                 } else {
-                    alert(result.message || 'Failed to archive student');
+                    await showAlert(result.message || 'Failed to archive student', 'error');
                 }
             } catch (error) {
                 console.error('Error archiving student:', error);
-                alert('Error archiving student');
+                await showAlert('Error archiving student', 'error');
             }
         }
 
@@ -3931,12 +4583,13 @@
          */
         async function restoreStudent(studentId, studentName) {
             const adminData = JSON.parse(sessionStorage.getItem('adminData'));
-            if (!adminData || adminData.is_super_admin == 0 || !adminData.is_super_admin) {
-                alert('Only super admin can restore archived students');
+            if (!adminData || adminData.is_super_admin != 1) {
+                await showAlert('Only super admin can restore archived students', 'error');
                 return;
             }
             
-            if (!confirm(`Restore student record: ${studentName}?`)) {
+            const confirmed = await showConfirm(`Restore student record: ${studentName}?`);
+            if (!confirmed) {
                 return;
             }
             
@@ -3953,15 +4606,18 @@
                 
                 const result = await response.json();
                 
+                console.log('Restore response:', result); // Debug log
+                
                 if (result.success) {
                     showNotification('Student restored successfully', 'success');
                     await fetchStudents();
                 } else {
-                    alert(result.message || 'Failed to restore student');
+                    console.error('Restore failed:', result);
+                    await showAlert(result.message || 'Failed to restore student', 'error');
                 }
             } catch (error) {
                 console.error('Error restoring student:', error);
-                alert('Error restoring student');
+                await showAlert('Error restoring student: ' + error.message, 'error');
             }
         }
 
@@ -3979,6 +4635,188 @@
         async function restoreStudentFromModal(studentId, studentName) {
             closeStudentModal();
             await restoreStudent(studentId, studentName);
+        }
+
+        /**
+         * Archive all visible students
+         */
+        async function archiveAllStudents() {
+            const visibleStudents = showingArchivedStudents ? [] : studentsData.filter(s => !s.is_archived);
+            
+            if (visibleStudents.length === 0) {
+                showNotification('No active students to archive', 'warning');
+                return;
+            }
+            
+            const confirmed = await showConfirm(`Archive all ${visibleStudents.length} students?`);
+            if (!confirmed) {
+                return;
+            }
+            
+            let successCount = 0;
+            for (const student of visibleStudents) {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/admin_students.php`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'archive',
+                            student_id: student.student_id
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) successCount++;
+                } catch (error) {
+                    console.error('Error archiving student:', error);
+                }
+            }
+            
+            showNotification(`${successCount} of ${visibleStudents.length} students archived successfully`, 'success');
+            exitStudentArchiveMode();
+            await fetchStudents();
+        }
+
+        /**
+         * Archive selected students
+         */
+        async function archiveSelectedStudents() {
+            if (selectedStudentIds.length === 0) {
+                showNotification('Please select students to archive', 'warning');
+                return;
+            }
+            
+            const confirmed = await showConfirm(`Archive ${selectedStudentIds.length} selected students?`);
+            if (!confirmed) {
+                return;
+            }
+            
+            let successCount = 0;
+            for (const studentId of selectedStudentIds) {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/admin_students.php`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'archive',
+                            student_id: studentId
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) successCount++;
+                } catch (error) {
+                    console.error('Error archiving student:', error);
+                }
+            }
+            
+            showNotification(`${successCount} of ${selectedStudentIds.length} students archived successfully`, 'success');
+            exitStudentArchiveMode();
+            await fetchStudents();
+        }
+
+        /**
+         * Restore all visible archived students
+         */
+        async function restoreAllStudents() {
+            const archivedStudents = showingArchivedStudents ? studentsData.filter(s => s.is_archived) : [];
+            
+            if (archivedStudents.length === 0) {
+                showNotification('No archived students to restore', 'warning');
+                return;
+            }
+            
+            const confirmed = await showConfirm(`Restore all ${archivedStudents.length} archived students?`);
+            if (!confirmed) {
+                return;
+            }
+            
+            let successCount = 0;
+            let errors = [];
+            for (const student of archivedStudents) {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/admin_students.php`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'restore',
+                            student_id: student.student_id
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    console.log(`Restore ${student.first_name} ${student.last_name}:`, result); // Debug
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        errors.push(`${student.first_name} ${student.last_name}: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error restoring student:', student.student_id, error);
+                    errors.push(`${student.first_name} ${student.last_name}: ${error.message}`);
+                }
+            }
+            
+            if (errors.length > 0) {
+                console.error('Restore errors:', errors);
+            }
+            
+            showNotification(`${successCount} of ${archivedStudents.length} students restored successfully`, successCount > 0 ? 'success' : 'error');
+            exitStudentArchiveMode();
+            await fetchStudents();
+        }
+
+        /**
+         * Restore selected students
+         */
+        async function restoreSelectedStudents() {
+            if (selectedStudentIds.length === 0) {
+                showNotification('Please select students to restore', 'warning');
+                return;
+            }
+            
+            const confirmed = await showConfirm(`Restore ${selectedStudentIds.length} selected students?`);
+            if (!confirmed) {
+                return;
+            }
+            
+            let successCount = 0;
+            let errors = [];
+            for (const studentId of selectedStudentIds) {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/admin_students.php`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'restore',
+                            student_id: studentId
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    console.log(`Restore student ${studentId}:`, result); // Debug
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        errors.push(`${studentId}: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error restoring student:', studentId, error);
+                    errors.push(`${studentId}: ${error.message}`);
+                }
+            }
+            
+            if (errors.length > 0) {
+                console.error('Restore errors:', errors);
+            }
+            
+            showNotification(`${successCount} of ${selectedStudentIds.length} students restored successfully`, successCount > 0 ? 'success' : 'error');
+            exitStudentArchiveMode();
+            await fetchStudents();
         }
 
         /**
@@ -4006,7 +4844,10 @@
          * Archive an admin account (Super Admin only)
          */
         async function archiveAdmin(adminId, fullName) {
-            if (!confirm(`Archive admin account: ${fullName}?\n\nThis will prevent them from logging in.`)) {
+            const confirmed = await showConfirm(
+                `Archive admin account: ${fullName}?\n\nThis will prevent them from logging in.`
+            );
+            if (!confirmed) {
                 return;
             }
             
@@ -4027,11 +4868,11 @@
                     showNotification('Admin account archived successfully', 'success');
                     await fetchAdminAccounts();
                 } else {
-                    alert(result.message || 'Failed to archive admin');
+                    await showAlert(result.message || 'Failed to archive admin', 'error');
                 }
             } catch (error) {
                 console.error('Error archiving admin:', error);
-                alert('Error archiving admin');
+                await showAlert('Error archiving admin', 'error');
             }
         }
 
@@ -4039,7 +4880,8 @@
          * Restore an archived admin (Super Admin only)
          */
         async function restoreAdmin(adminId, fullName) {
-            if (!confirm(`Restore admin account: ${fullName}?`)) {
+            const confirmed = await showConfirm(`Restore admin account: ${fullName}?`);
+            if (!confirmed) {
                 return;
             }
             
@@ -4060,11 +4902,11 @@
                     showNotification('Admin account restored successfully', 'success');
                     await fetchAdminAccounts();
                 } else {
-                    alert(result.message || 'Failed to restore admin');
+                    await showAlert(result.message || 'Failed to restore admin', 'error');
                 }
             } catch (error) {
                 console.error('Error restoring admin:', error);
-                alert('Error restoring admin');
+                await showAlert('Error restoring admin', 'error');
             }
         }
 
@@ -4072,11 +4914,19 @@
          * Permanently delete an archived admin (Super Admin only)
          */
         async function permanentDeleteAdmin(adminId, fullName) {
-            if (!confirm(`PERMANENTLY DELETE admin account: ${fullName}?\n\nThis action CANNOT be undone!`)) {
+            const confirmed1 = await showConfirm(
+                `PERMANENTLY DELETE admin account: ${fullName}?\n\nThis action CANNOT be undone!`,
+                { danger: true, confirmText: 'Delete', cancelText: 'Cancel' }
+            );
+            if (!confirmed1) {
                 return;
             }
             
-            if (!confirm('Are you absolutely sure? This will permanently remove this account from the database.')) {
+            const confirmed2 = await showConfirm(
+                'Are you absolutely sure?\n\nThis will permanently remove this account from the database.',
+                { danger: true, confirmText: 'Yes, Delete Forever', cancelText: 'Cancel' }
+            );
+            if (!confirmed2) {
                 return;
             }
             
@@ -4097,11 +4947,11 @@
                     showNotification('Admin account permanently deleted', 'success');
                     await fetchAdminAccounts();
                 } else {
-                    alert(result.message || 'Failed to delete admin');
+                    await showAlert(result.message || 'Failed to delete admin', 'error');
                 }
             } catch (error) {
                 console.error('Error deleting admin:', error);
-                alert('Error deleting admin');
+                await showAlert('Error deleting admin', 'error');
             }
         }
 
@@ -4203,7 +5053,7 @@
             if (!logs || logs.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                             <i class="fas fa-inbox text-5xl mb-3 text-gray-300"></i>
                             <p class="text-lg font-semibold">No activity logs found</p>
                             <p class="text-sm">Try adjusting your filters or check back later</p>
@@ -4228,6 +5078,9 @@
                 const actionBadge = getActionBadge(log.action_type);
                 
                 row.innerHTML = `
+                    <td class="px-6 py-4 admin-log-checkbox-column hidden">
+                        <input type="checkbox" class="admin-log-checkbox w-4 h-4" data-log-id="${log.log_id}" onchange="handleAdminLogCheckbox()">
+                    </td>
                     <td class="px-6 py-4 text-sm text-gray-600">
                         <i class="fas fa-clock text-blue-500 mr-1"></i>${time}
                     </td>
@@ -4390,6 +5243,427 @@
             }
         }
 
+
+
+        /**
+         * Export email logs to Excel
+         */
+        async function exportEmailLogsToExcel() {
+            try {
+                const type = document.getElementById('filterEmailType')?.value || 'all';
+                const status = document.getElementById('filterEmailStatus')?.value || 'all';
+                const search = document.getElementById('searchEmail')?.value || '';
+                const isArchived = showingArchivedLogs ? 1 : 0;
+                
+                let url = `${API_BASE}/admin/export_email_logs.php?`;
+                if (type !== 'all') url += `type=${type}&`;
+                if (status !== 'all') url += `status=${status}&`;
+                if (search) url += `search=${encodeURIComponent(search)}&`;
+                url += `is_archived=${isArchived}`;
+                
+                // Open in new window to trigger download
+                window.open(url, '_blank');
+                
+                showNotification('Email logs export started', 'success');
+            } catch (error) {
+                console.error('Error exporting email logs:', error);
+                alert('Error exporting email logs');
+            }
+        }
+
+
+
+        // ============================================
+        // STUDENT SELECTION AND EXPORT FUNCTIONS
+        // ============================================
+        
+        let selectedStudentIds = [];
+
+        /**
+         * Toggle select all students
+         */
+        function toggleSelectAllStudents() {
+            const selectAll = document.getElementById('selectAllStudents').checked;
+            document.querySelectorAll('.student-checkbox').forEach(cb => {
+                cb.checked = selectAll;
+            });
+            handleStudentCheckbox();
+        }
+
+        /**
+         * Handle student checkbox change
+         */
+        function handleStudentCheckbox() {
+            selectedStudentIds = [];
+            document.querySelectorAll('.student-checkbox:checked').forEach(cb => {
+                selectedStudentIds.push(cb.dataset.studentId);
+            });
+            updateSelectedStudentCount();
+        }
+
+        /**
+         * Update selected student count display
+         */
+        function updateSelectedStudentCount() {
+            const count = selectedStudentIds.length;
+            const countEl = document.getElementById('selectedStudentCount');
+            if (countEl) countEl.textContent = count;
+            
+            // Also update archive counts
+            const archiveCountEl = document.getElementById('selectedStudentArchiveCount');
+            if (archiveCountEl) archiveCountEl.textContent = count;
+            
+            const restoreCountEl = document.getElementById('selectedStudentRestoreCount');
+            if (restoreCountEl) restoreCountEl.textContent = count;
+        }
+
+        /**
+         * Enter student export mode - show checkboxes and action buttons
+         */
+        function enterStudentExportMode() {
+            // Show checkbox column
+            document.querySelectorAll('.student-checkbox-column').forEach(el => {
+                el.classList.remove('hidden');
+            });
+            
+            // Show action buttons, hide kebab menu
+            document.getElementById('studentActions').classList.remove('hidden');
+            document.getElementById('studentKebabMenu').classList.add('hidden');
+            
+            // Reset selection
+            selectedStudentIds = [];
+            document.getElementById('selectAllStudents').checked = false;
+            updateSelectedStudentCount();
+        }
+
+        /**
+         * Exit student export mode - hide checkboxes and action buttons
+         */
+        function exitStudentExportMode() {
+            // Hide checkbox column
+            document.querySelectorAll('.student-checkbox-column').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Hide action buttons, show kebab menu
+            document.getElementById('studentActions').classList.add('hidden');
+            document.getElementById('studentKebabMenu').classList.remove('hidden');
+            
+            // Reset selection
+            selectedStudentIds = [];
+            document.getElementById('selectAllStudents').checked = false;
+            document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedStudentCount();
+        }
+
+        /**
+         * Enter student archive mode - show checkboxes and archive action buttons
+         */
+        function enterStudentArchiveMode() {
+            // Show checkbox column
+            document.querySelectorAll('.student-checkbox-column').forEach(el => {
+                el.classList.remove('hidden');
+            });
+            
+            // Show archive action buttons, hide kebab menu
+            document.getElementById('studentArchiveActions').classList.remove('hidden');
+            document.getElementById('studentKebabMenu').classList.add('hidden');
+            
+            // Show/hide buttons based on current view
+            if (showingArchivedStudents) {
+                // Hide archive buttons, show restore buttons
+                document.querySelector('#studentArchiveActions button[onclick="archiveAllStudents()"]').classList.add('hidden');
+                document.querySelector('#studentArchiveActions button[onclick="archiveSelectedStudents()"]').classList.add('hidden');
+                document.getElementById('restoreAllStudentsBtn').classList.remove('hidden');
+                document.getElementById('restoreSelectedStudentsBtn').classList.remove('hidden');
+            } else {
+                // Show archive buttons, hide restore buttons
+                document.querySelector('#studentArchiveActions button[onclick="archiveAllStudents()"]').classList.remove('hidden');
+                document.querySelector('#studentArchiveActions button[onclick="archiveSelectedStudents()"]').classList.remove('hidden');
+                document.getElementById('restoreAllStudentsBtn').classList.add('hidden');
+                document.getElementById('restoreSelectedStudentsBtn').classList.add('hidden');
+            }
+            
+            // Reset selection
+            selectedStudentIds = [];
+            document.getElementById('selectAllStudents').checked = false;
+            updateSelectedStudentCount();
+        }
+
+        /**
+         * Exit student archive mode - hide checkboxes and archive action buttons
+         */
+        function exitStudentArchiveMode() {
+            // Hide checkbox column
+            document.querySelectorAll('.student-checkbox-column').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Hide archive action buttons, show kebab menu
+            document.getElementById('studentArchiveActions').classList.add('hidden');
+            document.getElementById('studentKebabMenu').classList.remove('hidden');
+            
+            // Reset selection
+            selectedStudentIds = [];
+            document.getElementById('selectAllStudents').checked = false;
+            document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedStudentCount();
+        }
+
+        /**
+         * Toggle student kebab menu
+         */
+        function toggleStudentMenu() {
+            const dropdown = document.getElementById('studentMenuDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Toggle email kebab menu
+         */
+        function toggleEmailMenu() {
+            const dropdown = document.getElementById('emailMenuDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close menus when clicking outside
+        document.addEventListener('click', function(event) {
+            const studentMenu = document.getElementById('studentKebabMenu');
+            const emailMenu = document.getElementById('emailKebabMenu');
+            
+            if (studentMenu && !studentMenu.contains(event.target)) {
+                document.getElementById('studentMenuDropdown')?.classList.add('hidden');
+            }
+            
+            if (emailMenu && !emailMenu.contains(event.target)) {
+                document.getElementById('emailMenuDropdown')?.classList.add('hidden');
+            }
+        });
+
+        /**
+         * Export all students (no selection needed)
+         */
+        async function exportAllStudents() {
+            try {
+                const searchTerm = document.getElementById('searchStudent')?.value || '';
+                const archived = showingArchivedStudents ? 'true' : 'false';
+                
+                let url = `${API_BASE}/admin/export_students.php?archived=${archived}`;
+                if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+                
+                window.open(url, '_blank');
+                showNotification('Exporting all students...', 'success');
+                
+                // Exit export mode after initiating export
+                setTimeout(() => exitStudentExportMode(), 500);
+            } catch (error) {
+                console.error('Error exporting students:', error);
+                alert('Error exporting students');
+            }
+        }
+
+        /**
+         * Export selected students
+         */
+        async function exportSelectedStudents() {
+            if (selectedStudentIds.length === 0) {
+                alert('Please select students to export');
+                return;
+            }
+
+            try {
+                // Create a form to POST the selected IDs
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `${API_BASE}/admin/export_students.php`;
+                form.target = '_blank';
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'student_ids';
+                input.value = JSON.stringify(selectedStudentIds);
+                form.appendChild(input);
+
+                const archivedInput = document.createElement('input');
+                archivedInput.type = 'hidden';
+                archivedInput.name = 'archived';
+                archivedInput.value = showingArchivedStudents ? 'true' : 'false';
+                form.appendChild(archivedInput);
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+
+                showNotification(`Exporting ${selectedStudentIds.length} student(s)...`, 'success');
+                
+                // Exit export mode after initiating export
+                setTimeout(() => exitStudentExportMode(), 500);
+            } catch (error) {
+                console.error('Error exporting selected students:', error);
+                alert('Error exporting selected students');
+            }
+        }
+
+        // ============================================
+        // ADMIN LOG SELECTION AND EXPORT FUNCTIONS
+        // ============================================
+        
+        let selectedAdminLogIds = [];
+
+        /**
+         * Toggle select all admin logs
+         */
+        function toggleSelectAllAdminLogs() {
+            const selectAll = document.getElementById('selectAllAdminLogs').checked;
+            document.querySelectorAll('.admin-log-checkbox').forEach(cb => {
+                cb.checked = selectAll;
+            });
+            handleAdminLogCheckbox();
+        }
+
+        /**
+         * Handle admin log checkbox change
+         */
+        function handleAdminLogCheckbox() {
+            selectedAdminLogIds = [];
+            document.querySelectorAll('.admin-log-checkbox:checked').forEach(cb => {
+                selectedAdminLogIds.push(cb.dataset.logId);
+            });
+            updateSelectedAdminLogCount();
+        }
+
+        /**
+         * Update selected admin log count display
+         */
+        function updateSelectedAdminLogCount() {
+            const count = selectedAdminLogIds.length;
+            const countEl = document.getElementById('selectedAdminLogCount');
+            countEl.textContent = count;
+        }
+
+        /**
+         * Enter admin log export mode - show checkboxes and action buttons
+         */
+        function enterAdminLogExportMode() {
+            const adminData = JSON.parse(sessionStorage.getItem('adminData'));
+            if (!adminData || adminData.is_super_admin != 1) {
+                alert('Only super admins can export admin logs');
+                return;
+            }
+
+            // Show checkbox column
+            document.querySelectorAll('.admin-log-checkbox-column').forEach(el => {
+                el.classList.remove('hidden');
+            });
+            
+            // Show action buttons, hide start export button
+            document.getElementById('adminLogActions').classList.remove('hidden');
+            document.getElementById('startAdminLogExportBtn').classList.add('hidden');
+            
+            // Reset selection
+            selectedAdminLogIds = [];
+            document.getElementById('selectAllAdminLogs').checked = false;
+            updateSelectedAdminLogCount();
+        }
+
+        /**
+         * Exit admin log export mode - hide checkboxes and action buttons
+         */
+        function exitAdminLogExportMode() {
+            // Hide checkbox column
+            document.querySelectorAll('.admin-log-checkbox-column').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Hide action buttons, show start export button
+            document.getElementById('adminLogActions').classList.add('hidden');
+            document.getElementById('startAdminLogExportBtn').classList.remove('hidden');
+            
+            // Reset selection
+            selectedAdminLogIds = [];
+            document.getElementById('selectAllAdminLogs').checked = false;
+            document.querySelectorAll('.admin-log-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedAdminLogCount();
+        }
+
+        /**
+         * Export all admin logs (no selection needed)
+         */
+        async function exportAllAdminLogs() {
+            try {
+                const adminData = JSON.parse(sessionStorage.getItem('adminData'));
+                if (!adminData || adminData.is_super_admin != 1) {
+                    alert('Only super admins can export admin logs');
+                    return;
+                }
+                
+                const adminFilter = document.getElementById('filterLogAdmin')?.value || 'all';
+                const actionFilter = document.getElementById('filterLogAction')?.value || 'all';
+                const dateFilter = document.getElementById('filterLogDate')?.value || '';
+                const searchTerm = document.getElementById('searchLogs')?.value || '';
+                
+                let url = `${API_BASE}/admin/export_admin_logs.php?`;
+                if (adminFilter !== 'all') url += `admin_id=${adminFilter}&`;
+                if (actionFilter !== 'all') url += `action_type=${actionFilter}&`;
+                if (dateFilter) {
+                    url += `start_date=${dateFilter}&`;
+                    url += `end_date=${dateFilter}&`;
+                }
+                if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
+                
+                window.open(url, '_blank');
+                showNotification('Exporting all admin logs...', 'success');
+                
+                // Exit export mode after initiating export
+                setTimeout(() => exitAdminLogExportMode(), 500);
+            } catch (error) {
+                console.error('Error exporting admin logs:', error);
+                alert('Error exporting admin logs');
+            }
+        }
+
+        /**
+         * Export selected admin logs
+         */
+        async function exportSelectedAdminLogs() {
+            const adminData = JSON.parse(sessionStorage.getItem('adminData'));
+            if (!adminData || adminData.is_super_admin != 1) {
+                alert('Only super admins can export admin logs');
+                return;
+            }
+
+            if (selectedAdminLogIds.length === 0) {
+                alert('Please select logs to export');
+                return;
+            }
+
+            try {
+                // Create a form to POST the selected IDs
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `${API_BASE}/admin/export_admin_logs.php`;
+                form.target = '_blank';
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'log_ids';
+                input.value = JSON.stringify(selectedAdminLogIds);
+                form.appendChild(input);
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+
+                showNotification(`Exporting ${selectedAdminLogIds.length} log(s)...`, 'success');
+                
+                // Exit export mode after initiating export
+                setTimeout(() => exitAdminLogExportMode(), 500);
+            } catch (error) {
+                console.error('Error exporting selected logs:', error);
+                alert('Error exporting selected logs');
+            }
+        }
+
         /**
          * Update admin accounts stats
          */
@@ -4428,6 +5702,83 @@
         }
         .animate-fade-in {
             animation: fade-in 0.3s ease-out;
+        }
+
+        /* Notification animations */
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Custom Modal Styles */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .custom-modal-content {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 28rem;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-modal-in {
+            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         /* Retractable Sidebar Styles */
