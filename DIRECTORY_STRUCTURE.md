@@ -89,7 +89,8 @@ Q-Mak/
 │   ├── setup_database.php
 │   ├── add_archive_columns.php
 │   ├── generate_password.php
-│   ├── SYSTEM_CHECK.php     # NEW: Comprehensive system diagnostics
+│   ├── handle_closing_time.php  # NEW: Automated closing time handler (cron job)
+│   ├── SYSTEM_CHECK.php     # Comprehensive system diagnostics
 │   └── test_error_log.php
 │
 ├── tests/                  # Test files

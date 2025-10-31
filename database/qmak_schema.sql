@@ -95,8 +95,10 @@ CREATE TABLE IF NOT EXISTS `students` (
 
 CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `reference_number` VARCHAR(20) NOT NULL COMMENT 'Unique reference number for order tracking',
   `student_id` VARCHAR(50) NOT NULL,
-  `queue_number` VARCHAR(50) NOT NULL UNIQUE,
+  `queue_number` VARCHAR(50) NOT NULL,
+  `queue_date` DATE NOT NULL COMMENT 'Date for daily queue resets',
   `item_name` TEXT NULL COMMENT 'Legacy field for single items',
   `item_ordered` TEXT NULL COMMENT 'Comma-separated list of items',
   `purchasing` TEXT NULL COMMENT 'Alias for item_ordered',
@@ -104,23 +106,35 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `notes` TEXT NULL,
   `status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
   `order_status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
-  `order_type` ENUM('walk-in', 'online') NOT NULL DEFAULT 'online' COMMENT 'Order source type',
+  `order_type` ENUM('walk-in', 'online', 'immediate', 'pre-order') NOT NULL DEFAULT 'online' COMMENT 'Order source type',
+  `scheduled_date` DATE NULL COMMENT 'For pre-orders, the date customer wants to pick up the order',
+  `ordered_outside_hours` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Flag indicating order was placed outside operating hours',
   `estimated_wait_time` INT(11) DEFAULT 10 COMMENT 'Estimated wait time in minutes',
+  `actual_completion_time` INT(11) NULL COMMENT 'Actual time taken to complete order in minutes',
   `qr_code` LONGTEXT NULL COMMENT 'QR code data URI',
   `qr_expiry` DATETIME NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `started_processing_at` DATETIME NULL COMMENT 'When order processing started',
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `completed_at` DATETIME NULL COMMENT 'When order was completed',
   `claimed_at` DATETIME NULL,
   `is_archived` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Archive status',
   `archived_at` DATETIME NULL,
   `archived_by` INT(11) NULL COMMENT 'Admin ID who archived',
   PRIMARY KEY (`order_id`),
-  UNIQUE KEY `queue_number` (`queue_number`),
+  UNIQUE KEY `unique_reference_number` (`reference_number`),
+  UNIQUE KEY `unique_queue_per_day` (`queue_number`, `queue_date`),
+  INDEX `idx_reference_number` (`reference_number`),
+  INDEX `idx_queue_date` (`queue_date`),
   INDEX `idx_student_id` (`student_id`),
   INDEX `idx_status` (`status`),
   INDEX `idx_order_status` (`order_status`),
   INDEX `idx_order_type` (`order_type`),
+  INDEX `idx_scheduled_date` (`scheduled_date`),
+  INDEX `idx_ordered_outside_hours` (`ordered_outside_hours`),
   INDEX `idx_created_at` (`created_at`),
+  INDEX `idx_started_processing_at` (`started_processing_at`),
+  INDEX `idx_completed_at` (`completed_at`),
   INDEX `idx_is_archived` (`is_archived`),
   FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -406,15 +420,374 @@ CREATE TABLE IF NOT EXISTS `settings` (
 -- Insert default settings
 INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
 ('queue_prefix', 'Q', 'Prefix for queue numbers'),
+('queue_start_number', '1', 'Starting queue number each day'),
+('queue_reset_time', '00:00:00', 'Time to reset queue counter daily'),
+('queue_max_per_day', '999', 'Maximum queue numbers allowed per day'),
 ('max_queue_per_day', '999', 'Maximum queue numbers per day'),
+('reference_prefix', 'REF', 'Prefix for reference numbers'),
+('reference_length', '8', 'Length of random reference number'),
+('wait_time_buffer_percent', '20', 'Buffer percentage added to calculated wait time'),
+('wait_time_min', '5', 'Minimum wait time in minutes'),
+('wait_time_max', '60', 'Maximum wait time in minutes'),
+('enable_queue_analytics', '1', 'Enable automatic queue analytics generation'),
+('analytics_lookback_days', '7', 'Number of days to use for average calculations'),
 ('auto_email_notifications', '1', 'Enable automatic email notifications'),
 ('business_hours_start', '08:00', 'Business hours start time'),
 ('business_hours_end', '17:00', 'Business hours end time'),
+('default_opening_time', '10:00:00', 'Default opening time for COOP'),
+('default_closing_time', '17:00:00', 'Default closing time for COOP'),
+('closing_warning_minutes', '30', 'Minutes before closing to warn about pending orders'),
+('auto_move_pending_to_next_day', '1', 'Auto-move pending orders to next business day at closing'),
+('allow_preorders', '1', 'Allow orders to be placed for next business day outside hours'),
+('max_preorder_days', '3', 'Maximum days in advance for pre-orders'),
+('schedule_display_days', '7', 'Number of days to show in schedule display'),
+('enable_lunch_break', '0', 'Enable lunch break period'),
+('lunch_break_start', '12:00:00', 'Lunch break start time'),
+('lunch_break_end', '13:00:00', 'Lunch break end time'),
 ('qr_expiry_minutes', '60', 'QR code expiry time in minutes'),
 ('otp_expiry_minutes', '5', 'OTP code expiry time in minutes'),
 ('otp_max_attempts', '3', 'Maximum OTP verification attempts'),
 ('email_from_name', 'UMak COOP', 'From name in emails'),
 ('email_from_address', 'coop@umak.edu.ph', 'From email address');
+
+-- --------------------------------------------------------
+-- Table structure for table `queue_analytics`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `queue_analytics` (
+  `analytics_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `queue_date` DATE NOT NULL,
+  `total_orders` INT(11) NOT NULL DEFAULT 0 COMMENT 'Total orders placed that day',
+  `completed_orders` INT(11) NOT NULL DEFAULT 0 COMMENT 'Orders completed that day',
+  `cancelled_orders` INT(11) NOT NULL DEFAULT 0 COMMENT 'Orders cancelled that day',
+  `avg_wait_time` DECIMAL(5,2) DEFAULT NULL COMMENT 'Average wait time in minutes',
+  `avg_completion_time` DECIMAL(5,2) DEFAULT NULL COMMENT 'Average completion time in minutes',
+  `peak_hour_start` TIME NULL COMMENT 'Start of busiest hour',
+  `peak_hour_end` TIME NULL COMMENT 'End of busiest hour',
+  `peak_hour_orders` INT(11) DEFAULT 0 COMMENT 'Number of orders during peak hour',
+  `busiest_items` TEXT NULL COMMENT 'Most ordered items (JSON format)',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`analytics_id`),
+  UNIQUE KEY `unique_queue_date` (`queue_date`),
+  INDEX `idx_queue_date` (`queue_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `working_hours`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `working_hours` (
+  `schedule_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `day_of_week` TINYINT(1) NOT NULL COMMENT '1=Monday, 2=Tuesday, ..., 7=Sunday',
+  `is_open` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Is COOP open on this day',
+  `opening_time` TIME NOT NULL DEFAULT '10:00:00',
+  `closing_time` TIME NOT NULL DEFAULT '17:00:00',
+  `break_start` TIME NULL COMMENT 'Optional lunch break start',
+  `break_end` TIME NULL COMMENT 'Optional lunch break end',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`schedule_id`),
+  UNIQUE KEY `unique_day` (`day_of_week`),
+  INDEX `idx_day_of_week` (`day_of_week`),
+  INDEX `idx_is_open` (`is_open`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert default schedule (Monday-Friday, 10am-5pm)
+INSERT INTO `working_hours` (`day_of_week`, `is_open`, `opening_time`, `closing_time`) VALUES
+(1, 1, '10:00:00', '17:00:00'), -- Monday
+(2, 1, '10:00:00', '17:00:00'), -- Tuesday
+(3, 1, '10:00:00', '17:00:00'), -- Wednesday
+(4, 1, '10:00:00', '17:00:00'), -- Thursday
+(5, 1, '10:00:00', '17:00:00'), -- Friday
+(6, 0, '10:00:00', '17:00:00'), -- Saturday (closed)
+(7, 0, '10:00:00', '17:00:00')  -- Sunday (closed)
+ON DUPLICATE KEY UPDATE 
+  is_open = VALUES(is_open),
+  opening_time = VALUES(opening_time),
+  closing_time = VALUES(closing_time);
+
+-- --------------------------------------------------------
+-- Table structure for table `special_hours`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `special_hours` (
+  `special_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `date` DATE NOT NULL,
+  `is_open` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Override normal schedule',
+  `opening_time` TIME NULL,
+  `closing_time` TIME NULL,
+  `reason` VARCHAR(255) NULL COMMENT 'Holiday name or reason for closure/change',
+  `created_by` INT(11) NULL COMMENT 'Admin who created this entry',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`special_id`),
+  UNIQUE KEY `unique_date` (`date`),
+  INDEX `idx_date` (`date`),
+  INDEX `idx_is_open` (`is_open`),
+  FOREIGN KEY (`created_by`) REFERENCES `admin_accounts`(`admin_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Stored Procedures for Queue Management
+-- --------------------------------------------------------
+
+DELIMITER $$
+
+-- Procedure: Get next queue number for a date
+DROP PROCEDURE IF EXISTS `sp_get_next_queue_number`$$
+
+CREATE PROCEDURE `sp_get_next_queue_number`(
+  IN p_queue_date DATE,
+  OUT p_queue_number VARCHAR(50)
+)
+BEGIN
+  DECLARE v_last_number INT;
+  DECLARE v_next_number INT;
+  DECLARE v_queue_prefix VARCHAR(10);
+  
+  -- Get queue prefix from settings (default: 'Q')
+  SELECT setting_value INTO v_queue_prefix 
+  FROM settings 
+  WHERE setting_key = 'queue_prefix' 
+  LIMIT 1;
+  
+  IF v_queue_prefix IS NULL THEN
+    SET v_queue_prefix = 'Q';
+  END IF;
+  
+  -- Get the last queue number for the date
+  SELECT MAX(CAST(SUBSTRING(queue_number, LOCATE('-', queue_number) + 1) AS UNSIGNED))
+  INTO v_last_number
+  FROM orders
+  WHERE queue_date = p_queue_date;
+  
+  -- If no orders today, start from 1
+  IF v_last_number IS NULL THEN
+    SET v_next_number = 1;
+  ELSE
+    SET v_next_number = v_last_number + 1;
+  END IF;
+  
+  -- Format as Q-1, Q-2, etc.
+  SET p_queue_number = CONCAT(v_queue_prefix, '-', v_next_number);
+END$$
+
+-- Procedure: Generate unique reference number
+DROP PROCEDURE IF EXISTS `sp_generate_reference_number`$$
+
+CREATE PROCEDURE `sp_generate_reference_number`(
+  OUT p_reference_number VARCHAR(20)
+)
+BEGIN
+  DECLARE v_prefix VARCHAR(10);
+  DECLARE v_length INT;
+  DECLARE v_random VARCHAR(20);
+  DECLARE v_exists INT;
+  DECLARE v_attempts INT DEFAULT 0;
+  
+  -- Get settings
+  SELECT setting_value INTO v_prefix 
+  FROM settings WHERE setting_key = 'reference_prefix' LIMIT 1;
+  
+  SELECT setting_value INTO v_length 
+  FROM settings WHERE setting_key = 'reference_length' LIMIT 1;
+  
+  IF v_prefix IS NULL THEN SET v_prefix = 'REF'; END IF;
+  IF v_length IS NULL THEN SET v_length = 8; END IF;
+  
+  -- Try to generate unique reference number
+  generate_loop: LOOP
+    -- Generate random string
+    SET v_random = UPPER(SUBSTRING(MD5(CONCAT(RAND(), UUID())), 1, v_length));
+    SET p_reference_number = CONCAT(v_prefix, '-', v_random);
+    
+    -- Check if exists
+    SELECT COUNT(*) INTO v_exists 
+    FROM orders 
+    WHERE reference_number = p_reference_number;
+    
+    IF v_exists = 0 THEN
+      LEAVE generate_loop;
+    END IF;
+    
+    SET v_attempts = v_attempts + 1;
+    
+    -- Safety: max 10 attempts, then use timestamp
+    IF v_attempts >= 10 THEN
+      SET p_reference_number = CONCAT(v_prefix, '-', DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'));
+      LEAVE generate_loop;
+    END IF;
+  END LOOP;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+-- Views for Queue Management
+-- --------------------------------------------------------
+
+-- View: Today's queue
+CREATE OR REPLACE VIEW `v_today_queue` AS
+SELECT 
+  o.order_id,
+  o.reference_number,
+  o.queue_number,
+  o.queue_date,
+  o.student_id,
+  CONCAT(s.first_name, ' ', s.last_name) as student_name,
+  s.email,
+  o.item_ordered,
+  o.status,
+  o.estimated_wait_time,
+  o.actual_completion_time,
+  o.created_at,
+  o.started_processing_at,
+  o.completed_at,
+  CAST(SUBSTRING(o.queue_number, LOCATE('-', o.queue_number) + 1) AS UNSIGNED) as queue_position
+FROM orders o
+LEFT JOIN students s ON o.student_id = s.student_id
+WHERE o.queue_date = CURDATE()
+  AND o.is_archived = 0
+ORDER BY queue_position ASC;
+
+-- View: Pending orders count
+CREATE OR REPLACE VIEW `v_pending_orders_today` AS
+SELECT 
+  COUNT(*) as pending_count,
+  AVG(estimated_wait_time) as avg_estimated_wait
+FROM orders
+WHERE queue_date = CURDATE()
+  AND status IN ('pending', 'processing')
+  AND is_archived = 0;
+
+-- View: Current operating status
+CREATE OR REPLACE VIEW `v_current_operating_status` AS
+SELECT 
+  DAYOFWEEK(CURDATE()) as current_day,
+  CURTIME() as time_now,
+  wh.is_open as is_scheduled_open,
+  wh.opening_time,
+  wh.closing_time,
+  wh.break_start,
+  wh.break_end,
+  CASE 
+    WHEN sh.is_open IS NOT NULL THEN sh.is_open
+    ELSE wh.is_open
+  END as is_actually_open,
+  sh.reason as special_reason,
+  CASE
+    WHEN sh.is_open = 0 THEN 'Closed (Special)'
+    WHEN wh.is_open = 0 THEN 'Closed (Regular)'
+    WHEN CURTIME() < wh.opening_time THEN 'Not Yet Open'
+    WHEN wh.break_start IS NOT NULL 
+         AND CURTIME() >= wh.break_start 
+         AND CURTIME() < wh.break_end THEN 'Lunch Break'
+    WHEN CURTIME() >= wh.closing_time THEN 'Closed for Day'
+    ELSE 'Open'
+  END as status_text
+FROM working_hours wh
+LEFT JOIN special_hours sh ON sh.date = CURDATE()
+WHERE wh.day_of_week = DAYOFWEEK(CURDATE())
+  AND wh.is_active = 1;
+
+-- View: Upcoming schedule (next 7 days)
+CREATE OR REPLACE VIEW `v_upcoming_schedule` AS
+SELECT 
+  d.date,
+  DAYNAME(d.date) as day_name,
+  DAYOFWEEK(d.date) as day_of_week,
+  COALESCE(sh.is_open, wh.is_open) as is_open,
+  COALESCE(sh.opening_time, wh.opening_time) as opening_time,
+  COALESCE(sh.closing_time, wh.closing_time) as closing_time,
+  wh.break_start,
+  wh.break_end,
+  sh.reason,
+  CASE 
+    WHEN sh.special_id IS NOT NULL THEN 'special'
+    ELSE 'regular'
+  END as schedule_type
+FROM (
+  SELECT CURDATE() + INTERVAL 0 DAY as date UNION ALL
+  SELECT CURDATE() + INTERVAL 1 DAY UNION ALL
+  SELECT CURDATE() + INTERVAL 2 DAY UNION ALL
+  SELECT CURDATE() + INTERVAL 3 DAY UNION ALL
+  SELECT CURDATE() + INTERVAL 4 DAY UNION ALL
+  SELECT CURDATE() + INTERVAL 5 DAY UNION ALL
+  SELECT CURDATE() + INTERVAL 6 DAY
+) d
+LEFT JOIN working_hours wh ON wh.day_of_week = DAYOFWEEK(d.date) AND wh.is_active = 1
+LEFT JOIN special_hours sh ON sh.date = d.date
+ORDER BY d.date;
+
+-- --------------------------------------------------------
+-- Events for Queue Analytics
+-- --------------------------------------------------------
+
+-- Enable event scheduler
+SET GLOBAL event_scheduler = ON;
+
+DELIMITER $$
+
+-- Event: Generate daily analytics
+DROP EVENT IF EXISTS `evt_generate_daily_analytics`$$
+
+CREATE EVENT `evt_generate_daily_analytics`
+ON SCHEDULE EVERY 1 DAY
+STARTS CONCAT(CURDATE(), ' 23:55:00')
+DO
+BEGIN
+  DECLARE v_date DATE;
+  DECLARE v_total INT;
+  DECLARE v_completed INT;
+  DECLARE v_cancelled INT;
+  DECLARE v_avg_wait DECIMAL(5,2);
+  DECLARE v_avg_completion DECIMAL(5,2);
+  
+  SET v_date = CURDATE();
+  
+  -- Calculate statistics
+  SELECT 
+    COUNT(*) INTO v_total
+  FROM orders
+  WHERE queue_date = v_date;
+  
+  SELECT 
+    COUNT(*) INTO v_completed
+  FROM orders
+  WHERE queue_date = v_date AND status = 'completed';
+  
+  SELECT 
+    COUNT(*) INTO v_cancelled
+  FROM orders
+  WHERE queue_date = v_date AND status = 'cancelled';
+  
+  SELECT 
+    AVG(estimated_wait_time) INTO v_avg_wait
+  FROM orders
+  WHERE queue_date = v_date AND estimated_wait_time IS NOT NULL;
+  
+  SELECT 
+    AVG(actual_completion_time) INTO v_avg_completion
+  FROM orders
+  WHERE queue_date = v_date AND actual_completion_time IS NOT NULL;
+  
+  -- Insert or update analytics
+  INSERT INTO queue_analytics 
+    (queue_date, total_orders, completed_orders, cancelled_orders, avg_wait_time, avg_completion_time)
+  VALUES 
+    (v_date, v_total, v_completed, v_cancelled, v_avg_wait, v_avg_completion)
+  ON DUPLICATE KEY UPDATE
+    total_orders = v_total,
+    completed_orders = v_completed,
+    cancelled_orders = v_cancelled,
+    avg_wait_time = v_avg_wait,
+    avg_completion_time = v_avg_completion,
+    updated_at = NOW();
+END$$
+
+DELIMITER ;
 
 COMMIT;
 

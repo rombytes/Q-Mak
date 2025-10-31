@@ -160,11 +160,21 @@
                     const waitTime = order.estimated_wait_time || 10;
                     const waitTimeRange = `${waitTime} - ${waitTime + 5} mins`;
                     
+                    // Get reference number and queue date
+                    const refNumber = order.reference_number || 'REF-' + order.order_id.toString().padStart(8, '0');
+                    const queueDate = order.queue_date || new Date(order.created_at).toISOString().split('T')[0];
+                    const orderType = order.order_type || 'immediate';
+                    
                     document.getElementById('orderId').innerHTML = `
                         <div class="flex items-center gap-2 mb-2">
                             <i class="fas fa-hashtag text-blue-500 text-sm"></i>
                             <span class="text-sm text-gray-600">Queue Number:</span>
-                            <strong class="text-blue-900">${order.queue_number}</strong>
+                            <strong class="text-blue-900 text-lg">${order.queue_number}</strong>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-barcode text-purple-500 text-sm"></i>
+                            <span class="text-sm text-gray-600">Reference:</span>
+                            <strong class="text-purple-900 font-mono text-xs">${refNumber}</strong>
                         </div>
                         <div class="flex items-center gap-2 mb-2">
                             <i class="fas fa-shopping-bag text-green-500 text-sm"></i>
@@ -172,16 +182,20 @@
                             <span class="text-gray-900">${itemDisplay}</span>
                         </div>
                         <div class="flex items-center gap-2 mb-2">
-                            <i class="fas fa-clock text-purple-500 text-sm"></i>
+                            <i class="fas fa-clock text-orange-500 text-sm"></i>
                             <span class="text-sm text-gray-600">Estimated Wait:</span>
-                            <strong class="text-purple-900">${waitTimeRange}</strong>
+                            <strong class="text-orange-900">${waitTimeRange}</strong>
                         </div>
-                        <div class="flex items-start gap-2">
-                            <i class="fas fa-calendar text-orange-500 text-sm mt-0.5"></i>
-                            <span class="text-sm text-gray-600">Order Date:</span>
-                            <span class="text-gray-900">
-                                <strong class="block">${new Date(order.created_at).toLocaleDateString()}</strong>
-                                <span class="text-sm text-gray-600">${new Date(order.created_at).toLocaleTimeString()}</span>
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-calendar-day text-indigo-500 text-sm"></i>
+                            <span class="text-sm text-gray-600">Queue Date:</span>
+                            <strong class="text-indigo-900">${new Date(queueDate).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</strong>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-${orderType === 'pre-order' ? 'moon' : 'bolt'} text-teal-500 text-sm"></i>
+                            <span class="text-sm text-gray-600">Order Type:</span>
+                            <span class="px-2 py-0.5 rounded text-xs font-semibold ${orderType === 'pre-order' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}">
+                                ${orderType === 'pre-order' ? 'Pre-Order' : 'Immediate'}
                             </span>
                         </div>
                     `;
@@ -272,10 +286,17 @@
             // Show the QR code section
             wrapper.classList.remove('hidden');
 
-            // Build the same data object as order_result.html
+            // Build QR data with new queue system fields
+            const refNumber = order.reference_number || 'REF-' + order.order_id.toString().padStart(8, '0');
+            const queueDate = order.queue_date || new Date(order.created_at).toISOString().split('T')[0];
+            const orderType = order.order_type || 'immediate';
+            
             const qrData = JSON.stringify({
                 queue_number: order.queue_number,
+                reference_number: refNumber,
                 email: email,
+                queue_date: queueDate,
+                order_type: orderType,
                 timestamp: new Date().toISOString(),
                 type: 'umak_coop_order'
             });
@@ -302,9 +323,16 @@
             wrapper.classList.remove('hidden');
             const ctx = canvas.getContext('2d');
             
+            const refNumber = order.reference_number || 'REF-' + order.order_id.toString().padStart(8, '0');
+            const queueDate = order.queue_date || new Date(order.created_at).toISOString().split('T')[0];
+            const orderType = order.order_type || 'immediate';
+            
             const qrData = JSON.stringify({
                 queue_number: order.queue_number,
+                reference_number: refNumber,
                 email: email,
+                queue_date: queueDate,
+                order_type: orderType,
                 timestamp: new Date().toISOString(),
                 type: 'umak_coop_order'
             });

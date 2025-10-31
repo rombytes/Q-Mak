@@ -102,6 +102,16 @@ For detailed installation instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.md)**
    - Admin Login: `http://localhost/Q-Mak/pages/admin/admin_login.html`
    - Student Login: `http://localhost/Q-Mak/pages/student/student_login.html`
 
+6. **Setup Automated Tasks (Optional)**
+   For production environments, set up a cron job to handle closing time:
+   ```bash
+   # Run at 5:05 PM on weekdays to move pending orders to next business day
+   5 17 * * 1-5 php /path/to/Q-Mak/scripts/handle_closing_time.php
+   ```
+   - On Windows/XAMPP: Use Task Scheduler instead of cron
+   - The script automatically checks working hours from the database
+   - Moves pending orders to the next business day and sends notifications
+
 ## Default Accounts
 
 ### Super Administrator
@@ -174,6 +184,7 @@ Q-Mak/
 ├── scripts/                     # Setup and utility scripts
 │   ├── QUICK_SETUP.php          # Installation wizard
 │   ├── setup_database.php       # Database initialization
+│   ├── handle_closing_time.php  # Automated closing time handler (cron)
 │   ├── generate_password.php    # Password hash generator
 │   └── add_archive_columns.php  # Migration scripts
 ├── tests/                       # Test files

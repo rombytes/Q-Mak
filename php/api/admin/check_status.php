@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             SELECT 
                 o.order_id,
                 o.queue_number,
+                o.reference_number,
                 o.item_name as item_ordered,
                 o.status as order_status,
                 o.qr_code,

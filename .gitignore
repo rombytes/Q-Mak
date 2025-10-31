@@ -65,7 +65,12 @@ php_error_log
 test*.php
 debug*.php
 reset*.php
+
+# Keep fix_database.php and handle_closing_time.php
+# (they are needed in production)
 fix*.php
+!database/fix_database.php
+!scripts/handle_closing_time.php
 
 # ==========================================
 # Database Files

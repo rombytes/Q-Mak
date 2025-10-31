@@ -30,12 +30,12 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+<body class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
     <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-3xl w-full border border-blue-100 animate-fade-in">
         <div class="flex justify-between items-center mb-8">
             <div class="flex items-center gap-4">
                 <div class="relative">
-                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center shadow-xl">
                         <i class="fas fa-check text-white text-3xl"></i>
                     </div>
                     <div class="absolute inset-0 bg-green-500 rounded-2xl pulse-ring"></div>
@@ -66,9 +66,10 @@
                 </div>
                 
                 <!-- Order Details -->
-                <div class="flex-1 text-center md:text-left space-y-6">
-                    <div class="bg-white rounded-xl p-6 shadow-md border border-blue-100">
-                        <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                <div class="flex-1 text-center md:text-left space-y-4">
+                    <!-- Queue Number -->
+                    <div class="bg-white rounded-xl p-4 shadow-md border border-blue-100">
+                        <div class="flex items-center justify-center md:justify-start gap-3">
                             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-hashtag text-blue-600"></i>
                             </div>
@@ -78,21 +79,38 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-xl p-6 shadow-md border border-orange-100">
-                        <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                    
+                    <!-- Reference Number -->
+                    <div class="bg-white rounded-xl p-4 shadow-md border border-purple-100">
+                        <div class="flex items-center justify-center md:justify-start gap-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-barcode text-purple-600"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-sm font-semibold text-gray-600">Reference Number</h4>
+                                <p id="refNum" class="text-lg font-bold text-purple-600"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Smart Wait Time -->
+                    <div class="bg-white rounded-xl p-4 shadow-md border border-orange-100">
+                        <div class="flex items-center justify-center md:justify-start gap-3">
                             <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                                 <i class="fas fa-clock text-orange-600"></i>
                             </div>
                             <div class="text-left">
                                 <h4 class="text-sm font-semibold text-gray-600">Estimated Wait Time</h4>
-                                <p id="waitTime" class="text-3xl font-bold text-orange-500"></p>
+                                <div id="waitTime" class="text-orange-500"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 shadow-md text-white">
+                    
+                    <!-- Order Type & Date -->
+                    <div id="orderTypeInfo" class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 shadow-md text-white">
                         <div class="flex items-center gap-2 text-sm">
                             <i class="fas fa-info-circle"></i>
-                            <span>Valid for <strong>30 minutes</strong> from order placement</span>
+                            <span id="orderInfo">Loading order info...</span>
                         </div>
                     </div>
                 </div>
@@ -145,25 +163,58 @@
     </div>
 
     <script>
-        const queueNum = sessionStorage.getItem('queueNum');
-        const waitTime = sessionStorage.getItem('waitTime');
-        const userEmail = sessionStorage.getItem('userEmail');
+        // Declare pollInterval at the top level
+        let pollInterval;
+        
+        // Get all order data from sessionStorage
+        const orderData = {
+            queueNum: sessionStorage.getItem('queueNum'),
+            referenceNum: sessionStorage.getItem('referenceNum'),
+            waitTime: sessionStorage.getItem('waitTime'),
+            waitTimeDetails: JSON.parse(sessionStorage.getItem('waitTimeDetails') || '{}'),
+            queuePosition: sessionStorage.getItem('queuePosition'),
+            queueDate: sessionStorage.getItem('queueDate'),
+            orderType: sessionStorage.getItem('orderType'),
+            coopStatus: JSON.parse(sessionStorage.getItem('coopStatus') || '{}'),
+            userEmail: sessionStorage.getItem('userEmail')
+        };
 
-        if (!queueNum || !waitTime) {
+        if (!orderData.queueNum || !orderData.waitTime) {
             showAlert('Session expired. Please start again.', 'warning').then(() => {
                 window.location.href = '../index.html';
             });
         } else {
-            // Display order details
-            document.getElementById('queueNum').textContent = queueNum;
-            document.getElementById('waitTime').textContent = waitTime + ' - ' + (parseInt(waitTime) + 5) + ' mins';
+            // Display enhanced order details
+            displayOrderDetails();
             
-            // Generate QR Code (simplified approach)
+            // Generate QR Code
             generateQRCode();
+            
+            // Start real-time wait time updates
+            startWaitTimePolling();
             
             // Show success notification
             if (window.notificationManager) {
-                window.notificationManager.orderSuccess(queueNum);
+                window.notificationManager.orderSuccess(orderData.queueNum);
+            }
+        }
+        
+        function displayOrderDetails() {
+            // Queue number (sequential format)
+            document.getElementById('queueNum').textContent = orderData.queueNum;
+            
+            // Wait time with dynamic info
+            const waitDiv = document.getElementById('waitTime');
+            if (orderData.waitTimeDetails.queue_position) {
+                waitDiv.innerHTML = `
+                    <span class="text-3xl font-bold">${orderData.waitTime} mins</span>
+                    <span class="text-sm block text-gray-600 mt-1">
+                        Position #${orderData.waitTimeDetails.queue_position} • 
+                        ${orderData.waitTimeDetails.pending_orders} orders ahead
+                    </span>
+                `;
+            } else {
+                waitDiv.textContent = orderData.waitTime + ' mins';
             }
         }
 
@@ -224,10 +275,13 @@
             const canvas = document.getElementById('qrcode');
             const ctx = canvas.getContext('2d');
             
-            // Create QR data
+            // Create QR data with new queue system fields
             const qrData = JSON.stringify({
-                queue_number: queueNum,
-                email: userEmail,
+                queue_number: orderData.queueNum,
+                reference_number: orderData.referenceNum,
+                email: orderData.userEmail,
+                queue_date: orderData.queueDate,
+                order_type: orderData.orderType,
                 timestamp: new Date().toISOString(),
                 type: 'umak_coop_order'
             });
@@ -298,8 +352,11 @@
         function generateClientQRCode() {
             const canvas = document.getElementById('qrcode');
             const qrData = JSON.stringify({
-                queue_number: queueNum,
-                email: userEmail,
+                queue_number: orderData.queueNum,
+                reference_number: orderData.referenceNum,
+                email: orderData.userEmail,
+                queue_date: orderData.queueDate,
+                order_type: orderData.orderType,
                 timestamp: new Date().toISOString(),
                 type: 'umak_coop_order'
             });
@@ -351,7 +408,7 @@
             const canvas = document.getElementById('qrcode');
             const url = canvas.toDataURL('image/png');
             const link = document.createElement('a');
-            link.download = `UMAK-COOP-${queueNum}.png`;
+            link.download = `UMAK-COOP-${orderData.queueNum}-${orderData.referenceNum}.png`;
             link.href = url;
             link.click();
             
@@ -360,7 +417,90 @@
             }
         }
 
+        // Add reference number display
+        if (orderData.referenceNum) {
+            document.getElementById('refNum').textContent = orderData.referenceNum;
+        } else {
+            // If no reference number from database, show placeholder
+            document.getElementById('refNum').textContent = 'N/A';
+            console.warn('Reference number not found in session storage');
+        }
+        
+        // Display order type information
+        function updateOrderInfo() {
+            const orderInfo = document.getElementById('orderInfo');
+            if (orderData.orderType === 'pre-order') {
+                orderInfo.innerHTML = `<strong>Pre-Order</strong> scheduled for ${new Date(orderData.queueDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
+                document.getElementById('orderTypeInfo').className = 'bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 shadow-md text-white';
+            } else {
+                const expiryTime = new Date(Date.now() + 30 * 60000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                orderInfo.innerHTML = `<strong>Immediate Order</strong> • Valid until ${expiryTime}`;
+            }
+        }
+        updateOrderInfo();
+        
+        // Real-time wait time polling
+        function startWaitTimePolling() {
+            // Initial update
+            updateWaitTime();
+            
+            // Poll every 30 seconds
+            pollInterval = setInterval(updateWaitTime, 30000);
+        }
+        
+        async function updateWaitTime() {
+            try {
+                const response = await fetch(`/Q-Mak/php/api/student/get_wait_time.php?queue=${orderData.queueNum}&ref=${orderData.referenceNum}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const waitDiv = document.getElementById('waitTime');
+                    
+                    if (data.status === 'completed') {
+                        waitDiv.innerHTML = `
+                            <span class="text-3xl font-bold text-green-600">Ready!</span>
+                            <span class="text-sm block text-green-600 mt-1">
+                                <i class="fas fa-check-circle"></i> Your order is ready for pickup
+                            </span>
+                        `;
+                        clearInterval(pollInterval);
+                        
+                        // Show notification
+                        if (window.notificationManager) {
+                            window.notificationManager.showInAppNotification('Your order is ready!', 'success');
+                        }
+                    } else if (data.status === 'processing') {
+                        waitDiv.innerHTML = `
+                            <span class="text-3xl font-bold text-blue-600">${data.estimated_minutes} mins</span>
+                            <span class="text-sm block text-blue-600 mt-1">
+                                <i class="fas fa-spinner fa-spin"></i> Being prepared now
+                            </span>
+                        `;
+                    } else {
+                        waitDiv.innerHTML = `
+                            <span class="text-3xl font-bold text-orange-500">${data.estimated_minutes} mins</span>
+                            <span class="text-sm block text-gray-600 mt-1">
+                                Position #${data.queue_position} • 
+                                ${data.orders_ahead} orders ahead
+                            </span>
+                        `;
+                    }
+                    
+                    // Update elapsed time indicator
+                    if (data.minutes_elapsed > 0) {
+                        const elapsedSpan = document.createElement('span');
+                        elapsedSpan.className = 'text-xs text-gray-500 mt-1 block';
+                        elapsedSpan.textContent = `${data.minutes_elapsed} minutes elapsed`;
+                        waitDiv.appendChild(elapsedSpan);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update wait time:', error);
+            }
+        }
+        
         function goHome() {
+            if (pollInterval) clearInterval(pollInterval);
             sessionStorage.clear();
             window.location.href = '../index.html';
         }
@@ -372,6 +512,11 @@
                     window.notificationManager.requestPermission();
                 }, 2000);
             }
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            if (pollInterval) clearInterval(pollInterval);
         });
     </script>
 </body>

@@ -31,6 +31,7 @@ header('Access-Control-Allow-Methods: POST');
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../utils/email.php';
+require_once __DIR__ . '/../../utils/queue_functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -150,33 +151,109 @@ try {
             throw new Exception("Order data not provided");
         }
         
-        // Generate queue number
-        $queueNum = 'Q-' . str_pad(rand(100, 999), 3, '0', STR_PAD_LEFT);
+        // Check if COOP is open
+        $coopStatus = isCoopOpen($db);
+        $orderType = 'immediate';
+        $queueDate = date('Y-m-d');
+        $orderedOutsideHours = 0;
         
-        // Check if queue number exists
-        $checkQueue = $db->prepare("SELECT queue_number FROM orders WHERE queue_number = ?");
-        $checkQueue->execute([$queueNum]);
-        while ($checkQueue->fetch()) {
-            $queueNum = 'Q-' . str_pad(rand(100, 999), 3, '0', STR_PAD_LEFT);
-            $checkQueue->execute([$queueNum]);
+        if (!$coopStatus['open']) {
+            // Check if pre-orders are allowed
+            $allowPreorders = getSetting($db, 'allow_preorders', 1);
+            
+            if ($allowPreorders) {
+                // Calculate next business day
+                $nextBusinessDay = getNextBusinessDay($db);
+                
+                if (!$nextBusinessDay) {
+                    throw new Exception("Unable to process order. No available business days found.");
+                }
+                
+                // Create as pre-order
+                $orderType = 'pre-order';
+                $queueDate = $nextBusinessDay;
+                $orderedOutsideHours = 1;
+                
+                // Generate queue number for next business day
+                $queueNum = generateQueueNumber($db, $nextBusinessDay);
+                $response['message'] = "COOP is currently closed. Your order has been scheduled for " . date('l, F j', strtotime($nextBusinessDay)) . ".";
+            } else {
+                throw new Exception("COOP is currently closed. Reason: " . $coopStatus['reason'] . ". Please place your order during operating hours.");
+            }
+        } else {
+            // Generate sequential queue number for today
+            $queueNum = generateQueueNumber($db);
         }
         
-        // Calculate wait time (5-15 minutes)
-        $waitTime = rand(5, 15);
+        // Generate unique reference number
+        $referenceNum = generateReferenceNumber($db);
+        
+        // Calculate dynamic wait time based on queue and items
+        $waitTimeData = calculateWaitTime($db, $orderData['purchasing']);
+        $waitTime = $waitTimeData['estimated_minutes'];
         
         // QR expiry
         $qrExpiry = date('Y-m-d H:i:s', strtotime('+' . QR_EXPIRY_MINUTES . ' minutes'));
         
+        // Check which columns exist and prepare insert
         $ordersCols = $db->query("DESCRIBE orders")->fetchAll(PDO::FETCH_ASSOC);
         $ordersColsMap = [];
         foreach ($ordersCols as $c) { $ordersColsMap[$c['Field']] = true; }
+        
+        // Base columns
         $cols = ['queue_number','student_id','item_name'];
         $values = [$queueNum, $student['student_id'], $orderData['purchasing']];
         $placeholders = ['?','?','?'];
-        if (isset($ordersColsMap['item_ordered'])) { $cols[] = 'item_ordered'; $values[] = $orderData['purchasing']; $placeholders[] = '?'; }
-        if (isset($ordersColsMap['estimated_wait_time'])) { $cols[] = 'estimated_wait_time'; $values[] = $waitTime; $placeholders[] = '?'; }
-        if (isset($ordersColsMap['qr_expiry'])) { $cols[] = 'qr_expiry'; $values[] = $qrExpiry; $placeholders[] = '?'; }
-        if (isset($ordersColsMap['status'])) { $cols[] = 'status'; $values[] = 'pending'; $placeholders[] = '?'; }
+        
+        // Add new queue system columns
+        if (isset($ordersColsMap['reference_number'])) { 
+            $cols[] = 'reference_number'; 
+            $values[] = $referenceNum; 
+            $placeholders[] = '?'; 
+        }
+        if (isset($ordersColsMap['queue_date'])) { 
+            $cols[] = 'queue_date'; 
+            $values[] = $queueDate; 
+            $placeholders[] = '?'; 
+        }
+        if (isset($ordersColsMap['order_type'])) { 
+            $cols[] = 'order_type'; 
+            $values[] = $orderType; 
+            $placeholders[] = '?'; 
+        }
+        if (isset($ordersColsMap['scheduled_date'])) { 
+            $cols[] = 'scheduled_date'; 
+            $values[] = $orderType === 'pre-order' ? $queueDate : null; 
+            $placeholders[] = '?'; 
+        }
+        if (isset($ordersColsMap['ordered_outside_hours'])) { 
+            $cols[] = 'ordered_outside_hours'; 
+            $values[] = $orderedOutsideHours; 
+            $placeholders[] = '?'; 
+        }
+        
+        // Existing columns
+        if (isset($ordersColsMap['item_ordered'])) { 
+            $cols[] = 'item_ordered'; 
+            $values[] = $orderData['purchasing']; 
+            $placeholders[] = '?'; 
+        }
+        if (isset($ordersColsMap['estimated_wait_time'])) { 
+            $cols[] = 'estimated_wait_time'; 
+            $values[] = $waitTime; 
+            $placeholders[] = '?'; 
+        }
+        if (isset($ordersColsMap['qr_expiry'])) { 
+            $cols[] = 'qr_expiry'; 
+            $values[] = $qrExpiry; 
+            $placeholders[] = '?'; 
+        }
+        if (isset($ordersColsMap['status'])) { 
+            $cols[] = 'status'; 
+            $values[] = 'pending'; 
+            $placeholders[] = '?'; 
+        }
+        
         $sql = "INSERT INTO orders (" . implode(', ', $cols) . ") VALUES (" . implode(', ', $placeholders) . ")";
         $insertOrder = $db->prepare($sql);
         $insertOrder->execute($values);
@@ -196,14 +273,18 @@ try {
             $upd->execute([$qrCodeUri, $orderId]);
         }
         
-        // Prepare receipt data
+        // Prepare receipt data with enhanced information
         $receiptData = [
             'queue_number' => $queueNum,
+            'reference_number' => $referenceNum,
             'student_name' => $student['first_name'] . ' ' . $student['last_name'],
             'student_id' => $student['student_id'],
             'item_ordered' => $orderData['purchasing'],
             'order_date' => date('F j, Y g:i A'),
-            'wait_time' => $waitTime
+            'wait_time' => $waitTime,
+            'queue_position' => $waitTimeData['queue_position'],
+            'order_type' => $orderType,
+            'queue_date' => $queueDate
         ];
         
         $db->commit();
@@ -214,10 +295,16 @@ try {
         $response['data'] = [
             'order_id' => $orderId,
             'queue_number' => $queueNum,
+            'reference_number' => $referenceNum,
             'wait_time' => $waitTime,
+            'wait_time_details' => $waitTimeData,
+            'queue_position' => $waitTimeData['queue_position'],
+            'queue_date' => $queueDate,
+            'order_type' => $orderType,
             'qr_expiry' => $qrExpiry,
-            'qr_code' => $qrCodeUri, // Include QR code in API response
-            'qr_code_data' => $qrData // Include QR data for debugging
+            'qr_code' => $qrCodeUri,
+            'qr_code_data' => $qrData,
+            'coop_status' => $coopStatus
         ];
     } else {
         $db->commit();

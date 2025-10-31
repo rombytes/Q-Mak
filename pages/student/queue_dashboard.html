@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Dashboard - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-up {
+            animation: slide-up 0.5s ease-out;
+        }
+        
+        .queue-card {
+            transition: all 0.3s ease;
+        }
+        
+        .queue-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-blue-600">
+                        <i class="fas fa-chart-line"></i> Queue Dashboard
+                    </h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="refreshAll()" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200 transition">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button onclick="goHome()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+                        <i class="fas fa-home"></i> Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- COOP Status Banner -->
+        <div id="statusBanner" class="mb-6 slide-up">
+            <!-- Dynamic status will be inserted here -->
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid lg:grid-cols-3 gap-6">
+            <!-- Left Column: Current Queue & Stats -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Today's Queue Overview -->
+                <div class="glass-effect rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <i class="fas fa-list-ol text-blue-600"></i>
+                            Today's Queue
+                            <span id="currentDate" class="text-sm text-gray-500"></span>
+                        </h2>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                                <i class="fas fa-check"></i> <span id="completedCount">0</span> Completed
+                            </span>
+                            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full">
+                                <i class="fas fa-clock"></i> <span id="pendingCount">0</span> Pending
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Queue Display -->
+                    <div id="currentQueueDisplay" class="bg-blue-50 rounded-xl p-6 mb-4">
+                        <div class="text-center">
+                            <p class="text-gray-600 mb-2">Now Serving</p>
+                            <div id="currentServing" class="text-5xl font-bold text-blue-600">
+                                <!-- Current queue number -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Queue List -->
+                    <div id="queueList" class="space-y-3">
+                        <!-- Dynamic queue items will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Wait Time Analysis -->
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-bar text-purple-600"></i>
+                        Wait Time Analysis
+                    </h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4 text-center">
+                            <div id="avgWaitTime" class="text-2xl font-bold text-blue-600">--</div>
+                            <p class="text-sm text-gray-600 mt-1">Avg Wait Time</p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4 text-center">
+                            <div id="avgProcessTime" class="text-2xl font-bold text-green-600">--</div>
+                            <p class="text-sm text-gray-600 mt-1">Avg Process Time</p>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-4 text-center">
+                            <div id="queueVelocity" class="text-2xl font-bold text-purple-600">--</div>
+                            <p class="text-sm text-gray-600 mt-1">Orders/Hour</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Schedule & Info -->
+            <div class="space-y-6">
+                <!-- Operating Hours -->
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-calendar-week text-indigo-600"></i>
+                        Operating Schedule
+                    </h3>
+                    <div id="scheduleDisplay" class="space-y-2">
+                        <!-- Schedule will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Pre-Order Info -->
+                <div class="glass-effect rounded-2xl p-6 bg-purple-50">
+                    <h3 class="text-lg font-bold mb-3 text-purple-800">
+                        <i class="fas fa-moon"></i> After-Hours Orders
+                    </h3>
+                    <p class="text-sm text-gray-700 mb-3">
+                        Orders placed outside operating hours will be scheduled as pre-orders for the next business day.
+                    </p>
+                    <div class="bg-white rounded-lg p-3 border border-purple-200">
+                        <p class="text-xs text-gray-600 mb-1">Next Business Day:</p>
+                        <p id="nextBusinessDay" class="font-semibold text-purple-700">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Queue Features -->
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-3">
+                        <i class="fas fa-star text-yellow-500"></i> System Features
+                    </h3>
+                    <div class="space-y-2">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
+                            <div>
+                                <p class="font-semibold text-sm">Sequential Queues</p>
+                                <p class="text-xs text-gray-600">Q-1, Q-2, Q-3... daily reset</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
+                            <div>
+                                <p class="font-semibold text-sm">Smart Wait Times</p>
+                                <p class="text-xs text-gray-600">Based on real queue data</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
+                            <div>
+                                <p class="font-semibold text-sm">Reference Numbers</p>
+                                <p class="text-xs text-gray-600">Unique REF-XXXX for tracking</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
+                            <div>
+                                <p class="font-semibold text-sm">Real-time Updates</p>
+                                <p class="text-xs text-gray-600">Auto-refresh every 30s</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Place Order Button -->
+        <div class="fixed bottom-6 right-6">
+            <button onclick="placeOrder()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-105 flex items-center gap-3 font-bold">
+                <i class="fas fa-plus-circle text-xl"></i>
+                Place New Order
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let refreshInterval;
+        let scheduleData = {};
+        let queueData = [];
+        
+        // Initialize dashboard
+        async function initDashboard() {
+            // Set current date
+            const today = new Date();
+            document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            
+            // Load all data
+            await loadCoopStatus();
+            await loadSchedule();
+            await loadCurrentQueue();
+            await loadWaitTimeStats();
+            
+            // Start auto-refresh (every 30 seconds)
+            refreshInterval = setInterval(refreshAll, 30000);
+        }
+        
+        // Load COOP status
+        async function loadCoopStatus() {
+            try {
+                const response = await fetch('/Q-Mak/php/api/student/get_schedule.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const status = data.current_status;
+                    const banner = document.getElementById('statusBanner');
+                    
+                    if (status.open) {
+                        banner.innerHTML = `
+                            <div class="bg-green-500 text-white rounded-2xl p-6 shadow-lg">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-3 h-3 bg-white rounded-full pulse-animation"></div>
+                                        <div>
+                                            <h2 class="text-2xl font-bold">COOP is OPEN</h2>
+                                            <p class="text-green-100">Accepting orders until ${formatTime(status.closes_at)}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-3xl font-bold">${status.minutes_until_closing}</p>
+                                        <p class="text-sm text-green-100">minutes left</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        const nextOpen = status.opens_at ? `Opens at ${formatTime(status.opens_at)}` : 'Check schedule below';
+                        banner.innerHTML = `
+                            <div class="bg-gray-700 text-white rounded-2xl p-6 shadow-lg">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                        <div>
+                                            <h2 class="text-2xl font-bold">COOP is CLOSED</h2>
+                                            <p class="text-gray-300">${status.reason} • ${nextOpen}</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-purple-600 px-4 py-2 rounded-lg">
+                                        <p class="text-sm font-semibold">Pre-orders Available</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Update stats
+                    document.getElementById('completedCount').textContent = data.today_stats.completed_orders;
+                    document.getElementById('pendingCount').textContent = data.today_stats.pending_orders;
+                    
+                    // Store schedule data
+                    scheduleData = data;
+                }
+            } catch (error) {
+                console.error('Failed to load COOP status:', error);
+            }
+        }
+        
+        // Load operating schedule
+        async function loadSchedule() {
+            try {
+                const response = await fetch('/Q-Mak/php/api/student/get_schedule.php');
+                const data = await response.json();
+                
+                if (data.success && data.schedule) {
+                    const scheduleDiv = document.getElementById('scheduleDisplay');
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    let html = '';
+                    data.schedule.forEach(day => {
+                        if (!day) return;
+                        
+                        const isToday = day.date === today;
+                        const dayClass = isToday ? 'border-l-4 border-blue-500 bg-blue-50' : 'bg-gray-50';
+                        const statusIcon = day.is_open ? 
+                            '<i class="fas fa-check-circle text-green-500"></i>' : 
+                            '<i class="fas fa-times-circle text-red-500"></i>';
+                        
+                        html += `
+                            <div class="${dayClass} rounded-lg p-3 transition hover:shadow-md">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        ${isToday ? '<span class="text-xs font-bold text-blue-600">TODAY</span>' : ''}
+                                        <p class="font-semibold ${isToday ? 'text-blue-900' : 'text-gray-700'}">
+                                            ${day.day_name || getDayName(new Date(day.date))}
+                                        </p>
+                                        <p class="text-xs text-gray-500">${formatDate(day.date)}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        ${statusIcon}
+                                        <p class="text-sm ${day.is_open ? 'text-green-600 font-semibold' : 'text-red-600'}">
+                                            ${day.is_open ? `${formatTime(day.opening_time)} - ${formatTime(day.closing_time)}` : 'Closed'}
+                                        </p>
+                                        ${day.reason ? `<p class="text-xs text-gray-500">${day.reason}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    scheduleDiv.innerHTML = html;
+                    
+                    // Update next business day
+                    updateNextBusinessDay(data.schedule);
+                }
+            } catch (error) {
+                console.error('Failed to load schedule:', error);
+            }
+        }
+        
+        // Load current queue
+        async function loadCurrentQueue() {
+            // Mock data for demonstration - replace with actual API call
+            const mockQueue = [
+                { queue: 'Q-1', ref: 'REF-ABC12345', status: 'completed', wait: 0 },
+                { queue: 'Q-2', ref: 'REF-DEF67890', status: 'completed', wait: 0 },
+                { queue: 'Q-3', ref: 'REF-GHI11111', status: 'processing', wait: 2 },
+                { queue: 'Q-4', ref: 'REF-JKL22222', status: 'pending', wait: 8 },
+                { queue: 'Q-5', ref: 'REF-MNO33333', status: 'pending', wait: 15 }
+            ];
+            
+            // Update current serving
+            const processing = mockQueue.find(q => q.status === 'processing');
+            document.getElementById('currentServing').textContent = processing ? processing.queue : 'Q-0';
+            
+            // Update queue list
+            const queueList = document.getElementById('queueList');
+            let html = '';
+            
+            mockQueue.forEach(item => {
+                const statusColor = {
+                    completed: 'bg-green-100 text-green-700',
+                    processing: 'bg-blue-100 text-blue-700',
+                    pending: 'bg-orange-100 text-orange-700'
+                };
+                
+                const statusIcon = {
+                    completed: 'check-circle',
+                    processing: 'spinner fa-spin',
+                    pending: 'clock'
+                };
+                
+                html += `
+                    <div class="queue-card bg-white rounded-lg p-4 border ${item.status === 'processing' ? 'border-blue-300' : 'border-gray-200'}">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="text-2xl font-bold ${item.status === 'processing' ? 'text-blue-600' : 'text-gray-700'}">
+                                    ${item.queue}
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Ref: ${item.ref}</p>
+                                    ${item.wait > 0 ? `<p class="text-xs text-gray-600">${item.wait} min wait</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="${statusColor[item.status]} px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                                <i class="fas fa-${statusIcon[item.status]}"></i>
+                                ${item.status.toUpperCase()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            queueList.innerHTML = html || '<p class="text-center text-gray-500">No orders in queue</p>';
+        }
+        
+        // Load wait time statistics
+        async function loadWaitTimeStats() {
+            // Mock data - replace with actual API
+            document.getElementById('avgWaitTime').textContent = '12 min';
+            document.getElementById('avgProcessTime').textContent = '7 min';
+            document.getElementById('queueVelocity').textContent = '8.5';
+        }
+        
+        // Update next business day
+        function updateNextBusinessDay(schedule) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            for (let day of schedule) {
+                if (!day) continue;
+                const dayDate = new Date(day.date);
+                if (dayDate > new Date() && day.is_open) {
+                    document.getElementById('nextBusinessDay').textContent = 
+                        dayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                    return;
+                }
+            }
+            
+            document.getElementById('nextBusinessDay').textContent = 'Check schedule';
+        }
+        
+        // Utility functions
+        function formatTime(time) {
+            if (!time) return '';
+            const [hours, minutes] = time.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        function getDayName(date) {
+            return date.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        
+        // Actions
+        function refreshAll() {
+            console.log('Refreshing dashboard...');
+            loadCoopStatus();
+            loadCurrentQueue();
+            loadWaitTimeStats();
+        }
+        
+        function placeOrder() {
+            window.location.href = 'create_order.html';
+        }
+        
+        function goHome() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            window.location.href = '../index.html';
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initDashboard);
+        
+        // Clean up on unload
+        window.addEventListener('beforeunload', () => {
+            if (refreshInterval) clearInterval(refreshInterval);
+        });
+    </script>
+</body>
+</html>

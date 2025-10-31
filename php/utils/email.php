@@ -40,7 +40,7 @@ class EmailService {
      * Send order receipt email
      */
     public static function sendReceipt($email, $orderData) {
-        $subject = "Order Confirmation - Queue #{$orderData['queue_number']}";
+        $subject = "Order Confirmation - Queue #{$orderData['queue_number']} - Ref: {$orderData['reference_number']}";
         $body = self::getReceiptEmailTemplate($email, $orderData);
         
         $result = self::sendEmail($email, $subject, $body);
@@ -53,7 +53,7 @@ class EmailService {
      * Send order status update email
      */
     public static function sendStatusUpdate($email, $orderData) {
-        $subject = "Order Status Update - Queue #{$orderData['queue_number']}";
+        $subject = "Order Status Update - Queue #{$orderData['queue_number']} - Ref: {$orderData['reference_number']}";
         $body = self::getStatusUpdateTemplate($orderData);
         
         $result = self::sendEmail($email, $subject, $body);
@@ -325,6 +325,10 @@ class EmailService {
                     </div>
                     <table class='order-details' width='100%' cellpadding='0' cellspacing='0'>
                         <tr>
+                            <th>Reference Number</th>
+                            <td><strong style='color: #1e3a8a; font-size: 16px;'>{$data['reference_number']}</strong></td>
+                        </tr>
+                        <tr>
                             <th>Student Name</th>
                             <td>{$data['student_name']}</td>
                         </tr>
@@ -489,6 +493,7 @@ class EmailService {
 
                     <div class='order-summary'>
                         <h4>Order Information</h4>
+                        <p><strong>Reference Number:</strong> <span style='color: #1e3a8a; font-weight: 600;'>{$data['reference_number']}</span></p>
                         <p><strong>Queue Number:</strong> {$data['queue_number']}</p>
                         <p><strong>Item Ordered:</strong> {$data['item_ordered']}</p>
                         <p><strong>Current Status:</strong> {$statusInfo['label']}</p>

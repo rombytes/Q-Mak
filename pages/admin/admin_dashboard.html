@@ -9,9 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+<body class="flex h-screen bg-gray-50">
     <!-- Retractable Sidebar -->
-    <div class="sidebar bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 text-white flex flex-col fixed h-full z-50 shadow-2xl">
+    <div class="sidebar bg-blue-900 text-white flex flex-col fixed h-full z-50 shadow-2xl">
         <div class="sidebar-content">
             <!-- Profile Section -->
             <div class="p-4 border-b border-blue-700/50">
@@ -29,7 +29,7 @@
             <!-- Navigation Menu -->
             <nav class="flex-1 py-4">
                 <ul class="space-y-1 py-2">
-                    <li onclick="showTab('queue-management')" id="tab-queue-management" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 border-l-4 border-orange-300 shadow-lg hover:shadow-xl transform hover:translate-x-1">
+                    <li onclick="showTab('queue-management')" id="tab-queue-management" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl bg-orange-500 hover:bg-orange-600 border-l-4 border-orange-300 shadow-lg hover:shadow-xl transform hover:translate-x-1">
                         <div class="flex items-center gap-3">
                             <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="16" x2="16" y2="12"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="16" x2="8" y2="8"/>
@@ -114,7 +114,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50" style="margin-left: 80px;">
+    <div class="flex-1 overflow-y-auto bg-gray-50" style="margin-left: 80px;">
         <!-- Top Bar -->
         <div class="bg-white/80 backdrop-blur-md shadow-lg sticky top-0 z-40 px-8 py-5 border-b border-blue-100">
             <div class="flex justify-between items-center">
@@ -136,7 +136,7 @@
             <div id="content-queue-management" class="tab-content">
                 <!-- Page Header -->
                 <div class="mb-8">
-                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent mb-2">Queue & Orders Management</h2>
+                    <h2 class="text-3xl font-bold text-blue-900 mb-2">Queue & Orders Management</h2>
                     <p class="text-gray-600">Monitor and process customer orders in real-time</p>
                 </div>
                 
@@ -144,7 +144,7 @@
                 <div id="currentQueueDisplay" class="glass-effect rounded-2xl shadow-xl p-8 mb-8 border border-blue-100">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-2xl font-semibold text-blue-900">Current Queue</h3>
-                        <div class="text-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-2 rounded-full font-semibold shadow-md" id="queuePosition">Queue: -</div>
+                        <div class="text-sm bg-orange-500 text-white px-5 py-2 rounded-full font-semibold shadow-md" id="queuePosition">Queue: -</div>
                     </div>
                     
                     <div id="currentOrderCard" class="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
@@ -201,26 +201,26 @@
                         
                         <div class="mt-8 pt-6 border-t border-gray-100">
                             <div id="queue-action-start" class="flex justify-center">
-                                <button onclick="processQueue('processing')" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-3.5 rounded-xl font-semibold flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                                <button onclick="processQueue('processing')" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-xl font-semibold flex items-center gap-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                     Start Processing
                                 </button>
                             </div>
                             
                             <div id="queue-action-process" class="flex gap-3 justify-center hidden">
-                                <button onclick="processQueue('ready')" class="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+                                <button onclick="processQueue('ready')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                     Mark Ready
                                 </button>
-                                <button onclick="processQueue('completed')" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+                                <button onclick="processQueue('completed')" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                                     Complete
                                 </button>
-                                <button onclick="skipQueue()" class="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+                                <button onclick="skipQueue()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
                                     Skip
                                 </button>
-                                <button onclick="processQueue('cancelled')" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+                                <button onclick="processQueue('cancelled')" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
                                     Cancel
                                 </button>
@@ -749,41 +749,162 @@
             <div id="content-admin-settings" class="tab-content hidden">
                 <!-- Page Header -->
                 <div class="mb-8">
-                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent mb-2">Admin Account Management</h2>
-                    <p class="text-gray-600">Update your account security settings</p>
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent mb-2">System Settings</h2>
+                    <p class="text-gray-600">Manage system configuration and operating hours</p>
                 </div>
                 
-                <div class="glass-effect rounded-2xl shadow-md p-8 max-w-md border border-gray-100">
-                    <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
-                        <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                        </svg>
-                        Change Password
-                    </h3>
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- Working Hours Management -->
+                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
+                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
+                            <i class="fas fa-clock text-indigo-600"></i>
+                            Operating Hours
+                        </h3>
+                        
+                        <div id="workingHoursForm" class="space-y-4">
+                            <!-- Days of Week -->
+                            <div class="space-y-3" id="weeklyHours">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                            
+                            <button onclick="saveWorkingHours()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                                <i class="fas fa-save mr-2"></i>
+                                Save Operating Hours
+                            </button>
+                        </div>
+                        
+                        <div id="hoursUpdateMessage" class="mt-4"></div>
+                    </div>
                     
-                    <form id="passwordUpdateForm" class="space-y-5">
-        
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-2">Current Password</label>
-                            <input type="password" id="currentPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
-                        </div>
+                    <!-- Special Hours Management -->
+                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
+                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
+                            <i class="fas fa-calendar-times text-red-600"></i>
+                            Special Dates & Holidays
+                        </h3>
                         
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-2">New Password</label>
-                            <input type="password" id="newPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
-                        </div>
+                        <form id="specialHourForm" class="space-y-4 mb-6">
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-2">Date</label>
+                                <input type="date" id="specialDate" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" required />
+                            </div>
+                            
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-2">Reason</label>
+                                <input type="text" id="specialReason" placeholder="e.g., National Holiday, Maintenance" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" required />
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-2">Opening Time</label>
+                                    <input type="time" id="specialOpenTime" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-2">Closing Time</label>
+                                    <input type="time" id="specialCloseTime" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="specialClosed" class="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
+                                <label for="specialClosed" class="text-sm text-gray-700">Mark as Closed Day</label>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                                <i class="fas fa-plus mr-2"></i>
+                                Add Special Date
+                            </button>
+                        </form>
                         
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-2">Confirm Password</label>
-                            <input type="password" id="confirmPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
+                        <div id="specialHoursList" class="space-y-2 max-h-64 overflow-y-auto">
+                            <!-- Special hours will be listed here -->
                         </div>
+                    </div>
+                    
+                    <!-- Password Management -->
+                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
+                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                            Change Password
+                        </h3>
                         
-                        <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
-                            Update Password
-                        </button>
-                    </form>
+                        <form id="passwordUpdateForm" class="space-y-5">
+            
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-2">Current Password</label>
+                                <input type="password" id="currentPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
+                            </div>
+                            
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-2">New Password</label>
+                                <input type="password" id="newPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
+                            </div>
+                            
+                            <div>
+                                <label class="block font-semibold text-gray-700 mb-2">Confirm Password</label>
+                                <input type="password" id="confirmPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                                Update Password
+                            </button>
+                        </form>
 
-                    <div id="passwordUpdateMessage" class="mt-4 text-sm font-medium"></div>
+                        <div id="passwordUpdateMessage" class="mt-4 text-sm font-medium"></div>
+                    </div>
+                    
+                    <!-- System Settings -->
+                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
+                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
+                            <i class="fas fa-cog text-blue-600"></i>
+                            System Configuration
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                                <div>
+                                    <p class="font-semibold text-gray-900">Average Processing Time</p>
+                                    <p class="text-sm text-gray-600">Base time per order</p>
+                                </div>
+                                <input type="number" id="avgProcessTime" value="5" min="1" max="60" class="w-20 border border-gray-300 rounded-lg p-2 text-center" /> 
+                                <span class="text-sm text-gray-600 ml-2">min</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                                <div>
+                                    <p class="font-semibold text-gray-900">Item Complexity Factor</p>
+                                    <p class="text-sm text-gray-600">Extra time per item</p>
+                                </div>
+                                <input type="number" id="itemComplexity" value="2" min="0" max="10" class="w-20 border border-gray-300 rounded-lg p-2 text-center" />
+                                <span class="text-sm text-gray-600 ml-2">min</span>
+                            </div>
+                            
+                            <button onclick="saveSystemSettings()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                                <i class="fas fa-save mr-2"></i>
+                                Save System Settings
+                            </button>
+                        </div>
+                        
+                        <!-- Queue Reset Section -->
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <div class="bg-red-50 rounded-lg p-4 mb-4">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-exclamation-triangle text-red-600 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold text-red-900">Daily Queue Reset</p>
+                                        <p class="text-sm text-red-700 mt-1">Reset the daily queue number counter back to 1. This should be done at the start of each business day.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="resetDailyQueue()" class="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-redo mr-2"></i>
+                                Reset Daily Queue Number
+                            </button>
+                            <div id="queueResetMessage" class="mt-3 text-sm font-medium text-center"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2636,7 +2757,10 @@
                 
                 row.innerHTML = `
                     <td class="px-6 py-4">
-                        <span class="font-bold text-blue-900 text-base">${order.queue_number}</span>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-blue-900 text-base">${order.queue_number}</span>
+                            ${order.reference_number ? `<span class="text-xs text-purple-600 font-semibold mt-0.5">Ref: ${order.reference_number}</span>` : ''}
+                        </div>
                     </td>
                     <td class="px-6 py-4">
                         <span class="font-medium text-gray-700">${order.student_id}</span>
@@ -5756,10 +5880,271 @@
         // END ADMIN MANAGEMENT TAB FUNCTIONS
         // ============================================
 
+        // ============================================
+        // WORKING HOURS MANAGEMENT FUNCTIONS
+        // ============================================
+        
+        async function loadWorkingHours() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/get_working_hours.php`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayWorkingHours(data.working_hours);
+                    displaySpecialHours(data.special_hours);
+                }
+            } catch (error) {
+                console.error('Error loading working hours:', error);
+            }
+        }
+        
+        function displayWorkingHours(hours) {
+            const weeklyHours = document.getElementById('weeklyHours');
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            
+            let html = '';
+            days.forEach((day, index) => {
+                const dayNum = index + 1;
+                const dayData = hours.find(h => h.day_of_week == dayNum) || {};
+                const isOpen = dayData.is_open == 1;
+                
+                html += `
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <input type="checkbox" id="day${dayNum}" ${isOpen ? 'checked' : ''} 
+                               onchange="toggleDayOpen(${dayNum})" 
+                               class="w-5 h-5 text-indigo-600 rounded" />
+                        <label for="day${dayNum}" class="font-semibold text-gray-900 w-24">${day}</label>
+                        <input type="time" id="open${dayNum}" value="${dayData.opening_time || '10:00'}" 
+                               ${!isOpen ? 'disabled' : ''} 
+                               class="border border-gray-300 rounded-lg p-2 text-sm" />
+                        <span class="text-gray-600">to</span>
+                        <input type="time" id="close${dayNum}" value="${dayData.closing_time || '17:00'}" 
+                               ${!isOpen ? 'disabled' : ''} 
+                               class="border border-gray-300 rounded-lg p-2 text-sm" />
+                    </div>
+                `;
+            });
+            
+            weeklyHours.innerHTML = html;
+        }
+        
+        function toggleDayOpen(dayNum) {
+            const checkbox = document.getElementById(`day${dayNum}`);
+            const openTime = document.getElementById(`open${dayNum}`);
+            const closeTime = document.getElementById(`close${dayNum}`);
+            
+            openTime.disabled = !checkbox.checked;
+            closeTime.disabled = !checkbox.checked;
+        }
+        
+        async function saveWorkingHours() {
+            const days = [1, 2, 3, 4, 5, 6, 7];
+            const workingHours = [];
+            
+            days.forEach(dayNum => {
+                const isOpen = document.getElementById(`day${dayNum}`).checked;
+                const openTime = document.getElementById(`open${dayNum}`).value;
+                const closeTime = document.getElementById(`close${dayNum}`).value;
+                
+                workingHours.push({
+                    day_of_week: dayNum,
+                    is_open: isOpen ? 1 : 0,
+                    opening_time: openTime,
+                    closing_time: closeTime
+                });
+            });
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/update_working_hours.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ working_hours: workingHours })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessageInElement('hoursUpdateMessage', 'Operating hours updated successfully!', 'success');
+                    showNotification('Operating hours updated!', 'success');
+                } else {
+                    showMessageInElement('hoursUpdateMessage', data.message || 'Failed to update hours', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving working hours:', error);
+                showMessageInElement('hoursUpdateMessage', 'Error updating hours', 'error');
+            }
+        }
+        
+        async function displaySpecialHours(specialHours) {
+            const list = document.getElementById('specialHoursList');
+            
+            if (!specialHours || specialHours.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No special dates configured</p>';
+                return;
+            }
+            
+            let html = '';
+            specialHours.forEach(sh => {
+                const dateObj = new Date(sh.date);
+                const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                html += `
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-900">${formattedDate}</p>
+                            <p class="text-xs text-gray-600">${sh.reason}</p>
+                            ${sh.is_open == 0 ? '<p class="text-xs text-red-600 font-semibold mt-1">CLOSED</p>' : 
+                             `<p class="text-xs text-green-600 mt-1">${sh.opening_time} - ${sh.closing_time}</p>`}
+                        </div>
+                        <button onclick="deleteSpecialHour(${sh.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+        
+        document.getElementById('specialHourForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('specialDate').value;
+            const reason = document.getElementById('specialReason').value;
+            const openTime = document.getElementById('specialOpenTime').value;
+            const closeTime = document.getElementById('specialCloseTime').value;
+            const isClosed = document.getElementById('specialClosed').checked;
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/update_working_hours.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        special_hours: [{
+                            date: date,
+                            reason: reason,
+                            opening_time: openTime || null,
+                            closing_time: closeTime || null,
+                            is_open: isClosed ? 0 : 1
+                        }]
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Special date added successfully!', 'success');
+                    e.target.reset();
+                    loadWorkingHours(); // Reload to show new special hour
+                } else {
+                    alert(data.message || 'Failed to add special date');
+                }
+            } catch (error) {
+                console.error('Error adding special hour:', error);
+                alert('Error adding special date');
+            }
+        });
+        
+        async function deleteSpecialHour(id) {
+            if (!confirm('Delete this special date?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/update_working_hours.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ delete_special_hour: id })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Special date deleted', 'success');
+                    loadWorkingHours();
+                } else {
+                    alert(data.message || 'Failed to delete');
+                }
+            } catch (error) {
+                console.error('Error deleting special hour:', error);
+            }
+        }
+        
+        function saveSystemSettings() {
+            const avgTime = document.getElementById('avgProcessTime').value;
+            const complexity = document.getElementById('itemComplexity').value;
+            
+            // Store in localStorage for now (can be saved to database later)
+            localStorage.setItem('avgProcessTime', avgTime);
+            localStorage.setItem('itemComplexity', complexity);
+            
+            showNotification('System settings saved!', 'success');
+        }
+        
+        // Reset Daily Queue Function
+        async function resetDailyQueue() {
+            if (!confirm('Are you sure you want to reset the daily queue number?\n\nThis will reset the queue counter back to 1 for today. This action should only be done at the start of a new business day.')) {
+                return;
+            }
+            
+            const messageEl = document.getElementById('queueResetMessage');
+            messageEl.textContent = 'Resetting queue...';
+            messageEl.className = 'mt-3 text-sm font-medium text-center text-blue-600';
+            
+            try {
+                const response = await fetch('../../php/api/admin/reset_daily_queue.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageEl.textContent = data.message;
+                    messageEl.className = 'mt-3 text-sm font-medium text-center text-green-600';
+                    showNotification('Daily queue has been reset successfully!', 'success');
+                    
+                    // Refresh the queue display
+                    if (document.getElementById('content-queue-management').classList.contains('active')) {
+                        await loadCurrentQueue();
+                    }
+                } else {
+                    messageEl.textContent = data.message || 'Failed to reset queue';
+                    messageEl.className = 'mt-3 text-sm font-medium text-center text-red-600';
+                    showNotification(data.message || 'Failed to reset queue', 'error');
+                }
+            } catch (error) {
+                console.error('Reset queue error:', error);
+                messageEl.textContent = 'Error: ' + error.message;
+                messageEl.className = 'mt-3 text-sm font-medium text-center text-red-600';
+                showNotification('Failed to reset queue. Please try again.', 'error');
+            }
+            
+            // Clear message after 10 seconds
+            setTimeout(() => {
+                messageEl.textContent = '';
+            }, 10000);
+        }
+        
+        function showMessageInElement(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `mt-4 text-sm font-medium ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+            element.textContent = message;
+            
+            setTimeout(() => {
+                element.textContent = '';
+            }, 5000);
+        }
+        
+        // ============================================
+        // END WORKING HOURS MANAGEMENT
+        // ============================================
+
         // Start the dashboard
         checkSuperAdminAccess(); // Show admin management tab for super admin
         initializeDashboard();
         loadInventory(); // Load inventory management data
+        loadWorkingHours(); // Load working hours on init
     </script>
 
     <style>
