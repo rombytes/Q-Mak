@@ -212,10 +212,16 @@ try {
         
         // Get the latest OTP record for this email
         $getOtp = $db->prepare("
-            SELECT otp_id, otp_code, attempts, max_attempts, is_verified, expires_at
+            SELECT 
+                otp_id, 
+                otp_code, 
+                attempts, 
+                max_attempts, 
+                is_verified, 
+                expires_at
             FROM otp_verifications 
-            WHERE email = ? AND otp_type = 'registration'
-            ORDER BY created_at DESC 
+            WHERE email = ? AND otp_type = 'registration' AND is_verified = FALSE
+            ORDER BY otp_id DESC 
             LIMIT 1
         ");
         $getOtp->execute([$email]);
@@ -226,14 +232,20 @@ try {
             exit;
         }
         
-        // Check if OTP code matches
+        // Check if already exceeded max attempts FIRST (before checking code)
+        if ($otpRecord['attempts'] >= $otpRecord['max_attempts']) {
+            echo json_encode(['success' => false, 'message' => 'Maximum attempts exceeded. Please request a new verification code.']);
+            exit;
+        }
+        
+        // Now check if OTP code matches
         if ($otpRecord['otp_code'] !== $otp) {
-            // Increment attempts for wrong code
+            // Wrong code - increment attempts
             $newAttempts = $otpRecord['attempts'] + 1;
             $updateAttempts = $db->prepare("UPDATE otp_verifications SET attempts = ? WHERE otp_id = ?");
             $updateAttempts->execute([$newAttempts, $otpRecord['otp_id']]);
             
-            // Check if max attempts exceeded
+            // Check if max attempts exceeded after increment
             if ($newAttempts >= $otpRecord['max_attempts']) {
                 echo json_encode(['success' => false, 'message' => 'Verification failed. You have run out of tries.']);
             } else {
@@ -243,23 +255,7 @@ try {
             exit;
         }
         
-        // Check if attempts already exceeded (shouldn't happen but safety check)
-        if ($otpRecord['attempts'] >= $otpRecord['max_attempts']) {
-            echo json_encode(['success' => false, 'message' => 'Verification failed. You have run out of tries.']);
-            exit;
-        }
-        
-        if ($otpRecord['is_verified']) {
-            echo json_encode(['success' => false, 'message' => 'This verification code has already been used']);
-            exit;
-        }
-        
-        // Check if expired
-        if (strtotime($otpRecord['expires_at']) < time()) {
-            echo json_encode(['success' => false, 'message' => 'Verification code has expired. Please request a new one.']);
-            exit;
-        }
-        
+        // OTP code is correct - accept it (no expiration check during retries)
         // Mark OTP as verified
         $markVerified = $db->prepare("
             UPDATE otp_verifications 

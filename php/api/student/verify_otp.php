@@ -54,58 +54,71 @@ try {
     
     $db = getDB();
     
-    // Try to match the exact OTP code first
-    $stmtByCode = $db->prepare("
-        SELECT otp_id, email, otp_code, otp_type, attempts, max_attempts, is_verified, expires_at, NOW() as server_now
+    // Get the latest unverified OTP for this email and type
+    // Note: We fetch ALL unverified OTPs to check both expiration and attempts separately
+    $stmtLatest = $db->prepare("
+        SELECT 
+            otp_id, 
+            email, 
+            otp_code, 
+            otp_type, 
+            attempts, 
+            max_attempts, 
+            is_verified, 
+            expires_at
         FROM otp_verifications
-        WHERE email = ? AND otp_type = ? AND otp_code = ? AND is_verified = FALSE
+        WHERE email = ? 
+            AND otp_type = ? 
+            AND is_verified = FALSE
         ORDER BY otp_id DESC
         LIMIT 1
     ");
-    $stmtByCode->execute([$email, $otpType, $otpCode]);
-    $otpByCode = $stmtByCode->fetch();
-
-    if ($otpByCode) {
-        if (strtotime($otpByCode['expires_at']) < strtotime($otpByCode['server_now'])) {
-            if (ob_get_level()) { ob_clean(); }
-            echo json_encode(['success' => false, 'message' => 'OTP has expired. Please request a new one.']);
-            exit;
-        }
-        // use this record for verification path below
-        $otpRecord = $otpByCode;
-    } else {
-        // Fallback: get the latest unverified OTP (for attempts increment on wrong code)
-        $stmtLatest = $db->prepare("
-            SELECT otp_id, email, otp_code, otp_type, attempts, max_attempts, is_verified, expires_at, NOW() as server_now
-            FROM otp_verifications
-            WHERE email = ? AND otp_type = ? AND is_verified = FALSE
-            ORDER BY otp_id DESC
-            LIMIT 1
-        ");
-        $stmtLatest->execute([$email, $otpType]);
-        $latestOtp = $stmtLatest->fetch();
-        if ($latestOtp) {
-            if ($latestOtp['attempts'] >= $latestOtp['max_attempts']) {
-                if (ob_get_level()) { ob_clean(); }
-                echo json_encode(['success' => false, 'message' => 'Maximum attempts exceeded. Please request a new OTP.']);
-                exit;
-            }
-            $updateAttempts = $db->prepare("UPDATE otp_verifications SET attempts = attempts + 1 WHERE otp_id = ?");
-            $updateAttempts->execute([$latestOtp['otp_id']]);
-            $remainingAttempts = $latestOtp['max_attempts'] - $latestOtp['attempts'] - 1;
-            if (ob_get_level()) { ob_clean(); }
+    $stmtLatest->execute([$email, $otpType]);
+    $latestOtp = $stmtLatest->fetch();
+    
+    if (!$latestOtp) {
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode(['success' => false, 'message' => 'No valid OTP found. Please request a new one.']);
+        exit;
+    }
+    
+    // Check if already exceeded max attempts FIRST (before checking code)
+    if ($latestOtp['attempts'] >= $latestOtp['max_attempts']) {
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode(['success' => false, 'message' => 'Maximum attempts exceeded. Please request a new OTP.']);
+        exit;
+    }
+    
+    // Check if OTP code matches
+    if ($latestOtp['otp_code'] !== $otpCode) {
+        // Wrong code - increment attempts
+        $newAttempts = $latestOtp['attempts'] + 1;
+        $updateAttempts = $db->prepare("UPDATE otp_verifications SET attempts = ? WHERE otp_id = ?");
+        $updateAttempts->execute([$newAttempts, $latestOtp['otp_id']]);
+        
+        $remainingAttempts = $latestOtp['max_attempts'] - $newAttempts;
+        
+        if (ob_get_level()) { ob_clean(); }
+        
+        // Check if this was the last attempt
+        if ($newAttempts >= $latestOtp['max_attempts']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Maximum attempts exceeded. Please request a new OTP.',
+                'remaining_attempts' => 0
+            ]);
+        } else {
             echo json_encode([
                 'success' => false,
                 'message' => 'Incorrect OTP code',
                 'remaining_attempts' => $remainingAttempts
             ]);
-            exit;
-        } else {
-            if (ob_get_level()) { ob_clean(); }
-            echo json_encode(['success' => false, 'message' => 'No valid OTP found. Please request a new one.']);
-            exit;
         }
+        exit;
     }
+    
+    // OTP code is correct - accept it (no expiration check during retries)
+    $otpRecord = $latestOtp;
     
     // OTP is correct - mark as verified
     $db->beginTransaction();
