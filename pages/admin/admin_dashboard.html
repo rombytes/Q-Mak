@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HTML5 QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body class="flex h-screen bg-gray-50">
     <!-- Retractable Sidebar -->
@@ -1606,8 +1608,10 @@
             
             // Remove active class from all menu items
             document.querySelectorAll('nav li').forEach(item => {
-                item.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-orange-600', 'border-orange-300', 'shadow-lg', 'hover:shadow-xl');
-                item.classList.add('border-transparent', 'hover:bg-blue-700/60');
+                // Remove all orange/active styling
+                item.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'bg-gradient-to-r', 'from-orange-500', 'to-orange-600', 'border-orange-300', 'shadow-lg');
+                // Add default styling (inactive tabs have no shadow by default)
+                item.classList.add('border-transparent', 'hover:bg-blue-700/60', 'hover:shadow-md', 'hover:border-orange-400');
                 // Update font weight for inactive tabs
                 const span = item.querySelector('.menu-text');
                 if (span) {
@@ -1633,8 +1637,10 @@
             // Add active class to selected menu item
             const activeItem = document.getElementById('tab-' + tabName);
             if (activeItem) {
-                activeItem.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-orange-600', 'border-orange-300', 'shadow-lg', 'hover:shadow-xl');
-                activeItem.classList.remove('border-transparent', 'hover:bg-blue-700/60');
+                // Remove default styling
+                activeItem.classList.remove('border-transparent', 'hover:bg-blue-700/60', 'hover:shadow-md', 'hover:border-orange-400');
+                // Add active styling
+                activeItem.classList.add('bg-orange-500', 'hover:bg-orange-600', 'border-orange-300', 'shadow-lg');
                 // Update font weight for active tab
                 const span = activeItem.querySelector('.menu-text');
                 if (span) {
@@ -6357,6 +6363,422 @@
         .tab-content {
             display: block;
         }
+
+        /* Floating QR Scanner Button */
+        .qr-scan-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.5);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border: 3px solid white;
+        }
+
+        .qr-scan-button:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 15px 35px rgba(249, 115, 22, 0.6);
+        }
+
+        .qr-scan-button:active {
+            transform: scale(0.95);
+        }
+
+        .qr-scan-button i {
+            color: white;
+            font-size: 24px;
+        }
+
+        /* QR Scanner Modal */
+        .qr-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-modal.active {
+            display: flex;
+        }
+
+        .qr-modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #qr-reader {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        #qr-reader__dashboard_section_swaplink {
+            display: none !important;
+        }
+
+        /* Ensure active tab hover works properly with border effect */
+        nav li.bg-orange-500:hover {
+            background-color: rgb(234 88 12) !important; /* hover:bg-orange-600 */
+            border-left-color: rgb(251 146 60) !important; /* hover:border-orange-400 */
+        }
     </style>
+
+    <!-- Floating QR Scanner Button -->
+    <div class="qr-scan-button" onclick="openQRScanner()" title="Scan QR Code">
+        <i class="fas fa-camera"></i>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div id="qrScannerModal" class="qr-modal">
+        <div class="qr-modal-content">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-t-20">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-qrcode text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">QR Code Scanner</h3>
+                            <p class="text-orange-100 text-sm">Scan student order QR codes</p>
+                        </div>
+                    </div>
+                    <button onclick="closeQRScanner()" class="text-white hover:bg-white/20 p-2 rounded-full transition">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scanner Content -->
+            <div class="p-6">
+                <!-- Scanner View -->
+                <div id="qr-reader" class="mb-4 bg-gray-100"></div>
+
+                <!-- Instructions -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                        <div>
+                            <h4 class="font-semibold text-blue-900 mb-1">How to scan:</h4>
+                            <ul class="text-sm text-blue-700 space-y-1">
+                                <li>• Allow camera access when prompted</li>
+                                <li>• Position the QR code within the frame</li>
+                                <li>• Hold steady until the scanner detects it</li>
+                                <li>• Order details will appear automatically</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scan Result -->
+                <div id="qr-scan-result" class="hidden">
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg mb-4">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-green-900 mb-2">QR Code Detected!</h4>
+                                <div id="qr-order-details" class="text-sm text-green-800">
+                                    <!-- Order details will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3">
+                        <button onclick="processScannedOrder()" class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-6 rounded-xl font-semibold hover:shadow-lg transition">
+                            <i class="fas fa-check mr-2"></i>
+                            Process Order
+                        </button>
+                        <button onclick="scanAgain()" class="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition">
+                            <i class="fas fa-redo mr-2"></i>
+                            Scan Again
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Close Button -->
+                <button onclick="closeQRScanner()" class="w-full mt-4 bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition">
+                    <i class="fas fa-times mr-2"></i>
+                    Close Scanner
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let html5QrCode = null;
+        let scannedOrderData = null;
+
+        // Open QR Scanner
+        function openQRScanner() {
+            const modal = document.getElementById('qrScannerModal');
+            modal.classList.add('active');
+            
+            // Initialize scanner
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+
+            // Start scanning
+            html5QrCode.start(
+                { facingMode: "environment" }, // Use back camera
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess,
+                onScanError
+            ).catch(err => {
+                console.error("Error starting QR scanner:", err);
+                showAlert('Camera Error', 'Unable to access camera. Please check permissions.', 'error');
+            });
+        }
+
+        // Close QR Scanner
+        function closeQRScanner() {
+            const modal = document.getElementById('qrScannerModal');
+            modal.classList.remove('active');
+            
+            // Stop scanner
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    console.log("QR Scanner stopped");
+                }).catch(err => {
+                    console.error("Error stopping scanner:", err);
+                });
+            }
+
+            // Reset result display
+            document.getElementById('qr-scan-result').classList.add('hidden');
+            scannedOrderData = null;
+        }
+
+        // Handle successful scan
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log("QR Code detected:", decodedText);
+            
+            // Stop scanning temporarily
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.pause(true);
+            }
+
+            try {
+                // Parse QR code data
+                const qrData = JSON.parse(decodedText);
+                scannedOrderData = qrData;
+
+                // Display order details
+                displayScannedOrder(qrData);
+
+            } catch (error) {
+                console.error("Error parsing QR code:", error);
+                showAlert('Invalid QR Code', 'This QR code is not a valid order code.', 'error');
+                
+                // Resume scanning
+                setTimeout(() => {
+                    if (html5QrCode) {
+                        html5QrCode.resume();
+                    }
+                }, 2000);
+            }
+        }
+
+        // Handle scan errors (silent - too many logs)
+        function onScanError(errorMessage) {
+            // Silent - normal when QR not in frame
+        }
+
+        // Display scanned order details
+        function displayScannedOrder(qrData) {
+            const detailsDiv = document.getElementById('qr-order-details');
+            const resultDiv = document.getElementById('qr-scan-result');
+
+            detailsDiv.innerHTML = `
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <span class="font-semibold">Queue Number:</span>
+                        <p class="text-lg font-bold text-green-600">${qrData.queue_number || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <span class="font-semibold">Email:</span>
+                        <p class="text-sm">${qrData.email || 'N/A'}</p>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="font-semibold">Scanned At:</span>
+                        <p class="text-sm">${new Date().toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+
+            resultDiv.classList.remove('hidden');
+        }
+
+        // Process scanned order
+        async function processScannedOrder() {
+            if (!scannedOrderData) {
+                showAlert('Error', 'No order data available', 'error');
+                return;
+            }
+
+            const queueNumber = scannedOrderData.queue_number;
+            
+            // Find order in ordersData (the actual data source)
+            const foundOrder = ordersData.find(order => order.queue_number === queueNumber);
+
+            if (!foundOrder) {
+                showAlert('Order Not Found', `Queue ${queueNumber} was not found. It may have been completed, cancelled, or doesn't exist.`, 'warning');
+                closeQRScanner();
+                return;
+            }
+
+            // Check order status
+            if (foundOrder.order_status === 'completed') {
+                showAlert('Order Already Completed', `Queue ${queueNumber} has already been completed and claimed.`, 'info');
+                closeQRScanner();
+                return;
+            }
+
+            if (foundOrder.order_status === 'cancelled') {
+                showAlert('Order Cancelled', `Queue ${queueNumber} has been cancelled and is no longer active.`, 'warning');
+                closeQRScanner();
+                return;
+            }
+
+            // Check if this is the current queue (first pending/processing order)
+            const currentOrder = currentQueueOrder;
+            
+            if (currentOrder && currentOrder.queue_number === queueNumber) {
+                // This is the current queue! Process it automatically
+                closeQRScanner();
+                showTab('queue-management');
+                
+                // Scroll to current queue display
+                document.getElementById('currentQueueDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Highlight the current order card
+                const orderCard = document.getElementById('currentOrderCard');
+                orderCard.style.boxShadow = '0 0 0 4px rgba(249, 115, 22, 0.5)';
+                orderCard.style.transform = 'scale(1.02)';
+                orderCard.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    orderCard.style.boxShadow = '';
+                    orderCard.style.transform = '';
+                }, 2000);
+                
+                // Automatically start processing if status is pending
+                if (foundOrder.order_status === 'pending') {
+                    await showAlert(
+                        'QR Code Verified!',
+                        `Queue ${queueNumber} detected. Starting processing...`,
+                        'success'
+                    );
+                    
+                    // Wait a moment for visual feedback, then start processing
+                    setTimeout(async () => {
+                        await processQueue('processing');
+                    }, 800);
+                } else if (foundOrder.order_status === 'processing') {
+                    // Already processing, show message
+                    await showAlert(
+                        'Order in Progress',
+                        `Queue ${queueNumber} is already being processed. Mark as ready when complete.`,
+                        'info'
+                    );
+                }
+                
+                return;
+            }
+
+            // Order exists but is not the current queue
+            if (foundOrder.order_status === 'pending' || foundOrder.order_status === 'processing') {
+                // Get queue position
+                const pendingOrders = ordersData.filter(o => 
+                    (o.order_status === 'pending' || o.order_status === 'processing') &&
+                    o.order_id <= foundOrder.order_id
+                );
+                const queuePosition = pendingOrders.length;
+                const totalPending = ordersData.filter(o => 
+                    o.order_status === 'pending' || o.order_status === 'processing'
+                ).length;
+
+                showAlert(
+                    'Please Wait',
+                    `Queue ${queueNumber} is in position ${queuePosition} of ${totalPending}. Please wait for the current queue to be processed first.`,
+                    'info'
+                );
+                
+                closeQRScanner();
+                
+                // Show the order in the table for reference
+                showTab('queue-management');
+                
+                // Scroll to the order in the table
+                setTimeout(() => {
+                    const orderRows = Array.from(document.querySelectorAll('#ordersTableBody tr'));
+                    const orderRow = orderRows.find(row => {
+                        const queueCell = row.querySelector('td:first-child');
+                        return queueCell && queueCell.textContent.trim() === queueNumber;
+                    });
+                    
+                    if (orderRow) {
+                        orderRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        orderRow.style.background = 'linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(147, 197, 253, 0.2))';
+                        
+                        setTimeout(() => {
+                            orderRow.style.background = '';
+                        }, 3000);
+                    }
+                }, 300);
+                
+                return;
+            }
+
+            // Shouldn't reach here, but just in case
+            showAlert('Unknown Status', `Queue ${queueNumber} has status: ${foundOrder.order_status}`, 'warning');
+            closeQRScanner();
+        }
+
+        // Scan again
+        function scanAgain() {
+            document.getElementById('qr-scan-result').classList.add('hidden');
+            scannedOrderData = null;
+            
+            if (html5QrCode) {
+                html5QrCode.resume();
+            }
+        }
+    </script>
 </body>
 </html>

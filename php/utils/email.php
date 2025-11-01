@@ -6,7 +6,6 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
@@ -113,79 +112,43 @@ class EmailService {
         }
     }
     
-    // php/utils/email.php (inside the EmailService class)
-
+    /**
+     * Generate QR Code Data URI using Endroid QR Code library v6
+     * Simple, reliable, and works offline
+     */
     public static function generateQRCodeDataUri($dataString) {
         try {
-            // Endroid: QrCode + PngWriter (v3 and v4 compatible)
-            if (class_exists('Endroid\\QrCode\\QrCode') && class_exists('Endroid\\QrCode\\Writer\\PngWriter')) {
-                $qr = null;
-                if (method_exists('Endroid\\QrCode\\QrCode', 'setSize')) {
-                    $qr = new \Endroid\QrCode\QrCode($dataString);
-                    $qr->setSize(200);
-                } elseif (method_exists('Endroid\\QrCode\\QrCode', 'create')) {
-                    // v4 without Builder: no setSize available; use default size
-                    $qr = \Endroid\QrCode\QrCode::create($dataString);
-                }
-                if ($qr) {
-                    $writer = new \Endroid\QrCode\Writer\PngWriter();
-                    $result = $writer->write($qr);
-                    $data = $result->getString();
-                    if ($data !== '') {
-                        return 'data:image/png;base64,' . base64_encode($data);
-                    }
-                }
+            // Check if Endroid QR Code library is available
+            if (!class_exists('Endroid\\QrCode\\QrCode')) {
+                error_log("QR Code: Endroid library not found. Run: composer require endroid/qr-code");
+                return '';
             }
 
-            // Remote fallback via Google Charts
-            $qrUrl = 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' . urlencode($dataString) . '&choe=UTF-8';
-
-            if (function_exists('curl_init')) {
-                $ch = curl_init($qrUrl);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-                $imageData = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $curlError = curl_error($ch);
-                curl_close($ch);
-                
-                if ($imageData !== false && $httpCode === 200 && strlen($imageData) > 100) {
-                    error_log("QR Code generated successfully via cURL");
-                    return 'data:image/png;base64,' . base64_encode($imageData);
-                } else {
-                    error_log("QR Code cURL failed: HTTP $httpCode, Error: $curlError");
-                }
-            }
-
-            // Try file_get_contents with stream context
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 10,
-                    'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                ],
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false
-                ]
-            ]);
+            // Create QR Code using Endroid v6 syntax (constructor parameters)
+            $qrCode = new QrCode(
+                data: $dataString,
+                size: 200,
+                margin: 10
+            );
             
-            $imageData = @file_get_contents($qrUrl, false, $context);
-            if ($imageData !== false && strlen($imageData) > 100) {
-                error_log("QR Code generated successfully via file_get_contents");
-                return 'data:image/png;base64,' . base64_encode($imageData);
-            } else {
-                error_log("QR Code file_get_contents failed");
+            // Generate PNG image using PngWriter
+            $writer = new PngWriter();
+            $result = $writer->write($qrCode);
+            
+            // Convert to base64 data URI
+            $imageData = $result->getString();
+            
+            if (empty($imageData)) {
+                error_log("QR Code: Generated image is empty");
+                return '';
             }
-
-            // If all fails, log and return empty
-            error_log("QR Code generation failed: All methods exhausted for data: " . substr($dataString, 0, 100));
-            return '';
+            
+            error_log("QR Code: ✓ Generated successfully using Endroid v6 (" . strlen($imageData) . " bytes)");
+            return 'data:image/png;base64,' . base64_encode($imageData);
+            
         } catch (\Throwable $e) {
-            error_log("QR Code Generation Error: " . $e->getMessage());
+            error_log("QR Code: ✗ Generation failed - " . $e->getMessage());
+            error_log("QR Code: Stack trace: " . $e->getTraceAsString());
             return '';
         }
     }
