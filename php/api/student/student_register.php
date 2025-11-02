@@ -72,9 +72,7 @@ try {
         $db = getDB();
         
         // Start session for claim flags
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        require_once __DIR__ . '/../../config/session_config.php';
         
         // Check if student ID already exists
         $checkId = $db->prepare("SELECT student_id, password, email FROM students WHERE student_id = ?");
@@ -185,9 +183,7 @@ try {
             exit;
         }
         
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        require_once __DIR__ . '/../../config/session_config.php';
         
         if (!isset($_SESSION['student_registration'])) {
             echo json_encode(['success' => false, 'message' => 'Registration session expired. Please start again.']);

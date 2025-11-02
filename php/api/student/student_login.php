@@ -17,6 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
+// Use shared session configuration
+require_once __DIR__ . '/../../config/session_config.php';
 require_once __DIR__ . '/../../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -87,8 +89,7 @@ try {
     $updateLogin = $db->prepare("UPDATE students SET last_login = NOW() WHERE student_id = ?");
     $updateLogin->execute([$student['student_id']]);
     
-    // Create session
-    session_start();
+    // Create session (session already started at the top of the file)
     $_SESSION['student_logged_in'] = true;
     $_SESSION['student_id'] = $student['student_id'];
     $_SESSION['student_email'] = $student['email'];

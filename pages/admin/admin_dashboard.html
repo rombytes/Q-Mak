@@ -19,7 +19,7 @@
             <div class="p-4 border-b border-blue-700/50">
                 <div class="flex items-center gap-3">
                     <div class="profile-avatar" id="profileAvatar">
-                        A
+                        <img src="../../images/Herons.png" alt="Profile Picture">
                     </div>
                     <div class="menu-text flex-1 min-w-0">
                         <h3 class="font-bold text-sm truncate" id="sidebarAdminName">Admin User</h3>
@@ -3736,9 +3736,7 @@
                     if (adminData.email) {
                         document.getElementById('sidebarAdminEmail').textContent = adminData.email;
                     }
-                    // Set profile avatar (first letter of first name)
-                    const firstLetter = adminData.full_name.charAt(0).toUpperCase();
-                    document.getElementById('profileAvatar').textContent = firstLetter;
+                    // Profile picture is now set to Herons.png by default in HTML
                 }
                 
                 await fetchInventoryStatusAdmin();
@@ -6301,15 +6299,21 @@
             width: 40px;
             height: 40px;
             min-width: 40px;
-            background: linear-gradient(135deg, #F97316, #EA580C);
-            border-radius: 12px;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-radius: 50%;
+            border: 3px solid #1e3a8a;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+            overflow: hidden;
+            box-shadow: 0 4px 12px -1px rgba(30, 58, 138, 0.4);
+            padding: 3px;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .main-content-adjusted {

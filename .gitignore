@@ -99,6 +99,10 @@ cache/
 tmp/
 temp/
 
+# Session files (DO NOT upload session data)
+sessions/
+sess_*
+
 # ==========================================
 # Upload Directories
 # ==========================================

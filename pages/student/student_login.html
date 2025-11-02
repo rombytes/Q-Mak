@@ -314,6 +314,7 @@
                 const response = await fetch(`${API_BASE}/student/student_login.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ email, password })
                 });
 
@@ -325,9 +326,10 @@
                     loginBtn.classList.remove('btn-primary');
                     loginBtn.classList.add('bg-green-600');
                     
+                    // Wait a bit longer to ensure session cookie is saved
                     setTimeout(() => {
                         window.location.href = 'student_dashboard.html';
-                    }, 500);
+                    }, 800);
                 } else {
                     showError(result.message || 'Invalid email or password');
                     loginBtn.disabled = false;

@@ -159,43 +159,6 @@
                         <p id="nextBusinessDay" class="font-semibold text-purple-700">Loading...</p>
                     </div>
                 </div>
-
-                <!-- Queue Features -->
-                <div class="glass-effect rounded-2xl p-6">
-                    <h3 class="text-lg font-bold mb-3">
-                        <i class="fas fa-star text-yellow-500"></i> System Features
-                    </h3>
-                    <div class="space-y-2">
-                        <div class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
-                            <div>
-                                <p class="font-semibold text-sm">Sequential Queues</p>
-                                <p class="text-xs text-gray-600">Q-1, Q-2, Q-3... daily reset</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
-                            <div>
-                                <p class="font-semibold text-sm">Smart Wait Times</p>
-                                <p class="text-xs text-gray-600">Based on real queue data</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
-                            <div>
-                                <p class="font-semibold text-sm">Reference Numbers</p>
-                                <p class="text-xs text-gray-600">Unique REF-XXXX for tracking</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-green-500 mt-0.5"></i>
-                            <div>
-                                <p class="font-semibold text-sm">Real-time Updates</p>
-                                <p class="text-xs text-gray-600">Auto-refresh every 30s</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -348,66 +311,85 @@
         
         // Load current queue
         async function loadCurrentQueue() {
-            // Mock data for demonstration - replace with actual API call
-            const mockQueue = [
-                { queue: 'Q-1', ref: 'REF-ABC12345', status: 'completed', wait: 0 },
-                { queue: 'Q-2', ref: 'REF-DEF67890', status: 'completed', wait: 0 },
-                { queue: 'Q-3', ref: 'REF-GHI11111', status: 'processing', wait: 2 },
-                { queue: 'Q-4', ref: 'REF-JKL22222', status: 'pending', wait: 8 },
-                { queue: 'Q-5', ref: 'REF-MNO33333', status: 'pending', wait: 15 }
-            ];
-            
-            // Update current serving
-            const processing = mockQueue.find(q => q.status === 'processing');
-            document.getElementById('currentServing').textContent = processing ? processing.queue : 'Q-0';
-            
-            // Update queue list
-            const queueList = document.getElementById('queueList');
-            let html = '';
-            
-            mockQueue.forEach(item => {
-                const statusColor = {
-                    completed: 'bg-green-100 text-green-700',
-                    processing: 'bg-blue-100 text-blue-700',
-                    pending: 'bg-orange-100 text-orange-700'
-                };
+            try {
+                const response = await fetch('/Q-Mak/php/api/student/get_queue_display.php');
+                const data = await response.json();
                 
-                const statusIcon = {
-                    completed: 'check-circle',
-                    processing: 'spinner fa-spin',
-                    pending: 'clock'
-                };
-                
-                html += `
-                    <div class="queue-card bg-white rounded-lg p-4 border ${item.status === 'processing' ? 'border-blue-300' : 'border-gray-200'}">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <div class="text-2xl font-bold ${item.status === 'processing' ? 'text-blue-600' : 'text-gray-700'}">
-                                    ${item.queue}
+                if (data.success) {
+                    const queueItems = data.queue || [];
+                    
+                    // Update current serving
+                    const currentServing = data.current_serving || 'Q-0';
+                    document.getElementById('currentServing').textContent = currentServing;
+                    
+                    // Update queue list
+                    const queueList = document.getElementById('queueList');
+                    let html = '';
+                    
+                    if (queueItems.length === 0) {
+                        html = '<p class="text-center text-gray-500 py-8">No orders in queue today</p>';
+                    } else {
+                        queueItems.forEach(item => {
+                            const statusColor = {
+                                completed: 'bg-green-100 text-green-700',
+                                processing: 'bg-blue-100 text-blue-700',
+                                pending: 'bg-orange-100 text-orange-700'
+                            };
+                            
+                            const statusIcon = {
+                                completed: 'check-circle',
+                                processing: 'spinner fa-spin',
+                                pending: 'clock'
+                            };
+                            
+                            html += `
+                                <div class="queue-card bg-white rounded-lg p-4 border ${item.status === 'processing' ? 'border-blue-300 border-2' : 'border-gray-200'}">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex items-center gap-3">
+                                            <div class="text-2xl font-bold ${item.status === 'processing' ? 'text-blue-600' : 'text-gray-700'}">
+                                                ${item.queue}
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Ref: ${item.ref}</p>
+                                                ${item.wait > 0 ? `<p class="text-xs text-gray-600">~${item.wait} min wait</p>` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="${statusColor[item.status]} px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                                            <i class="fas fa-${statusIcon[item.status]}"></i>
+                                            ${item.status.toUpperCase()}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-xs text-gray-500">Ref: ${item.ref}</p>
-                                    ${item.wait > 0 ? `<p class="text-xs text-gray-600">${item.wait} min wait</p>` : ''}
-                                </div>
-                            </div>
-                            <div class="${statusColor[item.status]} px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
-                                <i class="fas fa-${statusIcon[item.status]}"></i>
-                                ${item.status.toUpperCase()}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            queueList.innerHTML = html || '<p class="text-center text-gray-500">No orders in queue</p>';
+                            `;
+                        });
+                    }
+                    
+                    queueList.innerHTML = html;
+                    
+                    // Store queue data
+                    queueData = queueItems;
+                    
+                    // Update analytics if available
+                    if (data.analytics) {
+                        document.getElementById('avgWaitTime').textContent = 
+                            data.analytics.avg_wait_time > 0 ? `${data.analytics.avg_wait_time} min` : '--';
+                        document.getElementById('avgProcessTime').textContent = 
+                            data.analytics.avg_process_time > 0 ? `${data.analytics.avg_process_time} min` : '--';
+                        document.getElementById('queueVelocity').textContent = 
+                            data.analytics.orders_per_hour > 0 ? data.analytics.orders_per_hour : '--';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load queue data:', error);
+                document.getElementById('queueList').innerHTML = 
+                    '<p class="text-center text-red-500 py-8">Failed to load queue. Please refresh.</p>';
+            }
         }
         
         // Load wait time statistics
         async function loadWaitTimeStats() {
-            // Mock data - replace with actual API
-            document.getElementById('avgWaitTime').textContent = '12 min';
-            document.getElementById('avgProcessTime').textContent = '7 min';
-            document.getElementById('queueVelocity').textContent = '8.5';
+            // Stats are loaded together with queue data in loadCurrentQueue()
+            // This function is kept for consistency with initialization flow
         }
         
         // Update next business day

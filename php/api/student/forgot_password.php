@@ -56,7 +56,7 @@ try {
     $otpCode = sprintf('%06d', mt_rand(0, 999999));
     
     // Store OTP in session with expiry (10 minutes)
-    session_start();
+    require_once __DIR__ . '/../../config/session_config.php';
     $_SESSION['forgot_password_otp'] = $otpCode;
     $_SESSION['forgot_password_email'] = $email;
     $_SESSION['forgot_password_student_id'] = $student['student_id'];

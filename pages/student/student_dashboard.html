@@ -240,10 +240,10 @@
                     <div class="bg-blue-50 rounded-2xl p-8 mb-8 shadow-lg border-2 border-blue-100">
                         <div class="flex items-center gap-6">
                             <div class="relative">
-                                <div class="w-24 h-24 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-xl transform hover:scale-110 transition-all duration-300">
-                                    <span id="profileInitials">--</span>
+                                <div class="w-24 h-24 rounded-full overflow-hidden shadow-xl transform hover:scale-110 transition-all duration-300 border-4 border-blue-900 bg-gradient-to-br from-blue-50 to-blue-100 p-2">
+                                    <img src="../../images/Herons.png" alt="Profile Picture" class="w-full h-full object-contain">
                                 </div>
-                                <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-white">
+                                <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
                                     <i class="fas fa-check text-white text-xs"></i>
                                 </div>
                             </div>
@@ -887,14 +887,25 @@
         // Check if logged in
         async function checkSession() {
             try {
-                const response = await fetch(`${API_BASE}/student/student_session.php`);
+                console.log('Checking session...');
+                const response = await fetch(`${API_BASE}/student/student_session.php`, {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
                 const result = await response.json();
+                console.log('Session result:', result);
 
                 if (!result.logged_in) {
+                    console.log('Not logged in, redirecting...');
                     window.location.href = 'student_login.html';
                     return;
                 }
 
+                console.log('Logged in successfully!');
                 studentData = result.data;
                 updateUI();
                 
@@ -902,34 +913,51 @@
                 await loadCurrentOrder();
             } catch (error) {
                 console.error('Session check error:', error);
-                window.location.href = 'student_login.html';
+                console.error('Error details:', error.message, error.stack);
+                // Don't redirect on error - there might be a network issue
+                alert('Error checking session: ' + error.message);
             }
         }
 
         function updateUI() {
-            if (!studentData) return;
+            console.log('updateUI called with studentData:', studentData);
+            if (!studentData) {
+                console.error('No student data available');
+                return;
+            }
 
-            document.getElementById('welcomeText').textContent = `Welcome back, ${studentData.first_name}`;
+            // Helper function to safely update element
+            function safeUpdate(elementId, value) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = value;
+                } else {
+                    console.warn(`Element not found: ${elementId}`);
+                }
+            }
+
+            safeUpdate('welcomeText', `Welcome back, ${studentData.first_name}`);
             
             // Update profile
             const fullName = `${studentData.first_name} ${studentData.middle_initial ? studentData.middle_initial + '. ' : ''}${studentData.last_name}`;
-            document.getElementById('profileStudentId').textContent = studentData.student_id;
-            document.getElementById('profileStudentIdDisplay').textContent = studentData.student_id;
-            document.getElementById('profileName').textContent = fullName;
-            document.getElementById('profileFullName').textContent = fullName;
-            document.getElementById('profileEmail').textContent = studentData.email;
-            document.getElementById('profileCollege').textContent = studentData.college || 'Not specified';
-            document.getElementById('profileProgram').textContent = studentData.program || 'Not specified';
-            document.getElementById('profileYear').textContent = studentData.year_level ? `${studentData.year_level}${getOrdinalSuffix(studentData.year_level)} Year` : 'Not specified';
-            document.getElementById('profileSection').textContent = studentData.section || 'Not specified';
+            safeUpdate('profileStudentId', studentData.student_id);
+            safeUpdate('profileStudentIdDisplay', studentData.student_id);
+            safeUpdate('profileName', fullName);
+            safeUpdate('profileFullName', fullName);
+            safeUpdate('profileEmail', studentData.email);
+            safeUpdate('profileCollege', studentData.college || 'Not specified');
+            safeUpdate('profileProgram', studentData.program || 'Not specified');
+            safeUpdate('profileYear', studentData.year_level ? `${studentData.year_level}${getOrdinalSuffix(studentData.year_level)} Year` : 'Not specified');
+            safeUpdate('profileSection', studentData.section || 'Not specified');
 
             // Update initials
             const initials = (studentData.first_name.charAt(0) + studentData.last_name.charAt(0)).toUpperCase();
-            document.getElementById('profileInitials').textContent = initials;
+            safeUpdate('profileInitials', initials);
 
             // Update order preview
-            document.getElementById('orderPreview').textContent = 
-                `${studentData.first_name} ${studentData.last_name} | ${studentData.student_id} | ${studentData.email}`;
+            safeUpdate('orderPreview', `${studentData.first_name} ${studentData.last_name} | ${studentData.student_id} | ${studentData.email}`);
+            
+            console.log('UI updated successfully');
         }
 
         // Toggle profile edit mode
@@ -1635,6 +1663,7 @@
                 await fetch(`${API_BASE}/student/student_session.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ action: 'logout' })
                 });
                 window.location.href = 'student_login.html';
@@ -1766,9 +1795,25 @@
             notificationManager.showInAppNotification('QR Code downloaded!', 'success');
         }
 
-        // Initialize
-        checkSession();
-        fetchInventoryStatus();
+        // Initialize - wait for DOM to be fully loaded
+        console.log('Dashboard script loaded...');
+        
+        // Make sure DOM is ready before checking session
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeDashboard);
+        } else {
+            // DOM already loaded
+            initializeDashboard();
+        }
+        
+        function initializeDashboard() {
+            console.log('DOM ready, initializing dashboard...');
+            setTimeout(() => {
+                console.log('Starting session check...');
+                checkSession();
+                fetchInventoryStatus();
+            }, 100);
+        }
     </script>
 
     <style>
