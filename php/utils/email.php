@@ -62,6 +62,19 @@ class EmailService {
     }
     
     /**
+     * Send order moved notification email
+     */
+    public static function sendOrderMovedNotification($email, $orderData) {
+        $subject = "Order Rescheduled - Queue #{$orderData['new_queue_number']}";
+        $body = self::getOrderMovedTemplate($orderData);
+        
+        $result = self::sendEmail($email, $subject, $body);
+        self::logEmail($email, 'order_moved', $subject, $result['success'], $result['error'] ?? null);
+        
+        return $result;
+    }
+    
+    /**
      * Core email sending function
      */
     private static function sendEmail($to, $subject, $htmlBody) {
@@ -526,6 +539,96 @@ class EmailService {
             error_log("EmailService::logEmail - Trace: " . $e->getTraceAsString());
             // Don't throw - logging failure shouldn't break email sending
         }
+    }
+    
+    /**
+     * Get order moved notification template
+     */
+    private static function getOrderMovedTemplate($data) {
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Order Rescheduled</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f7; }
+                .container { max-width: 600px; margin: 20px auto; background-color: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: white; padding: 30px; text-align: center; }
+                .header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+                .content { padding: 35px; }
+                .content p { margin: 0 0 18px; font-size: 15px; }
+                .info-box { background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .info-box h3 { margin: 0 0 15px; color: #1e3a8a; font-size: 17px; }
+                .info-box p { margin: 8px 0; color: #475569; }
+                .info-box strong { color: #1e293b; }
+                .highlight-box { background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); border-left: 4px solid #3b82f6; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+                .highlight-box h3 { margin: 0 0 10px; color: #1e40af; font-size: 18px; }
+                .highlight-box .new-queue { font-size: 32px; font-weight: 700; color: #1e40af; margin: 10px 0; }
+                .alert-box { background-color: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 18px; margin: 20px 0; }
+                .alert-box p { margin: 0; color: #92400e; font-size: 14px; }
+                .footer { text-align: center; padding: 25px; color: #64748b; font-size: 12px; background-color: #f1f5f9; }
+                .footer p { margin: 0; }
+                ul { padding-left: 20px; margin: 15px 0; }
+                ul li { margin: 8px 0; color: #475569; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>Order Rescheduled - UMak COOP</h1>
+                </div>
+                <div class='content'>
+                    <p>Hi <strong>{$data['student_name']}</strong>,</p>
+                    
+                    <p>Your order couldn't be completed today due to <strong>{$data['reason']}</strong>. We've automatically moved your order to the next business day to ensure you receive your items.</p>
+                    
+                    <div class='alert-box'>
+                        <p><strong>Important Notice:</strong> Your order was still pending when COOP reached closing time. Don't worry - your order is safe and has been rescheduled!</p>
+                    </div>
+                    
+                    <div class='info-box'>
+                        <h3>Original Order Details</h3>
+                        <p><strong>Reference Number:</strong> <span style='color: #1e3a8a; font-weight: 600;'>{$data['reference_number']}</span></p>
+                        <p><strong>Items:</strong> {$data['item_ordered']}</p>
+                        <p><strong>Original Date:</strong> {$data['original_date']}</p>
+                        <p><strong>Original Queue:</strong> {$data['old_queue_number']}</p>
+                    </div>
+                    
+                    <div class='highlight-box'>
+                        <h3>Updated Schedule</h3>
+                        <p><strong>New Date:</strong> <span style='font-size: 18px; color: #1e40af;'>{$data['new_date']}</span></p>
+                        <p><strong>New Queue Number:</strong></p>
+                        <div class='new-queue'>{$data['new_queue_number']}</div>
+                        <p style='margin-top: 10px;'><strong>Status:</strong> Pre-order (Ready for pickup on scheduled date)</p>
+                    </div>
+                    
+                    <div class='info-box'>
+                        <h3>Action Required</h3>
+                        <ul>
+                            <li><strong>Visit COOP on {$data['new_date']}</strong></li>
+                            <li><strong>Bring your new queue number: {$data['new_queue_number']}</strong></li>
+                            <li>Check your dashboard for real-time status updates</li>
+                            <li>Your reference number <strong>{$data['reference_number']}</strong> remains the same</li>
+                        </ul>
+                    </div>
+                    
+                    <p style='margin-top: 25px;'>If you wish to cancel this order, please log in to your student dashboard and cancel the order before the scheduled date.</p>
+                    
+                    <p style='margin-top: 15px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b;'>
+                        <strong>Need help?</strong> Contact the COOP staff during operating hours or visit your student dashboard.
+                    </p>
+                </div>
+                <div class='footer'>
+                    <p><strong>UMak COOP Queue Management System</strong></p>
+                    <p style='margin-top: 5px;'>Operating Hours: Monday-Friday, 10:00 AM - 5:00 PM</p>
+                    <p style='margin-top: 5px;'>Lunch Break: 12:00 PM - 1:00 PM</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
     }
 }
 ?>

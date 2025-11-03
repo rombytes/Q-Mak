@@ -124,11 +124,42 @@
                     Welcome, <span id="adminName" class="text-orange-500"></span>! 
                 </h1>
                 <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full">
-                        <div id="connectionStatus" class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
-                        <span class="text-sm text-green-700 font-medium">Live</span>
+                    <p class="text-gray-600 text-sm font-medium" id="currentDate"></p>
+                    
+                    <!-- Notification Bell -->
+                    <button onclick="toggleNotifications()" class="relative p-2 hover:bg-blue-50 rounded-lg transition-all duration-200" title="System Notifications">
+                        <i class="fas fa-bell text-gray-700 text-xl"></i>
+                        <span id="notificationBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-semibold shadow-lg">0</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Notification Dropdown Panel -->
+            <div id="notificationPanel" class="hidden absolute right-8 top-20 bg-white rounded-xl shadow-2xl border border-gray-200 w-96 max-h-[550px] overflow-hidden z-50 animate-fadeIn">
+                <!-- Header -->
+                <div class="p-4 border-b border-gray-200 bg-white sticky top-0">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800 text-lg">Notifications</h3>
+                        <button onclick="markAllRead()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold hover:underline transition">Mark all read</button>
                     </div>
-                    <p class="text-gray-600 text-sm" id="currentDate"></p>
+                </div>
+                
+                <!-- Tab Navigation -->
+                <div class="flex border-b border-gray-200 bg-gray-50">
+                    <button onclick="filterNotifications('all')" id="tab-all" class="notif-tab flex-1 px-4 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 bg-white transition-all">
+                        All
+                    </button>
+                    <button onclick="filterNotifications('unread')" id="tab-unread" class="notif-tab flex-1 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all">
+                        Unread
+                    </button>
+                    <button onclick="filterNotifications('read')" id="tab-read" class="notif-tab flex-1 px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all">
+                        Read
+                    </button>
+                </div>
+                
+                <!-- Notification List -->
+                <div id="notificationList" class="divide-y divide-gray-100 overflow-y-auto max-h-[400px]">
+                    <!-- Notifications will be loaded here -->
                 </div>
             </div>
         </div>
@@ -750,164 +781,203 @@
             <!-- Admin Settings Tab -->
             <div id="content-admin-settings" class="tab-content hidden">
                 <!-- Page Header -->
-                <div class="mb-8">
-                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent mb-2">System Settings</h2>
-                    <p class="text-gray-600">Manage system configuration and operating hours</p>
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-1">Settings</h2>
+                    <p class="text-gray-500 text-sm">Manage your system settings and preferences</p>
                 </div>
                 
-                <div class="grid lg:grid-cols-2 gap-8">
-                    <!-- Working Hours Management -->
-                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
-                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
-                            <i class="fas fa-clock text-indigo-600"></i>
-                            Operating Hours
-                        </h3>
+                <!-- Settings Navigation Tabs -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div class="flex border-b border-gray-200 overflow-x-auto">
+                        <button onclick="switchSettingsTab('system')" id="settings-tab-system" 
+                                class="settings-tab px-6 py-3 font-medium text-gray-900 border-b-2 border-gray-900 whitespace-nowrap">
+                            System
+                        </button>
+                        <button onclick="switchSettingsTab('working-hours')" id="settings-tab-working-hours" 
+                                class="settings-tab px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                            Working Hours
+                        </button>
+                        <button onclick="switchSettingsTab('special-dates')" id="settings-tab-special-dates" 
+                                class="settings-tab px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                            Special Dates
+                        </button>
+                        <button onclick="switchSettingsTab('account')" id="settings-tab-account" 
+                                class="settings-tab px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                            Account
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- System Settings Content -->
+                <div id="settings-content-system" class="settings-content">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-3xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">System Configuration</h3>
                         
-                        <div id="workingHoursForm" class="space-y-4">
-                            <!-- Days of Week -->
-                            <div class="space-y-3" id="weeklyHours">
-                                <!-- Will be populated dynamically -->
+                        <div class="space-y-6">
+                            <!-- Order Cutoff Time -->
+                            <div class="pb-6 border-b border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Order Cutoff Time</label>
+                                <p class="text-xs text-gray-500 mb-3">Minutes before closing time to stop accepting new orders</p>
+                                <div class="flex items-center gap-3">
+                                    <input type="number" id="orderCutoffMinutes" value="30" min="0" max="120" 
+                                           class="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                    <span class="text-sm text-gray-600">minutes</span>
+                                </div>
                             </div>
                             
-                            <button onclick="saveWorkingHours()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-save mr-2"></i>
-                                Save Operating Hours
-                            </button>
+                            <!-- Auto-Move Pending Orders -->
+                            <div class="pb-6 border-b border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Auto-Move Pending Orders</label>
+                                <p class="text-xs text-gray-500 mb-3">Automatically move pending orders to next business day at closing time</p>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="autoMovePending" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    <span class="ml-3 text-sm text-gray-700">Enabled</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Average Processing Time -->
+                            <div class="pb-6 border-b border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Average Processing Time</label>
+                                <p class="text-xs text-gray-500 mb-3">Base time per order for queue estimation</p>
+                                <div class="flex items-center gap-3">
+                                    <input type="number" id="avgProcessTime" value="5" min="1" max="60" 
+                                           class="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                    <span class="text-sm text-gray-600">minutes</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Item Complexity Factor -->
+                            <div class="pb-6 border-b border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Item Complexity Factor</label>
+                                <p class="text-xs text-gray-500 mb-3">Additional time per item in order</p>
+                                <div class="flex items-center gap-3">
+                                    <input type="number" id="itemComplexity" value="2" min="0" max="10" 
+                                           class="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                    <span class="text-sm text-gray-600">minutes per item</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Daily Queue Reset -->
+                            <div class="pb-6 border-b border-gray-200">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Daily Queue Reset</label>
+                                <p class="text-xs text-gray-500 mb-3">Reset queue number counter at start of business day</p>
+                                <button onclick="resetDailyQueue()" 
+                                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                    Reset Queue Number
+                                </button>
+                                <div id="queueResetMessage" class="mt-2 text-xs font-medium"></div>
+                            </div>
+                            
+                            <div class="flex justify-end pt-2">
+                                <button onclick="saveSystemSettings()" 
+                                        class="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Working Hours Content -->
+                <div id="settings-content-working-hours" class="settings-content hidden">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-3xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Operating Hours</h3>
+                        
+                        <div id="workingHoursForm" class="space-y-3" data-days-generated="false">
+                            <!-- Days will be generated dynamically by JavaScript -->
                         </div>
                         
                         <div id="hoursUpdateMessage" class="mt-4"></div>
                     </div>
-                    
-                    <!-- Special Hours Management -->
-                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
-                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
-                            <i class="fas fa-calendar-times text-red-600"></i>
-                            Special Dates & Holidays
-                        </h3>
+                </div>
+                
+                <!-- Special Dates Content -->
+                <div id="settings-content-special-dates" class="settings-content hidden">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-3xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Special Dates & Holidays</h3>
                         
                         <form id="specialHourForm" class="space-y-4 mb-6">
                             <div>
-                                <label class="block font-semibold text-gray-700 mb-2">Date</label>
-                                <input type="date" id="specialDate" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" required />
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                <input type="date" id="specialDate" 
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
                             </div>
                             
                             <div>
-                                <label class="block font-semibold text-gray-700 mb-2">Reason</label>
-                                <input type="text" id="specialReason" placeholder="e.g., National Holiday, Maintenance" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" required />
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                                <input type="text" id="specialReason" placeholder="e.g., National Holiday, Maintenance" 
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
                             </div>
                             
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block font-semibold text-gray-700 mb-2">Opening Time</label>
-                                    <input type="time" id="specialOpenTime" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Opening Time</label>
+                                    <input type="time" id="specialOpenTime" 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                                 </div>
                                 <div>
-                                    <label class="block font-semibold text-gray-700 mb-2">Closing Time</label>
-                                    <input type="time" id="specialCloseTime" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Closing Time</label>
+                                    <input type="time" id="specialCloseTime" 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                                 </div>
                             </div>
                             
                             <div class="flex items-center gap-2">
-                                <input type="checkbox" id="specialClosed" class="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
+                                <input type="checkbox" id="specialClosed" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                                 <label for="specialClosed" class="text-sm text-gray-700">Mark as Closed Day</label>
                             </div>
                             
-                            <button type="submit" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-plus mr-2"></i>
-                                Add Special Date
-                            </button>
+                            <div class="flex justify-end pt-2">
+                                <button type="submit" 
+                                        class="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">
+                                    Add Special Date
+                                </button>
+                            </div>
                         </form>
                         
-                        <div id="specialHoursList" class="space-y-2 max-h-64 overflow-y-auto">
+                        <div id="specialHoursList" class="space-y-2 max-h-96 overflow-y-auto border-t border-gray-200 pt-4">
                             <!-- Special hours will be listed here -->
                         </div>
                     </div>
-                    
-                    <!-- Password Management -->
-                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
-                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
-                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                            </svg>
-                            Change Password
-                        </h3>
+                </div>
+                
+                <!-- Account Content -->
+                <div id="settings-content-account" class="settings-content hidden">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-3xl">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Change Password</h3>
                         
-                        <form id="passwordUpdateForm" class="space-y-5">
-            
+                        <form id="passwordUpdateForm" class="space-y-4">
                             <div>
-                                <label class="block font-semibold text-gray-700 mb-2">Current Password</label>
-                                <input type="password" id="currentPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                <input type="password" id="currentPassword" 
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
                             </div>
                             
                             <div>
-                                <label class="block font-semibold text-gray-700 mb-2">New Password</label>
-                                <input type="password" id="newPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input type="password" id="newPassword" 
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
                             </div>
                             
                             <div>
-                                <label class="block font-semibold text-gray-700 mb-2">Confirm Password</label>
-                                <input type="password" id="confirmPassword" class="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all" required />
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" 
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required />
                             </div>
                             
-                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
-                                Update Password
-                            </button>
+                            <div class="flex justify-end pt-2">
+                                <button type="submit" 
+                                        class="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">
+                                    Update Password
+                                </button>
+                            </div>
                         </form>
 
                         <div id="passwordUpdateMessage" class="mt-4 text-sm font-medium"></div>
                     </div>
-                    
-                    <!-- System Settings -->
-                    <div class="glass-effect rounded-2xl shadow-md p-8 border border-gray-100">
-                        <h3 class="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
-                            <i class="fas fa-cog text-blue-600"></i>
-                            System Configuration
-                        </h3>
-                        
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                                <div>
-                                    <p class="font-semibold text-gray-900">Average Processing Time</p>
-                                    <p class="text-sm text-gray-600">Base time per order</p>
-                                </div>
-                                <input type="number" id="avgProcessTime" value="5" min="1" max="60" class="w-20 border border-gray-300 rounded-lg p-2 text-center" /> 
-                                <span class="text-sm text-gray-600 ml-2">min</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                                <div>
-                                    <p class="font-semibold text-gray-900">Item Complexity Factor</p>
-                                    <p class="text-sm text-gray-600">Extra time per item</p>
-                                </div>
-                                <input type="number" id="itemComplexity" value="2" min="0" max="10" class="w-20 border border-gray-300 rounded-lg p-2 text-center" />
-                                <span class="text-sm text-gray-600 ml-2">min</span>
-                            </div>
-                            
-                            <button onclick="saveSystemSettings()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-save mr-2"></i>
-                                Save System Settings
-                            </button>
-                        </div>
-                        
-                        <!-- Queue Reset Section -->
-                        <div class="mt-6 pt-6 border-t border-gray-200">
-                            <div class="bg-red-50 rounded-lg p-4 mb-4">
-                                <div class="flex items-start gap-3">
-                                    <i class="fas fa-exclamation-triangle text-red-600 mt-1"></i>
-                                    <div>
-                                        <p class="font-semibold text-red-900">Daily Queue Reset</p>
-                                        <p class="text-sm text-red-700 mt-1">Reset the daily queue number counter back to 1. This should be done at the start of each business day.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onclick="resetDailyQueue()" class="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                                <i class="fas fa-redo mr-2"></i>
-                                Reset Daily Queue Number
-                            </button>
-                            <div id="queueResetMessage" class="mt-3 text-sm font-medium text-center"></div>
-                        </div>
-                    </div>
                 </div>
+            </div>
             </div>
 
             <!-- Admin Management Tab -->
@@ -5896,49 +5966,402 @@
                 if (data.success) {
                     displayWorkingHours(data.working_hours);
                     displaySpecialHours(data.special_hours);
+                    loadSystemSettings(data.settings);
                 }
             } catch (error) {
                 console.error('Error loading working hours:', error);
             }
         }
         
-        function displayWorkingHours(hours) {
-            const weeklyHours = document.getElementById('weeklyHours');
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        function loadSystemSettings(settings) {
+            if (!settings) return;
             
-            let html = '';
-            days.forEach((day, index) => {
-                const dayNum = index + 1;
-                const dayData = hours.find(h => h.day_of_week == dayNum) || {};
-                const isOpen = dayData.is_open == 1;
+            // Load order cutoff time
+            if (settings.closing_warning_minutes) {
+                const cutoffInput = document.getElementById('orderCutoffMinutes');
+                if (cutoffInput) cutoffInput.value = settings.closing_warning_minutes;
+            }
+            
+            // Load auto-move pending orders setting
+            if (settings.auto_move_pending_to_next_day !== undefined) {
+                const autoMoveInput = document.getElementById('autoMovePending');
+                if (autoMoveInput) autoMoveInput.checked = settings.auto_move_pending_to_next_day === '1';
+            }
+            
+            // Load average processing time
+            if (settings.avg_processing_time) {
+                const avgTimeInput = document.getElementById('avgProcessTime');
+                if (avgTimeInput) avgTimeInput.value = settings.avg_processing_time;
+            }
+            
+            // Load item complexity factor
+            if (settings.item_complexity_factor) {
+                const complexityInput = document.getElementById('itemComplexity');
+                if (complexityInput) complexityInput.value = settings.item_complexity_factor;
+            }
+        }
+        
+        function displayWorkingHours(hours) {
+            const container = document.getElementById('workingHoursForm');
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            
+            // Generate days HTML if not already done
+            if (container.getAttribute('data-days-generated') === 'false') {
+                let html = '';
+                
+                dayNames.forEach((dayName, index) => {
+                    const dayNum = index + 1;
+                    const isWeekend = dayNum >= 6;
+                    const toggleColor = isWeekend ? 'gray' : 'purple';
+                    
+                    html += `
+                    <div class="border border-gray-200 rounded-lg overflow-hidden" id="day-container-${dayNum}">
+                        <div class="flex items-center justify-between p-4 bg-white">
+                            <div class="flex items-center gap-3 flex-1">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="day${dayNum}" class="sr-only peer" onchange="toggleDay(${dayNum})">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-${toggleColor}-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${toggleColor}-600"></div>
+                                </label>
+                                <div class="flex-1">
+                                    <span class="text-sm font-medium text-gray-900">${dayName}</span>
+                                    <div id="day-summary-${dayNum}" class="text-xs text-gray-500 mt-0.5"></div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="toggleDayExpand(${dayNum})" class="text-purple-600 hover:text-purple-700">
+                                <svg id="expand-icon-${dayNum}" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="day-detail-${dayNum}" class="hidden border-t border-gray-200 p-4 bg-gray-50">
+                            <div id="time-slots-${dayNum}" class="space-y-3"></div>
+                            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
+                                <button type="button" onclick="addTimeSlot(${dayNum})" class="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Add Time Slot
+                                </button>
+                                <button type="button" onclick="copyToAll(${dayNum})" class="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy to All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
                 
                 html += `
-                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <input type="checkbox" id="day${dayNum}" ${isOpen ? 'checked' : ''} 
-                               onchange="toggleDayOpen(${dayNum})" 
-                               class="w-5 h-5 text-indigo-600 rounded" />
-                        <label for="day${dayNum}" class="font-semibold text-gray-900 w-24">${day}</label>
-                        <input type="time" id="open${dayNum}" value="${dayData.opening_time || '10:00'}" 
-                               ${!isOpen ? 'disabled' : ''} 
-                               class="border border-gray-300 rounded-lg p-2 text-sm" />
-                        <span class="text-gray-600">to</span>
-                        <input type="time" id="close${dayNum}" value="${dayData.closing_time || '17:00'}" 
-                               ${!isOpen ? 'disabled' : ''} 
-                               class="border border-gray-300 rounded-lg p-2 text-sm" />
+                    <div class="flex justify-end pt-4">
+                        <button onclick="saveWorkingHours()" 
+                                class="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">
+                            Save Changes
+                        </button>
                     </div>
                 `;
-            });
+                
+                container.innerHTML = html;
+                container.setAttribute('data-days-generated', 'true');
+            }
             
-            weeklyHours.innerHTML = html;
+            // Populate data for each day
+            hours.forEach(dayData => {
+                const dayNum = dayData.day_of_week;
+                const isOpen = dayData.is_open == 1;
+                
+                // Set checkbox
+                const checkbox = document.getElementById(`day${dayNum}`);
+                if (checkbox) checkbox.checked = isOpen;
+                
+                // Create time slots
+                const slotsContainer = document.getElementById(`time-slots-${dayNum}`);
+                if (slotsContainer) {
+                    // Determine time slots based on break times
+                    const slots = [];
+                    
+                    if (dayData.break_start && dayData.break_end) {
+                        // Has lunch break - split into two slots
+                        slots.push({
+                            start: dayData.opening_time || '09:00',
+                            end: dayData.break_start,
+                            label: 'Morning'
+                        });
+                        slots.push({
+                            start: dayData.break_end,
+                            end: dayData.closing_time || '17:00',
+                            label: 'Afternoon'
+                        });
+                    } else {
+                        // No break - single slot
+                        slots.push({
+                            start: dayData.opening_time || '09:00',
+                            end: dayData.closing_time || '17:00',
+                            label: 'Operating Hours'
+                        });
+                    }
+                    
+                    // Render time slots
+                    slotsContainer.innerHTML = slots.map((slot, idx) => `
+                        <div class="flex items-center gap-2 time-slot-item" data-slot-index="${idx}">
+                            <input type="time" value="${slot.start}" 
+                                   class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                   data-slot="start" data-day="${dayNum}" data-index="${idx}">
+                            <span class="text-gray-500">to</span>
+                            <input type="time" value="${slot.end}" 
+                                   class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                   data-slot="end" data-day="${dayNum}" data-index="${idx}">
+                            ${slots.length > 1 ? `
+                            <button type="button" onclick="removeTimeSlot(${dayNum}, ${idx})" 
+                                    class="text-red-500 hover:text-red-700 p-2" title="Remove time slot">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                            ` : ''}
+                        </div>
+                    `).join('');
+                }
+                
+                updateDaySummary(dayNum);
+            });
         }
         
         function toggleDayOpen(dayNum) {
             const checkbox = document.getElementById(`day${dayNum}`);
             const openTime = document.getElementById(`open${dayNum}`);
             const closeTime = document.getElementById(`close${dayNum}`);
+            const breakStart = document.getElementById(`breakStart${dayNum}`);
+            const breakEnd = document.getElementById(`breakEnd${dayNum}`);
             
             openTime.disabled = !checkbox.checked;
             closeTime.disabled = !checkbox.checked;
+            breakStart.disabled = !checkbox.checked;
+            breakEnd.disabled = !checkbox.checked;
+        }
+        
+        function toggleDay(dayNum) {
+            const checkbox = document.getElementById(`day${dayNum}`);
+            const slotsContainer = document.getElementById(`time-slots-${dayNum}`);
+            
+            if (!checkbox.checked && slotsContainer) {
+                // Clear all time slots when unchecking
+                const inputs = slotsContainer.querySelectorAll('input[type="time"]');
+                inputs.forEach(input => input.value = '');
+            }
+            updateDaySummary(dayNum);
+        }
+        
+        function toggleDayExpand(dayNum) {
+            const detail = document.getElementById(`day-detail-${dayNum}`);
+            const icon = document.getElementById(`expand-icon-${dayNum}`);
+            
+            if (detail.classList.contains('hidden')) {
+                detail.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                detail.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        function updateDaySummary(dayNum) {
+            const checkbox = document.getElementById(`day${dayNum}`);
+            const summary = document.getElementById(`day-summary-${dayNum}`);
+            
+            if (!summary) return;
+            
+            if (checkbox.checked) {
+                const slotsContainer = document.getElementById(`time-slots-${dayNum}`);
+                if (slotsContainer) {
+                    const slots = [];
+                    const timeSlots = slotsContainer.querySelectorAll('.time-slot-item');
+                    
+                    timeSlots.forEach(slot => {
+                        const startInput = slot.querySelector('[data-slot="start"]');
+                        const endInput = slot.querySelector('[data-slot="end"]');
+                        if (startInput && endInput && startInput.value && endInput.value) {
+                            slots.push(`${startInput.value} - ${endInput.value}`);
+                        }
+                    });
+                    
+                    summary.textContent = slots.length > 0 ? slots.join(' · ') : '';
+                }
+            } else {
+                summary.textContent = '';
+            }
+        }
+        
+        function addTimeSlot(dayNum) {
+            const slotsContainer = document.getElementById(`time-slots-${dayNum}`);
+            if (!slotsContainer) return;
+            
+            const currentSlots = slotsContainer.querySelectorAll('.time-slot-item');
+            const slotIndex = currentSlots.length;
+            
+            // Get the last slot's end time as the new start time
+            let lastEndTime = '13:00';
+            if (currentSlots.length > 0) {
+                const lastSlot = currentSlots[currentSlots.length - 1];
+                const lastEndInput = lastSlot.querySelector('[data-slot="end"]');
+                if (lastEndInput && lastEndInput.value) {
+                    lastEndTime = lastEndInput.value;
+                }
+            }
+            
+            const newSlot = document.createElement('div');
+            newSlot.className = 'flex items-center gap-2 time-slot-item';
+            newSlot.setAttribute('data-slot-index', slotIndex);
+            newSlot.innerHTML = `
+                <input type="time" value="${lastEndTime}" 
+                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                       data-slot="start" data-day="${dayNum}" data-index="${slotIndex}" onchange="updateDaySummary(${dayNum})">
+                <span class="text-gray-500">to</span>
+                <input type="time" value="17:00" 
+                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                       data-slot="end" data-day="${dayNum}" data-index="${slotIndex}" onchange="updateDaySummary(${dayNum})">
+                <button type="button" onclick="removeTimeSlot(${dayNum}, ${slotIndex})" 
+                        class="text-red-500 hover:text-red-700 p-2" title="Remove time slot">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            `;
+            
+            slotsContainer.appendChild(newSlot);
+            updateDaySummary(dayNum);
+        }
+        
+        function removeTimeSlot(dayNum, slotIndex) {
+            const slotsContainer = document.getElementById(`time-slots-${dayNum}`);
+            if (!slotsContainer) return;
+            
+            const slots = slotsContainer.querySelectorAll('.time-slot-item');
+            
+            // Don't allow removing if only one slot remains
+            if (slots.length <= 1) {
+                alert('At least one time slot is required');
+                return;
+            }
+            
+            // Remove the specific slot
+            slots.forEach(slot => {
+                if (parseInt(slot.getAttribute('data-slot-index')) === slotIndex) {
+                    slot.remove();
+                }
+            });
+            
+            // Reindex remaining slots
+            const remainingSlots = slotsContainer.querySelectorAll('.time-slot-item');
+            remainingSlots.forEach((slot, newIndex) => {
+                slot.setAttribute('data-slot-index', newIndex);
+                slot.querySelectorAll('[data-index]').forEach(input => {
+                    input.setAttribute('data-index', newIndex);
+                });
+                
+                // Update delete button
+                const deleteBtn = slot.querySelector('button[onclick^="removeTimeSlot"]');
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('onclick', `removeTimeSlot(${dayNum}, ${newIndex})`);
+                }
+            });
+            
+            updateDaySummary(dayNum);
+        }
+        
+        function copyToAll(sourceDayNum) {
+            const sourceSlotsContainer = document.getElementById(`time-slots-${sourceDayNum}`);
+            if (!sourceSlotsContainer) return;
+            
+            const sourceSlots = sourceSlotsContainer.querySelectorAll('.time-slot-item');
+            if (sourceSlots.length === 0) {
+                alert('Please set time slots first');
+                return;
+            }
+            
+            // Collect source time slots
+            const timeSlotsData = [];
+            sourceSlots.forEach(slot => {
+                const startInput = slot.querySelector('[data-slot="start"]');
+                const endInput = slot.querySelector('[data-slot="end"]');
+                if (startInput && endInput && startInput.value && endInput.value) {
+                    timeSlotsData.push({
+                        start: startInput.value,
+                        end: endInput.value
+                    });
+                }
+            });
+            
+            if (timeSlotsData.length === 0) {
+                alert('Please set valid time slots first');
+                return;
+            }
+            
+            if (confirm('Copy these time slots to all other days?')) {
+                for (let i = 1; i <= 7; i++) {
+                    if (i !== sourceDayNum) {
+                        // Enable the day
+                        document.getElementById(`day${i}`).checked = true;
+                        
+                        // Get target slots container
+                        const targetSlotsContainer = document.getElementById(`time-slots-${i}`);
+                        if (!targetSlotsContainer) continue;
+                        
+                        // Clear existing slots
+                        targetSlotsContainer.innerHTML = '';
+                        
+                        // Add copied slots
+                        timeSlotsData.forEach((slotData, idx) => {
+                            const newSlot = document.createElement('div');
+                            newSlot.className = 'flex items-center gap-2 time-slot-item';
+                            newSlot.setAttribute('data-slot-index', idx);
+                            newSlot.innerHTML = `
+                                <input type="time" value="${slotData.start}" 
+                                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                       data-slot="start" data-day="${i}" data-index="${idx}" onchange="updateDaySummary(${i})">
+                                <span class="text-gray-500">to</span>
+                                <input type="time" value="${slotData.end}" 
+                                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                       data-slot="end" data-day="${i}" data-index="${idx}" onchange="updateDaySummary(${i})">
+                                ${timeSlotsData.length > 1 ? `
+                                <button type="button" onclick="removeTimeSlot(${i}, ${idx})" 
+                                        class="text-red-500 hover:text-red-700 p-2" title="Remove time slot">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                                ` : ''}
+                            `;
+                            targetSlotsContainer.appendChild(newSlot);
+                        });
+                        
+                        updateDaySummary(i);
+                    }
+                }
+                showNotification('Time slots copied to all days!', 'success');
+            }
+        }
+        
+        function switchSettingsTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.settings-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show selected tab content
+            document.getElementById(`settings-content-${tabName}`).classList.remove('hidden');
+            
+            // Update tab button styling
+            document.querySelectorAll('.settings-tab').forEach(btn => {
+                btn.classList.remove('text-gray-900', 'border-gray-900');
+                btn.classList.add('text-gray-500', 'border-transparent');
+            });
+            
+            const activeTab = document.getElementById(`settings-tab-${tabName}`);
+            activeTab.classList.remove('text-gray-500', 'border-transparent');
+            activeTab.classList.add('text-gray-900', 'border-gray-900');
         }
         
         async function saveWorkingHours() {
@@ -5947,14 +6370,47 @@
             
             days.forEach(dayNum => {
                 const isOpen = document.getElementById(`day${dayNum}`).checked;
-                const openTime = document.getElementById(`open${dayNum}`).value;
-                const closeTime = document.getElementById(`close${dayNum}`).value;
+                const slotsContainer = document.getElementById(`time-slots-${dayNum}`);
+                
+                if (!slotsContainer) return;
+                
+                const timeSlots = slotsContainer.querySelectorAll('.time-slot-item');
+                let openTime = '';
+                let closeTime = '';
+                let breakStart = null;
+                let breakEnd = null;
+                
+                if (timeSlots.length > 0) {
+                    // Get first slot start time as opening time
+                    const firstSlot = timeSlots[0];
+                    const firstStart = firstSlot.querySelector('[data-slot="start"]');
+                    openTime = firstStart ? firstStart.value : '';
+                    
+                    // Get last slot end time as closing time
+                    const lastSlot = timeSlots[timeSlots.length - 1];
+                    const lastEnd = lastSlot.querySelector('[data-slot="end"]');
+                    closeTime = lastEnd ? lastEnd.value : '';
+                    
+                    // If there are 2 slots, the gap between them is the lunch break
+                    if (timeSlots.length === 2) {
+                        const firstEnd = firstSlot.querySelector('[data-slot="end"]');
+                        const secondSlot = timeSlots[1];
+                        const secondStart = secondSlot.querySelector('[data-slot="start"]');
+                        
+                        if (firstEnd && secondStart) {
+                            breakStart = firstEnd.value;
+                            breakEnd = secondStart.value;
+                        }
+                    }
+                }
                 
                 workingHours.push({
                     day_of_week: dayNum,
                     is_open: isOpen ? 1 : 0,
-                    opening_time: openTime,
-                    closing_time: closeTime
+                    opening_time: openTime || '09:00',
+                    closing_time: closeTime || '17:00',
+                    break_start: breakStart,
+                    break_end: breakEnd
                 });
             });
             
@@ -5962,7 +6418,10 @@
                 const response = await fetch(`${API_BASE}/admin/update_working_hours.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ working_hours: workingHours })
+                    body: JSON.stringify({ 
+                        action: 'update_weekly',
+                        schedule: workingHours 
+                    })
                 });
                 
                 const data = await response.json();
@@ -6072,15 +6531,40 @@
             }
         }
         
-        function saveSystemSettings() {
+        async function saveSystemSettings() {
+            const orderCutoff = document.getElementById('orderCutoffMinutes').value;
+            const autoMove = document.getElementById('autoMovePending').checked;
             const avgTime = document.getElementById('avgProcessTime').value;
             const complexity = document.getElementById('itemComplexity').value;
             
-            // Store in localStorage for now (can be saved to database later)
-            localStorage.setItem('avgProcessTime', avgTime);
-            localStorage.setItem('itemComplexity', complexity);
+            const settings = {
+                closing_warning_minutes: orderCutoff,
+                auto_move_pending_to_next_day: autoMove ? '1' : '0',
+                avg_processing_time: avgTime,
+                item_complexity_factor: complexity
+            };
             
-            showNotification('System settings saved!', 'success');
+            try {
+                const response = await fetch(`${API_BASE}/admin/update_working_hours.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'update_settings',
+                        settings: settings
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('System settings saved!', 'success');
+                } else {
+                    showNotification(data.message || 'Failed to save settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving system settings:', error);
+                showNotification('Error saving settings', 'error');
+            }
         }
         
         // Reset Daily Queue Function
@@ -6158,12 +6642,73 @@
             font-family: 'Inter', sans-serif;
         }
         
+        /* Settings Tab Styles */
+        .settings-tab {
+            transition: all 0.2s ease;
+            border-bottom-width: 2px;
+        }
+        
+        .settings-tab:hover {
+            text-decoration: none;
+            color: #111827;
+        }
+        
+        .settings-content {
+            display: block;
+        }
+        
+        .settings-content.hidden {
+            display: none;
+        }
+        
         @keyframes fade-in {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
             animation: fade-in 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(-15px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.25s ease-out;
+        }
+        
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Notification panel smooth transitions */
+        #notificationList {
+            transition: opacity 0.3s ease;
+        }
+        
+        .notif-tab {
+            transition: all 0.2s ease;
+        }
+        
+        /* Smooth notification item animations */
+        @keyframes notifSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Notification animations */
@@ -6737,34 +7282,83 @@
                     o.order_status === 'pending' || o.order_status === 'processing'
                 ).length;
 
-                showAlert(
-                    'Please Wait',
-                    `Queue ${queueNumber} is in position ${queuePosition} of ${totalPending}. Please wait for the current queue to be processed first.`,
-                    'info'
-                );
-                
                 closeQRScanner();
                 
-                // Show the order in the table for reference
-                showTab('queue-management');
-                
-                // Scroll to the order in the table
-                setTimeout(() => {
-                    const orderRows = Array.from(document.querySelectorAll('#ordersTableBody tr'));
-                    const orderRow = orderRows.find(row => {
-                        const queueCell = row.querySelector('td:first-child');
-                        return queueCell && queueCell.textContent.trim() === queueNumber;
-                    });
-                    
-                    if (orderRow) {
-                        orderRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        orderRow.style.background = 'linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(147, 197, 253, 0.2))';
+                // Show modal with order details instead of just switching tabs
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 p-6 animate-modal-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-gray-800">
+                                <i class="fas fa-qrcode text-blue-600 mr-2"></i>
+                                Scanned Order Details
+                            </h3>
+                            <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
                         
-                        setTimeout(() => {
-                            orderRow.style.background = '';
-                        }, 3000);
-                    }
-                }, 300);
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-yellow-600 mt-1 mr-3"></i>
+                                <div>
+                                    <p class="font-semibold text-yellow-800">Not Current Queue</p>
+                                    <p class="text-sm text-yellow-700 mt-1">
+                                        This order is in position <strong>${queuePosition}</strong> of <strong>${totalPending}</strong> in the queue.
+                                        Please process orders in sequence.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Queue Number</p>
+                                    <p class="text-lg font-bold text-blue-600">${foundOrder.queue_number}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Status</p>
+                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                                        foundOrder.order_status === 'processing' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
+                                    }">
+                                        ${foundOrder.order_status === 'processing' ? 'Processing' : 'Pending'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t pt-3">
+                                <p class="text-sm text-gray-600">Student Information</p>
+                                <p class="font-semibold text-gray-800">${foundOrder.first_name} ${foundOrder.last_name}</p>
+                                <p class="text-sm text-gray-600">${foundOrder.student_id} | ${foundOrder.email}</p>
+                            </div>
+                            
+                            <div class="border-t pt-3">
+                                <p class="text-sm text-gray-600">Items Ordered</p>
+                                <p class="font-semibold text-gray-800">${foundOrder.item_ordered}</p>
+                            </div>
+                            
+                            <div class="border-t pt-3">
+                                <p class="text-sm text-gray-600">Order Placed</p>
+                                <p class="text-sm text-gray-800">${new Date(foundOrder.created_at).toLocaleString()}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 mt-6">
+                            <button onclick="this.closest('.fixed').remove(); showTab('queue-management'); setTimeout(() => { const rows = Array.from(document.querySelectorAll('#queueTableBody tr')); const row = rows.find(r => r.querySelector('td')?.textContent.trim() === '${foundOrder.queue_number}'); if(row) { row.scrollIntoView({behavior: 'smooth', block: 'center'}); row.style.backgroundColor = 'rgba(59, 130, 246, 0.2)'; setTimeout(() => row.style.backgroundColor = '', 3000); } }, 300);" 
+                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-list mr-2"></i>
+                                View in Queue Table
+                            </button>
+                            <button onclick="this.closest('.fixed').remove()" 
+                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
                 
                 return;
             }
@@ -6783,6 +7377,225 @@
                 html5QrCode.resume();
             }
         }
+
+        // ============================================================================
+        // NOTIFICATION SYSTEM
+        // ============================================================================
+        
+        let notificationsData = [];
+        let currentFilter = 'all'; // 'all', 'unread', 'read'
+        
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/Q-Mak/php/api/admin/get_notifications.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    notificationsData = data.notifications;
+                    const unreadCount = data.unread_count;
+                    
+                    const badge = document.getElementById('notificationBadge');
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                    
+                    displayNotifications();
+                    updateTabCounts();
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+        
+        function filterNotifications(filter) {
+            currentFilter = filter;
+            
+            // Update tab styles
+            document.querySelectorAll('.notif-tab').forEach(tab => {
+                tab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-white');
+                tab.classList.add('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
+            });
+            
+            const activeTab = document.getElementById(`tab-${filter}`);
+            activeTab.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
+            activeTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'bg-white');
+            
+            displayNotifications();
+        }
+        
+        function updateTabCounts() {
+            const unreadCount = notificationsData.filter(n => n.is_read == 0 || n.is_read === '0').length;
+            const readCount = notificationsData.filter(n => n.is_read == 1 || n.is_read === '1').length;
+            
+            console.log('Unread count:', unreadCount, 'Read count:', readCount);
+            
+            document.getElementById('tab-unread').innerHTML = `Unread ${unreadCount > 0 ? `<span class="ml-1 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">${unreadCount}</span>` : ''}`;
+            document.getElementById('tab-read').innerHTML = `Read ${readCount > 0 ? `<span class="ml-1 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${readCount}</span>` : ''}`;
+        }
+        
+        function displayNotifications() {
+            const list = document.getElementById('notificationList');
+            
+            // Filter notifications based on current filter
+            // Convert is_read to number for consistent comparison
+            let filteredNotifications = notificationsData;
+            if (currentFilter === 'unread') {
+                filteredNotifications = notificationsData.filter(n => n.is_read == 0 || n.is_read === '0');
+            } else if (currentFilter === 'read') {
+                filteredNotifications = notificationsData.filter(n => n.is_read == 1 || n.is_read === '1');
+            }
+            
+            console.log('Current filter:', currentFilter);
+            console.log('Total notifications:', notificationsData.length);
+            console.log('Filtered notifications:', filteredNotifications.length);
+            console.log('Notifications data:', notificationsData);
+            
+            if (filteredNotifications.length === 0) {
+                let emptyMessage = 'No notifications';
+                if (currentFilter === 'unread') emptyMessage = 'No unread notifications';
+                if (currentFilter === 'read') emptyMessage = 'No read notifications';
+                
+                list.innerHTML = `
+                    <div class="p-8 text-center">
+                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <p class="text-gray-500 text-sm">${emptyMessage}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = filteredNotifications.map(notif => {
+                const isUnread = notif.is_read == 0 || notif.is_read === '0';
+                const date = new Date(notif.created_at);
+                const timeAgo = getTimeAgo(date);
+                
+                return `
+                    <div class="group p-4 hover:bg-blue-50/30 transition-all duration-200 ${isUnread ? 'bg-blue-50/50' : ''} relative cursor-pointer">
+                        <div class="flex items-start gap-3">
+                            ${isUnread ? '<div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0 animate-pulse"></div>' : '<div class="w-2 h-2 bg-gray-300 rounded-full mt-2 flex-shrink-0"></div>'}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h4 class="font-semibold text-sm ${isUnread ? 'text-gray-900' : 'text-gray-600'}">${notif.title}</h4>
+                                    ${isUnread ? `
+                                        <button onclick="markAsRead(${notif.notification_id}, event)" 
+                                                class="opacity-0 group-hover:opacity-100 text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 shadow-sm hover:shadow"
+                                                title="Mark as read">
+                                            <i class="fas fa-check mr-1"></i>Mark read
+                                        </button>
+                                    ` : `
+                                        <span class="text-xs text-gray-400 flex items-center gap-1">
+                                            <i class="fas fa-check-double"></i> Read
+                                        </span>
+                                    `}
+                                </div>
+                                <p class="text-sm text-gray-600 mb-2 line-clamp-2">${notif.message}</p>
+                                <div class="flex items-center justify-between">
+                                    <p class="text-xs text-gray-400 flex items-center gap-1">
+                                        <i class="far fa-clock"></i> ${timeAgo}
+                                    </p>
+                                    ${notif.notification_type ? `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">${notif.notification_type.replace('_', ' ')}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationPanel');
+            panel.classList.toggle('hidden');
+            
+            if (!panel.classList.contains('hidden')) {
+                currentFilter = 'all'; // Reset to "All" tab when opening
+                filterNotifications('all');
+                loadNotifications();
+            }
+        }
+        
+        async function markAsRead(notificationId, event) {
+            try {
+                if (event) {
+                    event.stopPropagation();
+                }
+                
+                console.log('Marking notification as read:', notificationId);
+                
+                const response = await fetch('/Q-Mak/php/api/admin/get_notifications.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notification_id: notificationId, action: 'mark_read' })
+                });
+                
+                const data = await response.json();
+                console.log('Mark as read response:', data);
+                
+                if (data.success) {
+                    // Reload notifications to update counts and list
+                    await loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+        
+        async function markAllRead() {
+            try {
+                // Show confirmation for better UX
+                if (currentFilter === 'unread') {
+                    const unreadCount = notificationsData.filter(n => n.is_read === '0').length;
+                    if (unreadCount === 0) return;
+                }
+                
+                const response = await fetch('/Q-Mak/php/api/admin/get_notifications.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'mark_all_read' })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Smooth transition
+                    const list = document.getElementById('notificationList');
+                    list.style.opacity = '0';
+                    setTimeout(() => {
+                        loadNotifications();
+                        list.style.opacity = '1';
+                    }, 200);
+                }
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+            }
+        }
+        
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' days ago';
+            return date.toLocaleDateString();
+        }
+        
+        // Close notification panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('notificationPanel');
+            const button = event.target.closest('button[onclick="toggleNotifications()"]');
+            
+            if (!panel.classList.contains('hidden') && !panel.contains(event.target) && !button) {
+                panel.classList.add('hidden');
+            }
+        });
+        
+        // Load notifications on page load and refresh every 5 minutes
+        loadNotifications();
+        setInterval(loadNotifications, 5 * 60 * 1000);
     </script>
 </body>
 </html>

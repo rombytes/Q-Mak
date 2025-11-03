@@ -30,10 +30,11 @@ try {
                     WHEN o.started_processing_at IS NOT NULL THEN NOW()
                     ELSE NOW()
                 END
-            ) as actual_wait_minutes
+            ) as actual_wait_minutes,
+            CAST(SUBSTRING(o.queue_number, LOCATE('-', o.queue_number) + 1) AS UNSIGNED) as queue_position
         FROM orders o
         WHERE o.queue_date = CURDATE()
-        ORDER BY o.queue_position ASC
+        ORDER BY queue_position ASC
     ");
     $stmt->execute();
     $orders = $stmt->fetchAll();

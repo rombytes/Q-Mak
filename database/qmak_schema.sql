@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `order_status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
   `order_type` ENUM('walk-in', 'online', 'immediate', 'pre-order') NOT NULL DEFAULT 'online' COMMENT 'Order source type',
   `scheduled_date` DATE NULL COMMENT 'For pre-orders, the date customer wants to pick up the order',
+  `moved_from_date` DATE NULL COMMENT 'Original date if order was auto-moved',
   `ordered_outside_hours` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Flag indicating order was placed outside operating hours',
   `estimated_wait_time` INT(11) DEFAULT 10 COMMENT 'Estimated wait time in minutes',
   `actual_completion_time` INT(11) NULL COMMENT 'Actual time taken to complete order in minutes',
@@ -164,6 +165,24 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
   INDEX `idx_status` (`status`),
   INDEX `idx_email_type` (`email_type`),
   INDEX `idx_is_archived` (`is_archived`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `system_notifications`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `system_notifications` (
+  `notification_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `notification_type` VARCHAR(50) NOT NULL COMMENT 'Type: closing_time_summary, system_alert, etc.',
+  `title` VARCHAR(255) NOT NULL,
+  `message` TEXT NOT NULL,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` TIMESTAMP NULL COMMENT 'Auto-delete after this date',
+  PRIMARY KEY (`notification_id`),
+  INDEX `idx_type` (`notification_type`),
+  INDEX `idx_is_read` (`is_read`),
+  INDEX `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -448,7 +467,9 @@ INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
 ('otp_expiry_minutes', '5', 'OTP code expiry time in minutes'),
 ('otp_max_attempts', '3', 'Maximum OTP verification attempts'),
 ('email_from_name', 'UMak COOP', 'From name in emails'),
-('email_from_address', 'coop@umak.edu.ph', 'From email address');
+('email_from_address', 'coop@umak.edu.ph', 'From email address'),
+('avg_processing_time', '5', 'Average processing time per order in minutes'),
+('item_complexity_factor', '2', 'Additional time per item in order (minutes)');
 
 -- --------------------------------------------------------
 -- Table structure for table `queue_analytics`

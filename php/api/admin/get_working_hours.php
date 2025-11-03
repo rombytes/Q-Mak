@@ -95,7 +95,8 @@ try {
     
     echo json_encode([
         'success' => true,
-        'weekly_schedule' => $weeklySchedule,
+        'working_hours' => $weeklySchedule, // Frontend expects 'working_hours'
+        'weekly_schedule' => $weeklySchedule, // Keep for backward compatibility
         'special_hours' => $specialHours,
         'settings' => $settings
     ]);

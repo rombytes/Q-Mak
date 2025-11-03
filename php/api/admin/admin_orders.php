@@ -48,6 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 o.status as order_status,
                 o.created_at,
                 o.updated_at,
+                o.queue_date,
+                o.order_type,
                 s.student_id,
                 s.first_name,
                 s.last_name,
@@ -62,7 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         ";
 
         if ($filter === 'today') {
-            $query .= " AND DATE(o.created_at) = CURDATE()";
+            // Filter by queue_date (not created_at) to avoid showing pre-orders for tomorrow
+            $query .= " AND o.queue_date = CURDATE()";
         } elseif ($filter === 'history') {
             // Show all orders for history (no date filter)
             $query .= "";
@@ -76,7 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         
         if (!empty($date)) {
-            $query .= " AND DATE(o.created_at) = ?";
+            // Filter by queue_date instead of created_at
+            $query .= " AND o.queue_date = ?";
             $params[] = $date;
         }
         
@@ -98,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // Get statistics
         $statsWhereClause = "";
         if ($filter === 'today') {
-            $statsWhereClause = "WHERE DATE(created_at) = CURDATE()";
+            // Use queue_date instead of created_at for consistent filtering
+            $statsWhereClause = "WHERE queue_date = CURDATE()";
         } elseif ($filter === 'history') {
             $statsWhereClause = ""; // All orders for history
         }

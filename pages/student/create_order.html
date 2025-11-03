@@ -13,10 +13,28 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full my-8">
+        <!-- Cutoff Warning Banner (will be inserted by JavaScript) -->
+        <div id="cutoffWarningBanner"></div>
+        
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h3 class="text-3xl font-bold text-blue-900">Create New Order</h3>
@@ -54,6 +72,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">UMak Student Email <span class="text-red-500">*</span></label>
                         <input type="email" id="email" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="studentID@umak.edu.ph" required />
+                        <div id="emailFeedback" class="mt-2 hidden"></div>
                     </div>
                 </div>
             </div>
@@ -236,7 +255,7 @@
             
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row gap-4 pt-6">
-                <button type="submit" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2">
+                <button type="submit" id="submitOrderBtn" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
@@ -253,9 +272,176 @@
     </div>
 
     <script>
-        const API_BASE = '../../php/api';
+        const API_BASE = '/Q-Mak/php/api';
         let selectedQuantity = 1;
         let inventoryStock = {};
+
+        // ============================================================================
+        // CUTOFF WARNING SYSTEM
+        // ============================================================================
+        
+        async function checkCutoffWarning() {
+            try {
+                const response = await fetch(`${API_BASE}/student/check_cutoff.php`);
+                const data = await response.json();
+                
+                if (data.success && data.warning) {
+                    const banner = document.getElementById('cutoffWarningBanner');
+                    const warning = data.warning;
+                    
+                    if (warning.level === 'error') {
+                        // COOP is closed
+                        banner.innerHTML = `
+                            <div class="bg-red-100 border-l-4 border-red-500 text-red-900 p-4 mb-6 rounded-lg shadow-md">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <p class="font-bold text-lg">COOP Closed</p>
+                                        <p class="mt-1">${warning.message}</p>
+                                        <p class="mt-2 text-sm">Your order will be scheduled for the next business day (${warning.next_business_day}).</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (warning.level === 'warning') {
+                        // Closing soon
+                        banner.innerHTML = `
+                            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-4 mb-6 rounded-lg shadow-md animate-pulse">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3 flex-1">
+                                        <p class="font-bold text-lg">Closing Soon!</p>
+                                        <p class="mt-1">${warning.message}</p>
+                                        <p class="mt-2 text-sm font-semibold">Orders placed after closing will be scheduled for ${warning.next_business_day}.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking cutoff warning:', error);
+            }
+        }
+        
+        // Check cutoff warning on page load and refresh every minute
+        checkCutoffWarning();
+        setInterval(checkCutoffWarning, 60 * 1000);
+
+        // ============================================================================
+        // EMAIL EXISTENCE CHECK
+        // ============================================================================
+        
+        let emailCheckTimeout = null;
+        let isRegisteredAccount = false; // Flag to track if email has registered account
+        const emailInput = document.getElementById('email');
+        const emailFeedback = document.getElementById('emailFeedback');
+        
+        // Add event listener to email input
+        emailInput.addEventListener('blur', checkEmailExists);
+        emailInput.addEventListener('input', function() {
+            // Clear previous timeout
+            clearTimeout(emailCheckTimeout);
+            
+            // Reset feedback while typing
+            emailFeedback.classList.add('hidden');
+            emailInput.classList.remove('border-red-500', 'border-green-500');
+            isRegisteredAccount = false; // Reset flag
+            
+            // Check after 1 second of no typing
+            emailCheckTimeout = setTimeout(() => {
+                if (emailInput.value && emailInput.validity.valid) {
+                    checkEmailExists();
+                }
+            }, 1000);
+        });
+        
+        async function checkEmailExists() {
+            const email = emailInput.value.trim();
+            
+            // Validate email format
+            if (!email || !emailInput.validity.valid) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/student/check_email.php?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+                
+                if (data.success && data.exists && data.has_account) {
+                    // Email has registered account with password - MUST LOGIN
+                    isRegisteredAccount = true; // Set flag to prevent submission
+                    
+                    // Disable submit button
+                    const submitBtn = document.getElementById('submitOrderBtn');
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    submitBtn.classList.remove('hover:bg-blue-800', 'hover:shadow-lg', 'hover:scale-105');
+                    
+                    emailFeedback.innerHTML = `
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-sm animate-fadeIn">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-semibold text-red-800">Registered Account Detected</h3>
+                                    <p class="mt-1 text-sm text-red-700">This email has a registered account.</p>
+                                    <p class="mt-1 text-sm text-red-700">Please login to place your order.</p>
+                                    <div class="mt-3 flex gap-3">
+                                        <button onclick="window.location.href='student_login.html'" 
+                                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all shadow-sm">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                            </svg>
+                                            Go to Login
+                                        </button>
+                                        <button onclick="emailInput.value=''; emailFeedback.classList.add('hidden'); isRegisteredAccount=false; document.getElementById('submitOrderBtn').disabled=false; document.getElementById('submitOrderBtn').classList.remove('opacity-50','cursor-not-allowed'); document.getElementById('submitOrderBtn').classList.add('hover:bg-blue-800','hover:shadow-lg','hover:scale-105'); emailInput.classList.remove('border-red-500'); emailInput.focus();" 
+                                                class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-all">
+                                            Use Different Email
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    emailFeedback.classList.remove('hidden');
+                    emailInput.classList.add('border-red-500');
+                    emailInput.classList.remove('border-green-500');
+                    
+                } else if (data.success && !data.exists) {
+                    // Email is available (new user or guest without password - can continue)
+                    isRegisteredAccount = false; // Clear flag to allow submission
+                    
+                    // Enable submit button
+                    const submitBtn = document.getElementById('submitOrderBtn');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    submitBtn.classList.add('hover:bg-blue-800', 'hover:shadow-lg', 'hover:scale-105');
+                    
+                    // Hide feedback for valid emails
+                    emailFeedback.classList.add('hidden');
+                    emailInput.classList.add('border-green-500');
+                    emailInput.classList.remove('border-red-500', 'border-amber-500');
+                }
+            } catch (error) {
+                console.error('Error checking email:', error);
+            }
+        }
+
+        // ============================================================================
+        // INVENTORY MANAGEMENT
+        // ============================================================================
 
         // Fetch inventory stock status
         async function fetchInventoryStatus() {
@@ -364,6 +550,62 @@
             e.preventDefault();
             
             const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // CRITICAL: Verify email one more time before allowing submission
+            const email = document.getElementById('email').value.trim();
+            
+            if (email) {
+                // Show checking state
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Verifying email...';
+                
+                try {
+                    const response = await fetch(`${API_BASE}/student/check_email.php?email=${encodeURIComponent(email)}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.exists && data.has_account) {
+                        // Email has registered account - BLOCK SUBMISSION
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit Order';
+                        
+                        // Show error
+                        emailFeedback.innerHTML = `
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-sm animate-fadeIn">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-semibold text-red-800">❌ Cannot Submit Order</h3>
+                                        <p class="mt-1 text-sm text-red-700">This email has a registered account.</p>
+                                        <p class="mt-1 text-sm text-red-700 font-bold">You must login to place your order.</p>
+                                        <div class="mt-3">
+                                            <button onclick="window.location.href='student_login.html'" 
+                                                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all shadow-sm">
+                                                Go to Login Page
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        emailFeedback.classList.remove('hidden');
+                        emailFeedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        emailInput.classList.add('border-red-500');
+                        
+                        // Show notification
+                        showNotification('This email has a registered account. Please login to place your order.', 'error');
+                        
+                        return; // STOP - Do not proceed with order
+                    }
+                } catch (error) {
+                    console.error('Error verifying email:', error);
+                }
+            }
+            
+            // If we reach here, email is valid or doesn't have account - proceed
             submitBtn.disabled = true;
             submitBtn.textContent = 'Processing...';
             
