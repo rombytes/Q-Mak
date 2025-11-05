@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="../../js/notifications.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -127,6 +128,11 @@
                     </svg>
                     <p class="text-sm text-red-700 font-medium" id="errorText"></p>
                 </div>
+            </div>
+            
+            <!-- Google reCAPTCHA -->
+            <div id="recaptchaContainer" class="hidden flex justify-center">
+                <div class="g-recaptcha" data-sitekey="6LfhpwMsAAAAAMwJ0NfsBcudpHvk95VurbzQ5pQC"></div>
             </div>
             
             <!-- Submit Button -->
@@ -272,6 +278,7 @@
 
     <script>
         const API_BASE = '../../php/api';
+        let captchaRequired = false;
         
         // Toggle password visibility
         function togglePassword() {
@@ -295,6 +302,23 @@
             errorDiv.classList.remove('hidden');
             setTimeout(() => errorDiv.classList.add('hidden'), 5000);
         }
+        
+        // Show reCAPTCHA widget
+        function showCaptcha() {
+            const container = document.getElementById('recaptchaContainer');
+            container.classList.remove('hidden');
+            captchaRequired = true;
+        }
+        
+        // Hide reCAPTCHA widget
+        function hideCaptcha() {
+            const container = document.getElementById('recaptchaContainer');
+            container.classList.add('hidden');
+            captchaRequired = false;
+            if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset();
+            }
+        }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -307,15 +331,34 @@
             // Hide any previous errors
             document.getElementById('errorMessage').classList.add('hidden');
             
+            // Check if CAPTCHA is required and get response
+            let recaptchaResponse = null;
+            if (captchaRequired) {
+                if (typeof grecaptcha === 'undefined') {
+                    showError('reCAPTCHA not loaded. Please refresh the page.');
+                    return;
+                }
+                recaptchaResponse = grecaptcha.getResponse();
+                if (!recaptchaResponse) {
+                    showError('Please complete the reCAPTCHA verification.');
+                    return;
+                }
+            }
+            
             loginBtn.disabled = true;
             submitText.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2 inline" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Logging in...';
 
             try {
+                const requestBody = { email, password };
+                if (recaptchaResponse) {
+                    requestBody.recaptcha_response = recaptchaResponse;
+                }
+                
                 const response = await fetch(`${API_BASE}/student/student_login.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const result = await response.json();
@@ -331,7 +374,18 @@
                         window.location.href = 'student_dashboard.html';
                     }, 800);
                 } else {
-                    showError(result.message || 'Invalid email or password');
+                    // Check if CAPTCHA is now required
+                    if (result.captcha_required) {
+                        showCaptcha();
+                        showError(result.message + ' Please complete the CAPTCHA to continue.');
+                    } else {
+                        showError(result.message || 'Invalid email or password');
+                        // Reset CAPTCHA if it was shown
+                        if (captchaRequired && typeof grecaptcha !== 'undefined') {
+                            grecaptcha.reset();
+                        }
+                    }
+                    
                     loginBtn.disabled = false;
                     submitText.textContent = 'Log In';
                 }
@@ -340,6 +394,11 @@
                 showError('Connection error. Please try again.');
                 loginBtn.disabled = false;
                 submitText.textContent = 'Log In';
+                
+                // Reset CAPTCHA on error
+                if (captchaRequired && typeof grecaptcha !== 'undefined') {
+                    grecaptcha.reset();
+                }
             }
         });
 

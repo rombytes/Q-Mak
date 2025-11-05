@@ -16,6 +16,7 @@ Q-Mak is a comprehensive web-based queue management system designed for the Univ
 - Order history with detailed item listings
 - Email notifications for order updates
 - Professional UI with SVG icons and modern design
+- **Brute force protection**: Login security with reCAPTCHA integration
 
 ### Admin Dashboard
 - **Order quantity display**: Shows "X items" count for multi-item orders
@@ -29,6 +30,15 @@ Q-Mak is a comprehensive web-based queue management system designed for the Univ
 - Service configuration and management
 - Role-based access control (Admin/Super Admin)
 - **Session debugging tools**: Auto-check PHP session on page load
+- **Security dashboard**: Monitor login attempts, IP blacklist, and security events
+
+### Security Features
+- **Brute force protection**: Progressive delays and account lockout
+- **Google reCAPTCHA v2**: CAPTCHA verification after failed login attempts
+- **IP blacklisting**: Automatic blocking of malicious IP addresses
+- **Security logging**: Comprehensive audit trail of authentication events
+- **Rate limiting**: Protection against automated attacks
+- **Session security**: IP and user agent validation
 
 ### Advanced Features
 - QR code generation using Google Charts API
@@ -97,7 +107,14 @@ For detailed installation instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.md)**
    - Update `BASE_URL` constant to match your environment
    - Configure email settings for OTP and notifications
 
-5. **Access the Application**
+5. **Security Configuration**
+   - Copy `php/config/security_config.example.php` to `php/config/security_config.php`
+   - Obtain Google reCAPTCHA v2 keys from https://www.google.com/recaptcha/admin/create
+   - Update `security_config.php` with your reCAPTCHA keys
+   - Run `scripts/setup_security.php` to create security tables
+   - See `SECURITY_CONFIG_SETUP.md` for detailed instructions
+
+6. **Access the Application**
    - Homepage: `http://localhost/Q-Mak/pages/index.html`
    - Admin Login: `http://localhost/Q-Mak/pages/admin/admin_login.html`
    - Student Login: `http://localhost/Q-Mak/pages/student/student_login.html`
@@ -143,10 +160,11 @@ Q-Mak/
 ├── pages/                       # Frontend HTML pages
 │   ├── index.html               # Homepage/Landing page
 │   ├── admin/                   # Admin portal pages
-│   │   ├── admin_login.html     # Admin authentication
-│   │   └── admin_dashboard.html # Main admin interface
+│   │   ├── admin_login.html     # Admin authentication with reCAPTCHA
+│   │   ├── admin_dashboard.html # Main admin interface
+│   │   └── security_dashboard.html # Security monitoring
 │   └── student/                 # Student portal pages
-│       ├── student_login.html   # Student authentication
+│       ├── student_login.html   # Student authentication with reCAPTCHA
 │       ├── student_register.html # Account creation
 │       ├── student_dashboard.html # Student main page
 │       ├── create_order.html    # Order creation
@@ -157,33 +175,38 @@ Q-Mak/
 ├── php/
 │   ├── api/                     # REST API endpoints
 │   │   ├── admin/               # Admin API endpoints
-│   │   │   ├── admin_login.php  # Admin authentication
+│   │   │   ├── admin_login.php  # Admin authentication (protected)
 │   │   │   ├── admin_orders.php # Order management
 │   │   │   ├── admin_students.php # Student records
 │   │   │   ├── admin_reports.php # Analytics and reports
 │   │   │   ├── admin_management.php # Admin accounts
 │   │   │   ├── email_logs.php   # Email monitoring
 │   │   │   ├── check_status.php # Order status checking
-│   │   │   ├── check_session.php # Session debug endpoint (NEW)
+│   │   │   ├── check_session.php # Session debug endpoint
+│   │   │   ├── security_management.php # Security monitoring API
 │   │   │   ├── export_orders.php # CSV export
 │   │   │   └── archive_manager.php # Archive operations
 │   │   ├── student/             # Student API endpoints
-│   │   │   ├── student_login.php # Student authentication
+│   │   │   ├── student_login.php # Student authentication (protected)
 │   │   │   ├── student_register.php # Account creation
 │   │   │   ├── student_session.php # Session management
 │   │   │   ├── create_order.php # Order creation
-│   │   │   └── verify_otp.php   # OTP verification
+│   │   │   └── verify_otp.php   # OTP verification (rate limited)
 │   │   └── services.php         # Service management (general)
 │   ├── config/                  # Configuration files
 │   │   ├── database.php         # Database connection
 │   │   ├── database.example.php # Example configuration
+│   │   ├── security_config.php  # Security settings (gitignored)
+│   │   ├── security_config.example.php # Security template
 │   │   ├── constants.php        # System constants
 │   │   └── email.example.php    # Example email config
 │   └── utils/                   # Utility functions
-│       └── email.php            # Email sending and QR generation
+│       ├── email.php            # Email sending and QR generation
+│       └── brute_force_protection.php # Security and authentication
 ├── scripts/                     # Setup and utility scripts
 │   ├── QUICK_SETUP.php          # Installation wizard
 │   ├── setup_database.php       # Database initialization
+│   ├── setup_security.php       # Security system installation
 │   ├── handle_closing_time.php  # Automated closing time handler (cron)
 │   ├── generate_password.php    # Password hash generator
 │   └── add_archive_columns.php  # Migration scripts
@@ -198,17 +221,21 @@ Q-Mak/
 ### Core Tables
 - **admin_accounts** - Administrative user accounts with role-based access
 - **students** - Student information (ID, name, email, college, program, year, section)
-  - Removed: phone column
-  - Added: email verification system
+  - Email verification system with OTP
 - **orders** - Order records with queue numbers and multi-item support
-  - item_ordered: Comma-separated list of items
-  - purchasing: Alias for item_ordered
-  - estimated_wait_time: Calculated wait time
+  - Multi-item support with quantity tracking
   - QR code data URI storage
+  - Estimated wait time calculation
 - **email_logs** - Email delivery tracking and history with archiving
 - **services** - Available services configuration
 - **otp_verifications** - OTP codes for email verification with attempts tracking
 - **settings** - System configuration parameters
+
+### Security Tables
+- **security_attempts** - Failed login tracking by email and IP address
+- **security_logs** - Comprehensive security event audit trail
+- **ip_blacklist** - IP address blocking for malicious actors
+- **captcha_challenges** - CAPTCHA verification tracking
 
 ### Key Features
 - Foreign key constraints for data integrity

@@ -30,6 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/brute_force_protection.php';
+
+// Initialize brute force protection
+$security = new BruteForceProtection();
 
 // Start session at the beginning
 if (session_status() === PHP_SESSION_NONE) {
@@ -56,6 +60,9 @@ try {
     
     $email = trim($data['email'] ?? '');
     $password = $data['password'] ?? '';
+    $captchaToken = $data['captcha_token'] ?? '';
+    $captchaAnswer = $data['captcha_answer'] ?? '';
+    $recaptchaResponse = $data['g-recaptcha-response'] ?? $data['recaptcha_response'] ?? '';
     
     if (empty($email) || empty($password)) {
         ob_end_clean();
@@ -69,6 +76,79 @@ try {
         echo json_encode(['success' => false, 'message' => 'Invalid email format']);
         exit;
     }
+    
+    // Check if account is locked
+    if ($security->isLocked($email, 'admin_login')) {
+        $status = $security->getAccountStatus($email, 'admin_login');
+        ob_end_clean();
+        echo json_encode([
+            'success' => false,
+            'message' => 'Account temporarily locked due to multiple failed login attempts. Please try again later.',
+            'locked_until' => $status['locked_until'] ?? null
+        ]);
+        exit;
+    }
+    
+    // Check if CAPTCHA is required
+    $requiresCaptcha = $security->requiresCaptcha($email, 'admin_login');
+    if ($requiresCaptcha) {
+        // Generate CAPTCHA info (for Google reCAPTCHA, this includes site key)
+        $captcha = $security->generateCaptcha($email);
+        
+        // Check if user has provided CAPTCHA response
+        if ($captcha['type'] === 'recaptcha' || $captcha['type'] === 'recaptcha_v3') {
+            // Google reCAPTCHA
+            if (empty($recaptchaResponse)) {
+                ob_end_clean();
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'CAPTCHA verification required'
+                ]);
+                exit;
+            }
+            
+            // Verify Google reCAPTCHA
+            if (!$security->verifyCaptcha($recaptchaResponse, null, $email)) {
+                ob_end_clean();
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'Invalid CAPTCHA. Please verify you are not a robot.'
+                ]);
+                exit;
+            }
+        } else {
+            // Custom CAPTCHA (math, text)
+            if (empty($captchaToken) || empty($captchaAnswer)) {
+                ob_end_clean();
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'CAPTCHA verification required'
+                ]);
+                exit;
+            }
+            
+            // Verify custom CAPTCHA
+            if (!$security->verifyCaptcha($captchaToken, $captchaAnswer, $email)) {
+                ob_end_clean();
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'Invalid CAPTCHA. Please try again.'
+                ]);
+                exit;
+            }
+        }
+    }
+    
+    // Apply progressive delay
+    $security->applyProgressiveDelay($email, 'admin_login');
     
     // Get database connection using the getDB function
     $conn = getDB();
@@ -84,17 +164,56 @@ try {
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$admin) {
+        // Record failed attempt
+        $attemptResult = $security->recordFailedAttempt($email, 'admin_login', [
+            'reason' => 'Invalid email'
+        ]);
+        
         ob_end_clean();
-        echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+        
+        if ($attemptResult['locked']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Account locked due to multiple failed attempts. Please try again later.',
+                'locked_until' => $attemptResult['locked_until']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid email or password',
+                'remaining_attempts' => $attemptResult['remaining']
+            ]);
+        }
         exit;
     }
 
     // Verify password
     if (!password_verify($password, $admin['password'])) {
+        // Record failed attempt
+        $attemptResult = $security->recordFailedAttempt($email, 'admin_login', [
+            'reason' => 'Invalid password'
+        ]);
+        
         ob_end_clean();
-        echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+        
+        if ($attemptResult['locked']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Account locked due to multiple failed attempts. Please try again later.',
+                'locked_until' => $attemptResult['locked_until']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid email or password',
+                'remaining_attempts' => $attemptResult['remaining']
+            ]);
+        }
         exit;
     }
+    
+    // Login successful - reset security attempts
+    $security->recordSuccessfulAttempt($email, 'admin_login');
 
     // Update last login
     try {

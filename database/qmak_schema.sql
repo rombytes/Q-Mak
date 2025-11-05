@@ -810,5 +810,135 @@ END$$
 
 DELIMITER ;
 
+-- ============================================================
+-- SECURITY TABLES FOR BRUTE FORCE PROTECTION
+-- Created: November 6, 2025
+-- ============================================================
+
+-- --------------------------------------------------------
+-- Table structure for table `security_attempts`
+-- Tracks failed login attempts and lockouts
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `security_attempts` (
+  `attempt_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `identifier` VARCHAR(255) NOT NULL COMMENT 'Email address or IP address',
+  `identifier_type` ENUM('email', 'ip', 'email_ip') NOT NULL DEFAULT 'email',
+  `attempt_type` ENUM('admin_login', 'student_login', 'otp_verify', 'password_reset') NOT NULL,
+  `failed_attempts` INT(11) NOT NULL DEFAULT 0,
+  `first_attempt_at` DATETIME NOT NULL,
+  `last_attempt_at` DATETIME NOT NULL,
+  `locked_until` DATETIME NULL COMMENT 'Account locked until this time',
+  `is_locked` TINYINT(1) NOT NULL DEFAULT 0,
+  `lockout_count` INT(11) NOT NULL DEFAULT 0 COMMENT 'Number of times account has been locked',
+  `ip_address` VARCHAR(45) NULL COMMENT 'IPv4 or IPv6 address',
+  `user_agent` TEXT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`attempt_id`),
+  UNIQUE KEY `unique_identifier_type` (`identifier`, `identifier_type`, `attempt_type`),
+  INDEX `idx_identifier` (`identifier`),
+  INDEX `idx_locked_until` (`locked_until`),
+  INDEX `idx_is_locked` (`is_locked`),
+  INDEX `idx_attempt_type` (`attempt_type`),
+  INDEX `idx_ip_address` (`ip_address`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `security_logs`
+-- Comprehensive audit logging for security events
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `security_logs` (
+  `log_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `event_type` ENUM(
+    'login_success',
+    'login_failed',
+    'account_locked',
+    'account_unlocked',
+    'ip_blocked',
+    'ip_unblocked',
+    'password_changed',
+    'password_reset_requested',
+    'otp_failed',
+    'otp_success',
+    'suspicious_activity',
+    'captcha_failed',
+    'captcha_success'
+  ) NOT NULL,
+  `severity` ENUM('info', 'warning', 'critical') NOT NULL DEFAULT 'info',
+  `user_type` ENUM('admin', 'student', 'guest', 'system') NOT NULL DEFAULT 'guest',
+  `user_identifier` VARCHAR(255) NULL COMMENT 'Email or ID',
+  `ip_address` VARCHAR(45) NULL,
+  `user_agent` TEXT NULL,
+  `description` TEXT NULL,
+  `metadata` JSON NULL COMMENT 'Additional event data',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  INDEX `idx_event_type` (`event_type`),
+  INDEX `idx_severity` (`severity`),
+  INDEX `idx_user_type` (`user_type`),
+  INDEX `idx_user_identifier` (`user_identifier`),
+  INDEX `idx_ip_address` (`ip_address`),
+  INDEX `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `ip_blacklist`
+-- Persistent IP blocking for severe threats
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `ip_blacklist` (
+  `blacklist_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `ip_address` VARCHAR(45) NOT NULL,
+  `reason` TEXT NOT NULL,
+  `blocked_by` INT(11) NULL COMMENT 'Admin ID who blocked this IP',
+  `block_type` ENUM('automatic', 'manual') NOT NULL DEFAULT 'automatic',
+  `blocked_until` DATETIME NULL COMMENT 'NULL = permanent block',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`blacklist_id`),
+  UNIQUE KEY `unique_ip` (`ip_address`),
+  INDEX `idx_ip_address` (`ip_address`),
+  INDEX `idx_is_active` (`is_active`),
+  INDEX `idx_blocked_until` (`blocked_until`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `captcha_challenges`
+-- Track CAPTCHA challenges and verification
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `captcha_challenges` (
+  `challenge_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `identifier` VARCHAR(255) NOT NULL COMMENT 'Email or IP',
+  `challenge_token` VARCHAR(64) NOT NULL,
+  `challenge_answer` VARCHAR(10) NOT NULL,
+  `is_solved` TINYINT(1) NOT NULL DEFAULT 0,
+  `attempts` INT(11) NOT NULL DEFAULT 0,
+  `expires_at` DATETIME NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`challenge_id`),
+  UNIQUE KEY `unique_token` (`challenge_token`),
+  INDEX `idx_identifier` (`identifier`),
+  INDEX `idx_expires_at` (`expires_at`),
+  INDEX `idx_is_solved` (`is_solved`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Add security indexes to existing tables
+-- --------------------------------------------------------
+
+ALTER TABLE `admin_accounts` 
+  ADD INDEX IF NOT EXISTS `idx_last_login` (`last_login`);
+
+ALTER TABLE `students` 
+  ADD INDEX IF NOT EXISTS `idx_last_login` (`last_login`);
+
+-- ============================================================
+-- END OF SECURITY TABLES
+-- ============================================================
+
 COMMIT;
 

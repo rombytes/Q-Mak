@@ -20,6 +20,10 @@ ini_set('display_errors', 0);
 // Use shared session configuration
 require_once __DIR__ . '/../../config/session_config.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/brute_force_protection.php';
+
+// Initialize brute force protection
+$security = new BruteForceProtection();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -32,6 +36,9 @@ try {
     
     $email = trim($input['email'] ?? '');
     $password = $input['password'] ?? '';
+    $captchaToken = $input['captcha_token'] ?? '';
+    $captchaAnswer = $input['captcha_answer'] ?? '';
+    $recaptchaResponse = $input['g-recaptcha-response'] ?? $input['recaptcha_response'] ?? '';
     
     if (empty($email) || empty($password)) {
         echo json_encode(['success' => false, 'message' => 'Email and password are required']);
@@ -43,6 +50,74 @@ try {
         echo json_encode(['success' => false, 'message' => 'Invalid email format']);
         exit;
     }
+    
+    // Check if account is locked
+    if ($security->isLocked($email, 'student_login')) {
+        $status = $security->getAccountStatus($email, 'student_login');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Account temporarily locked due to multiple failed login attempts. Please try again later.',
+            'locked_until' => $status['locked_until'] ?? null
+        ]);
+        exit;
+    }
+    
+    // Check if CAPTCHA is required
+    $requiresCaptcha = $security->requiresCaptcha($email, 'student_login');
+    if ($requiresCaptcha) {
+        // Generate CAPTCHA info (for Google reCAPTCHA, this includes site key)
+        $captcha = $security->generateCaptcha($email);
+        
+        // Check if user has provided CAPTCHA response
+        if ($captcha['type'] === 'recaptcha' || $captcha['type'] === 'recaptcha_v3') {
+            // Google reCAPTCHA
+            if (empty($recaptchaResponse)) {
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'CAPTCHA verification required'
+                ]);
+                exit;
+            }
+            
+            // Verify Google reCAPTCHA
+            if (!$security->verifyCaptcha($recaptchaResponse, null, $email)) {
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'Invalid CAPTCHA. Please verify you are not a robot.'
+                ]);
+                exit;
+            }
+        } else {
+            // Custom CAPTCHA (math, text)
+            if (empty($captchaToken) || empty($captchaAnswer)) {
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'CAPTCHA verification required'
+                ]);
+                exit;
+            }
+            
+            // Verify custom CAPTCHA
+            if (!$security->verifyCaptcha($captchaToken, $captchaAnswer, $email)) {
+                echo json_encode([
+                    'success' => false,
+                    'requires_captcha' => true,
+                    'captcha' => $captcha,
+                    'message' => 'Invalid CAPTCHA. Please try again.'
+                ]);
+                exit;
+            }
+        }
+    }
+    
+    // Apply progressive delay
+    $security->applyProgressiveDelay($email, 'student_login');
     
     $db = getDB();
     
@@ -57,7 +132,24 @@ try {
     $student = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$student) {
-        echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+        // Record failed attempt
+        $attemptResult = $security->recordFailedAttempt($email, 'student_login', [
+            'reason' => 'Invalid email'
+        ]);
+        
+        if ($attemptResult['locked']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Account locked due to multiple failed attempts. Please try again later.',
+                'locked_until' => $attemptResult['locked_until']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid email or password',
+                'remaining_attempts' => $attemptResult['remaining']
+            ]);
+        }
         exit;
     }
     
@@ -72,9 +164,29 @@ try {
     
     // Verify password
     if (!password_verify($password, $student['password'])) {
-        echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
+        // Record failed attempt
+        $attemptResult = $security->recordFailedAttempt($email, 'student_login', [
+            'reason' => 'Invalid password'
+        ]);
+        
+        if ($attemptResult['locked']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Account locked due to multiple failed attempts. Please try again later.',
+                'locked_until' => $attemptResult['locked_until']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid email or password',
+                'remaining_attempts' => $attemptResult['remaining']
+            ]);
+        }
         exit;
     }
+    
+    // Login successful - reset security attempts
+    $security->recordSuccessfulAttempt($email, 'student_login');
     
     // Check if account is verified
     if (!$student['is_verified']) {

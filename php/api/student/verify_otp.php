@@ -32,6 +32,10 @@ require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/constants.php';
 require_once __DIR__ . '/../../utils/email.php';
 require_once __DIR__ . '/../../utils/queue_functions.php';
+require_once __DIR__ . '/../../utils/brute_force_protection.php';
+
+// Initialize brute force protection
+$security = new BruteForceProtection();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -52,6 +56,21 @@ try {
         echo json_encode(['success' => false, 'message' => 'Email and OTP code are required']);
         exit;
     }
+    
+    // Check if identifier is locked (using email for OTP verification)
+    if ($security->isLocked($email, 'otp_verify')) {
+        $status = $security->getAccountStatus($email, 'otp_verify');
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode([
+            'success' => false,
+            'message' => 'Too many failed OTP attempts. Please request a new OTP.',
+            'locked_until' => $status['locked_until'] ?? null
+        ]);
+        exit;
+    }
+    
+    // Apply progressive delay to prevent rapid-fire attacks
+    $security->applyProgressiveDelay($email, 'otp_verify');
     
     $db = getDB();
     
@@ -92,31 +111,44 @@ try {
     
     // Check if OTP code matches
     if ($latestOtp['otp_code'] !== $otpCode) {
-        // Wrong code - increment attempts
+        // Wrong code - increment attempts in OTP table
         $newAttempts = $latestOtp['attempts'] + 1;
         $updateAttempts = $db->prepare("UPDATE otp_verifications SET attempts = ? WHERE otp_id = ?");
         $updateAttempts->execute([$newAttempts, $latestOtp['otp_id']]);
+        
+        // Record failed attempt in security system
+        $attemptResult = $security->recordFailedAttempt($email, 'otp_verify', [
+            'reason' => 'Invalid OTP code',
+            'otp_type' => $otpType
+        ]);
         
         $remainingAttempts = $latestOtp['max_attempts'] - $newAttempts;
         
         if (ob_get_level()) { ob_clean(); }
         
-        // Check if this was the last attempt
-        if ($newAttempts >= $latestOtp['max_attempts']) {
+        // Check if account is now locked or max OTP attempts reached
+        if ($attemptResult['locked'] || $newAttempts >= $latestOtp['max_attempts']) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Maximum attempts exceeded. Please request a new OTP.',
-                'remaining_attempts' => 0
+                'message' => $attemptResult['locked'] ? 
+                    'Too many failed attempts. Please request a new OTP.' : 
+                    'Maximum OTP attempts exceeded. Please request a new OTP.',
+                'remaining_attempts' => 0,
+                'locked_until' => $attemptResult['locked_until'] ?? null
             ]);
         } else {
             echo json_encode([
                 'success' => false,
                 'message' => 'Incorrect OTP code',
-                'remaining_attempts' => $remainingAttempts
+                'remaining_attempts' => $remainingAttempts,
+                'security_remaining' => $attemptResult['remaining']
             ]);
         }
         exit;
     }
+    
+    // OTP is correct - reset security attempts
+    $security->recordSuccessfulAttempt($email, 'otp_verify');
     
     // OTP code is correct - accept it (no expiration check during retries)
     $otpRecord = $latestOtp;

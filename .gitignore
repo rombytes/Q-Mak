@@ -8,6 +8,7 @@
 php/config/database.php
 php/config/email.php
 php/config/secrets.php
+php/config/security_config.php
 .env
 .env.local
 
@@ -234,3 +235,4 @@ debug_*.*
 # Keep example config files (without real credentials)
 !php/config/database.example.php
 !php/config/email.example.php
+!php/config/security_config.example.php

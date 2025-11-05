@@ -8,7 +8,7 @@ This document outlines the organized directory structure of the Q-Mak project.
 ```
 Q-Mak/
 ├── database/               # Database schemas and migrations
-│   ├── qmak_schema.sql
+│   ├── qmak_schema.sql              # Complete schema including security tables
 │   ├── migration_student_auth.sql
 │   ├── fix_orders_table.sql
 │   ├── sample_data.sql
@@ -31,66 +31,72 @@ Q-Mak/
 ├── pages/                  # Frontend HTML pages
 │   ├── index.html         # Main homepage (formerly homepage.html)
 │   ├── admin/             # Admin pages
-│   │   ├── admin_login.html
+│   │   ├── admin_login.html        # reCAPTCHA v2 integrated
 │   │   ├── admin_login_debug.html
-│   │   └── admin_dashboard.html  # Enhanced with custom modals & notifications
+│   │   ├── admin_dashboard.html    # Enhanced with custom modals & notifications
+│   │   └── security_dashboard.html # NEW: Security monitoring and management
 │   └── student/           # Student pages
-│       ├── student_login.html
-│       ├── student_register.html  # Enhanced with email format validation
+│       ├── student_login.html      # reCAPTCHA v2 integrated
+│       ├── student_register.html   # Enhanced with email format validation
 │       ├── student_dashboard.html
-│       ├── otp_verification.html  # UPDATED: Uses modal_utils.js
-│       ├── create_order.html      # UPDATED: Uses modal_utils.js
-│       ├── order_result.html      # UPDATED: Uses modal_utils.js
-│       ├── check_status.html      # UPDATED: Uses modal_utils.js
-│       └── status_display.html    # UPDATED: Uses modal_utils.js
+│       ├── otp_verification.html   # Uses modal_utils.js
+│       ├── create_order.html       # Uses modal_utils.js
+│       ├── order_result.html       # Uses modal_utils.js
+│       ├── check_status.html       # Uses modal_utils.js
+│       └── status_display.html     # Uses modal_utils.js
 │
 ├── php/                    # Backend PHP files
 │   ├── api/               # API endpoints
 │   │   ├── admin/         # Admin API endpoints
-│   │   │   ├── admin_login.php
+│   │   │   ├── admin_login.php       # Brute force protected
 │   │   │   ├── admin_login_debug.php
 │   │   │   ├── admin_logout.php
 │   │   │   ├── admin_management.php
 │   │   │   ├── admin_orders.php
 │   │   │   ├── admin_password.php
 │   │   │   ├── admin_reports.php
-│   │   │   ├── admin_students.php  # ENHANCED: Debug logging & session checks
-│   │   │   ├── analytics.php       # Real-time analytics API
+│   │   │   ├── admin_students.php    # Debug logging & session checks
+│   │   │   ├── analytics.php         # Real-time analytics API
 │   │   │   ├── archive_manager.php
-│   │   │   ├── check_session.php   # NEW: Session debug endpoint
+│   │   │   ├── check_session.php     # Session debug endpoint
 │   │   │   ├── check_status.php
 │   │   │   ├── email_logs.php
 │   │   │   ├── export_email_logs.php
 │   │   │   ├── export_orders.php
-│   │   │   └── get_students.php
+│   │   │   ├── get_students.php
+│   │   │   └── security_management.php # NEW: Security monitoring API
 │   │   ├── student/       # Student API endpoints
-│   │   │   ├── student_login.php
+│   │   │   ├── student_login.php     # Brute force protected
 │   │   │   ├── student_register.php  # Enhanced email validation
 │   │   │   ├── student_session.php
-│   │   │   ├── verify_otp.php
+│   │   │   ├── verify_otp.php        # Rate limited with security logging
 │   │   │   ├── resend_otp.php
 │   │   │   ├── create_order.php      # Enhanced with EmailSender
-│   │   │   ├── change_password.php   # NEW: Password change API
-│   │   │   ├── forgot_password.php   # NEW: Password recovery API
-│   │   │   └── update_profile.php    # NEW: Profile management API
+│   │   │   ├── change_password.php   # Password change API
+│   │   │   ├── forgot_password.php   # Password recovery API
+│   │   │   └── update_profile.php    # Profile management API
 │   │   ├── inventory.php             # NEW: Inventory management API
 │   │   └── inventory_status.php      # Enhanced inventory status
 │   ├── config/            # Configuration files
 │   │   ├── database.php
 │   │   ├── database.example.php
 │   │   ├── email.example.php
+│   │   ├── security_config.php          # Contains reCAPTCHA keys (gitignored)
+│   │   ├── security_config.example.php  # Template for deployment
 │   │   └── constants.php
 │   └── utils/             # Utility functions
-│       ├── email.php        # Legacy email handler (with debug logging)
-│       └── email_sender.php # NEW: Simplified OTP email sender
+│       ├── email.php              # Legacy email handler (with debug logging)
+│       ├── email_sender.php       # Simplified OTP email sender
+│       └── brute_force_protection.php # NEW: Security and authentication protection
 │
 ├── scripts/                # Setup and utility scripts
 │   ├── QUICK_SETUP.php
 │   ├── setup_database.php
+│   ├── setup_security.php       # NEW: Security system installation
 │   ├── add_archive_columns.php
 │   ├── generate_password.php
-│   ├── handle_closing_time.php  # NEW: Automated closing time handler (cron job)
-│   ├── SYSTEM_CHECK.php     # Comprehensive system diagnostics
+│   ├── handle_closing_time.php  # Automated closing time handler (cron job)
+│   ├── SYSTEM_CHECK.php         # Comprehensive system diagnostics
 │   └── test_error_log.php
 │
 ├── tests/                  # Test files
@@ -112,13 +118,34 @@ Q-Mak/
 ├── composer.json
 ├── composer.lock
 ├── CHANGELOG.md
-├── DATABASE_FIX_GUIDE.md
-├── DEPLOYMENT_NOTES.md
 ├── DIRECTORY_STRUCTURE.md
 ├── LICENSE
 ├── README.md
-└── SETUP_GUIDE.md
+├── SETUP_GUIDE.md
+└── SECURITY_CONFIG_SETUP.md  # NEW: Security configuration guide
 ```
+
+## Recent Updates (November 2025)
+
+### Security System Implementation
+- **Brute Force Protection**
+  - Failed login tracking by email and IP address
+  - Progressive delays with exponential backoff
+  - Temporary account lockout after 5 failed attempts
+  - Automatic IP blacklisting for persistent attacks
+  - Google reCAPTCHA v2 integration on login pages
+  - Comprehensive security audit logging
+  - Real-time security dashboard for monitoring
+
+- **Database Security Tables**
+  - security_attempts: Track failed login attempts
+  - security_logs: Comprehensive security event logging
+  - ip_blacklist: Manage blocked IP addresses
+  - captcha_challenges: CAPTCHA verification tracking
+
+- **Configuration Management**
+  - security_config.php: Contains sensitive keys (gitignored)
+  - security_config.example.php: Template for deployment
 
 ## Recent Updates (October 2025)
 

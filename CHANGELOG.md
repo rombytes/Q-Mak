@@ -2,6 +2,96 @@
 
 All notable changes to Q-Mak Queue Management System will be documented in this file.
 
+## [2.0.0] - 2025-11-06
+
+### Added - Brute Force Protection System
+- **Security Authentication**: Comprehensive brute force protection for login endpoints
+  - Failed login tracking by email address and IP address
+  - Progressive delays with exponential backoff algorithm
+  - Temporary account lockout after 5 failed attempts (15 minutes)
+  - Automatic IP blacklisting after repeated violations
+  - Google reCAPTCHA v2 integration on login pages
+  - Admin notifications for security events
+  - Comprehensive security audit logging
+
+- **Database Security Tables**:
+  - `security_attempts`: Track failed login attempts and lockout status
+  - `security_logs`: Comprehensive security event logging
+  - `ip_blacklist`: Manage blocked IP addresses
+  - `captcha_challenges`: CAPTCHA verification tracking
+
+- **Security Dashboard**: Real-time monitoring interface for administrators
+  - View recent security events and failed login attempts
+  - Manage IP blacklist (block/unblock addresses)
+  - Monitor account lockout status
+  - Filter and search security logs by event type and severity
+  - View security statistics and trends
+
+- **Protected Endpoints**:
+  - `php/api/admin/admin_login.php`: Protected with brute force detection
+  - `php/api/student/student_login.php`: Protected with brute force detection
+  - `php/api/student/verify_otp.php`: Rate limited with attempt tracking
+
+- **Configuration Management**:
+  - `php/config/security_config.php`: Security settings (gitignored)
+  - `php/config/security_config.example.php`: Template for deployment
+  - Configurable thresholds and timeouts
+  - reCAPTCHA integration settings
+
+### Changed
+- **Login Pages**: Integrated Google reCAPTCHA v2 checkbox
+  - CAPTCHA appears after 3 failed login attempts
+  - Dynamic widget loading with backend verification
+  - Seamless user experience with error handling
+  
+- **Database Schema**: Merged security tables into main schema
+  - `database/qmak_schema.sql`: Now includes all security tables
+  - Removed standalone `security_tables.sql` file
+
+- **.gitignore**: Updated to protect sensitive configuration
+  - Added `php/config/security_config.php` to ignore list
+  - Keeps reCAPTCHA keys secure and local
+
+### Security Features
+- **Multi-layer Protection**:
+  1. Failed attempt tracking (per email + IP)
+  2. Progressive delays (1s, 2s, 4s, 8s, 16s, 32s)
+  3. CAPTCHA requirement after 3 failures
+  4. Account lockout after 5 failures
+  5. IP blacklisting for persistent attacks
+  6. Security event logging
+  7. Admin notifications
+
+- **Configuration Options**:
+  - MAX_LOGIN_ATTEMPTS: 5 (configurable)
+  - LOCKOUT_DURATION: 15 minutes (configurable)
+  - CAPTCHA_THRESHOLD: 3 attempts (configurable)
+  - IP_BAN_THRESHOLD: 3 lockouts from same IP
+  - Whitelist support for trusted IPs
+
+### Documentation
+- Added `SECURITY_CONFIG_SETUP.md`: Complete security configuration guide
+- Added `docs/BRUTE_FORCE_PROTECTION_GUIDE.md`: Comprehensive technical documentation
+- Added `docs/GOOGLE_RECAPTCHA_INTEGRATION.md`: reCAPTCHA integration guide
+- Added `docs/RECAPTCHA_TESTING_GUIDE.md`: Testing procedures
+- Updated `DIRECTORY_STRUCTURE.md`: Added security files and tables
+- Updated `README.md`: Added security features section
+
+### Migration Notes
+- **Breaking Change**: Requires security configuration setup
+- New installations: Run `scripts/setup_security.php` after database setup
+- Existing installations: 
+  1. Copy `security_config.example.php` to `security_config.php`
+  2. Add Google reCAPTCHA v2 keys
+  3. Run `scripts/setup_security.php`
+- See `SECURITY_CONFIG_SETUP.md` for detailed instructions
+
+### Files Added
+- `php/utils/brute_force_protection.php`: Core security class
+- `php/api/admin/security_management.php`: Security monitoring API
+- `pages/admin/security_dashboard.html`: Security monitoring interface
+- `scripts/setup_security.php`: Security system installation script
+
 ## [1.9.0] - 2025-10-30
 
 ### Changed - Export UI Redesign 🎨
