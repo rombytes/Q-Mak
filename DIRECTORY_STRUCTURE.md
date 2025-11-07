@@ -16,34 +16,40 @@ Q-Mak/
 │   ├── fix_database.php             # Automated database fixes
 │   └── README.md
 │
-├── docs/                   # Documentation files
-│   └── (documentation files)
-│
 ├── images/                 # Image assets
 │   └── (image files)
 │
-├── js/                     # JavaScript files
-│   ├── modal_utils.js     # NEW: Custom modal system (showAlert/showConfirm)
-│   ├── notifications.js   # Toast notification system with stacking
+├── js/                     # Shared JavaScript utilities
+│   ├── admin_archive_functions.js # Archive operation utilities
 │   ├── inventory_helper.js # Inventory management utilities
-│   └── admin_archive_functions.js # Archive operation utilities
+│   ├── modal_utils.js     # Custom modal system (showAlert/showConfirm)
+│   └── notifications.js   # Toast notification system with stacking
 │
 ├── pages/                  # Frontend HTML pages
-│   ├── index.html         # Main homepage (formerly homepage.html)
-│   ├── admin/             # Admin pages
-│   │   ├── admin_login.html        # reCAPTCHA v2 integrated
-│   │   ├── admin_login_debug.html
-│   │   ├── admin_dashboard.html    # Enhanced with custom modals & notifications
-│   │   └── security_dashboard.html # NEW: Security monitoring and management
-│   └── student/           # Student pages
-│       ├── student_login.html      # reCAPTCHA v2 integrated
-│       ├── student_register.html   # Enhanced with email format validation
-│       ├── student_dashboard.html
-│       ├── otp_verification.html   # Uses modal_utils.js
-│       ├── create_order.html       # Uses modal_utils.js
-│       ├── order_result.html       # Uses modal_utils.js
-│       ├── check_status.html       # Uses modal_utils.js
-│       └── status_display.html     # Uses modal_utils.js
+│   ├── index.html         # Main homepage
+│   ├── assets/            # Shared page assets
+│   │   ├── css/           # Shared CSS files
+│   │   └── js/            # Shared JavaScript files
+│   ├── admin/             # Admin portal pages
+│   │   ├── assets/        # Admin-specific assets
+│   │   │   ├── css/       # External CSS files (2 files)
+│   │   │   └── js/        # External JavaScript files (5 files)
+│   │   ├── admin_dashboard.html    # Main admin interface with modals
+│   │   ├── admin_login.html        # Admin authentication with reCAPTCHA v2
+│   │   └── security_dashboard.html # Security monitoring and management
+│   └── student/           # Student portal pages
+│       ├── assets/        # Student-specific assets
+│       │   ├── css/       # External CSS files (9 files)
+│       │   └── js/        # External JavaScript files (9 files)
+│       ├── check_status.html       # Order status checking
+│       ├── create_order.html       # Order creation form
+│       ├── order_result.html       # Order confirmation with QR
+│       ├── otp_verification.html   # OTP verification
+│       ├── queue_dashboard.html    # Real-time queue display
+│       ├── status_display.html     # Status display page
+│       ├── student_dashboard.html  # Main student interface
+│       ├── student_login.html      # Student authentication with reCAPTCHA v2
+│       └── student_register.html   # Account registration
 │
 ├── php/                    # Backend PHP files
 │   ├── api/               # API endpoints
@@ -64,66 +70,86 @@ Q-Mak/
 │   │   │   ├── export_email_logs.php
 │   │   │   ├── export_orders.php
 │   │   │   ├── get_students.php
-│   │   │   └── security_management.php # NEW: Security monitoring API
+│   │   │   ├── security_management.php # Security monitoring API
+│   │   │   └── settings.php           # System settings management
 │   │   ├── student/       # Student API endpoints
-│   │   │   ├── student_login.php     # Brute force protected
-│   │   │   ├── student_register.php  # Enhanced email validation
-│   │   │   ├── student_session.php
-│   │   │   ├── verify_otp.php        # Rate limited with security logging
-│   │   │   ├── resend_otp.php
-│   │   │   ├── create_order.php      # Enhanced with EmailSender
-│   │   │   ├── change_password.php   # Password change API
-│   │   │   ├── forgot_password.php   # Password recovery API
-│   │   │   └── update_profile.php    # Profile management API
-│   │   ├── inventory.php             # NEW: Inventory management API
-│   │   └── inventory_status.php      # Enhanced inventory status
-│   ├── config/            # Configuration files
-│   │   ├── database.php
-│   │   ├── database.example.php
-│   │   ├── email.example.php
-│   │   ├── security_config.php          # Contains reCAPTCHA keys (gitignored)
-│   │   ├── security_config.example.php  # Template for deployment
-│   │   └── constants.php
+│   │   │   ├── change_password.php    # Password change API
+│   │   │   ├── check_cutoff.php       # Cutoff time checking
+│   │   │   ├── check_email.php        # Email existence validation
+│   │   │   ├── create_order.php       # Order creation
+│   │   │   ├── forgot_password.php    # Password recovery API
+│   │   │   ├── get_current_order.php  # Current order retrieval
+│   │   │   ├── get_order_history.php  # Order history
+│   │   │   ├── get_profile.php        # Profile data
+│   │   │   ├── resend_otp.php         # OTP resending
+│   │   │   ├── student_login.php      # Brute force protected
+│   │   │   ├── student_register.php   # Account registration
+│   │   │   ├── student_session.php    # Session management
+│   │   │   ├── update_profile.php     # Profile management
+│   │   │   └── verify_otp.php         # Rate limited OTP verification
+│   │   ├── get_captcha_config.php    # reCAPTCHA configuration
+│   │   ├── inventory.php             # Inventory management API
+│   │   ├── inventory_status.php      # Inventory status checking
+│   │   └── services.php              # Service management
+│   ├── config/            # Configuration files (gitignored)
+│   │   ├── constants.php
+│   │   ├── database.php              # Database credentials (gitignored)
+│   │   ├── database.example.php      # Example configuration template
+│   │   ├── email.example.php         # Example email configuration
+│   │   ├── security_config.php       # reCAPTCHA keys (gitignored)
+│   │   └── security_config.example.php # Security template
 │   └── utils/             # Utility functions
-│       ├── email.php              # Legacy email handler (with debug logging)
-│       ├── email_sender.php       # Simplified OTP email sender
-│       └── brute_force_protection.php # NEW: Security and authentication protection
+│       ├── brute_force_protection.php # Security and authentication
+│       ├── email.php                  # Email handler with QR generation
+│       └── email_sender.php           # Simplified OTP email sender
 │
 ├── scripts/                # Setup and utility scripts
-│   ├── QUICK_SETUP.php
-│   ├── setup_database.php
-│   ├── setup_security.php       # NEW: Security system installation
 │   ├── add_archive_columns.php
-│   ├── generate_password.php
-│   ├── handle_closing_time.php  # Automated closing time handler (cron job)
-│   ├── SYSTEM_CHECK.php         # Comprehensive system diagnostics
-│   └── test_error_log.php
+│   ├── generate_password.php    # Password hash generator (gitignored)
+│   ├── handle_closing_time.php  # Automated closing time handler (cron)
+│   ├── QUICK_SETUP.php          # Installation wizard
+│   ├── setup_database.php       # Database initialization
+│   ├── setup_security.php       # Security system installation
+│   ├── SYSTEM_CHECK.php         # System diagnostics tool
+│   └── test_error_log.php       # Error logging test
 │
 ├── tests/                  # Test files
-│   ├── test_api.php
-│   ├── test_admin_dashboard.html
-│   ├── qr_test.html
-│   ├── qr_test.php
 │   ├── api_qr_test.php
 │   ├── complete_qr_test.php
-│   ├── diagnose_otp_system.php  # NEW: OTP diagnostic tool
-│   ├── direct_otp_test.php      # NEW: Direct OTP backend test
-│   ├── get_email_logs.php       # NEW: Email log viewer
-│   └── OTP_TROUBLESHOOTING.md   # NEW: OTP troubleshooting guide
+│   ├── diagnose_otp_system.php  # OTP diagnostic tool
+│   ├── direct_otp_test.php      # Direct OTP backend test
+│   ├── get_email_logs.php       # Email log viewer
+│   ├── OTP_TROUBLESHOOTING.md   # OTP troubleshooting guide
+│   ├── qr_test.html
+│   ├── qr_test.php
+│   ├── test_admin_dashboard.html
+│   └── test_api.php
 │
-├── vendor/                 # Composer dependencies
+├── vendor/                 # Composer dependencies (gitignored)
 │
-├── .gitignore
-├── .htaccess
-├── composer.json
-├── composer.lock
-├── CHANGELOG.md
-├── DIRECTORY_STRUCTURE.md
-├── LICENSE
-├── README.md
-├── SETUP_GUIDE.md
-└── SECURITY_CONFIG_SETUP.md  # NEW: Security configuration guide
+├── .gitignore              # Git ignore rules
+├── .htaccess               # Apache configuration
+├── CHANGELOG.md            # Project changelog
+├── composer.json           # PHP dependencies
+├── composer.lock           # Dependency lock file
+├── DIRECTORY_STRUCTURE.md  # This file
+├── LICENSE                 # MIT License
+├── README.md               # Project documentation
+├── SECURITY_CONFIG_SETUP.md # Security configuration guide
+└── SETUP_GUIDE.md          # Complete setup instructions
 ```
+
+## Code Organization (November 2025)
+
+### CSS and JavaScript Extraction
+- **Separation of Concerns**: All inline CSS and JavaScript have been extracted into external files
+- **Admin Pages**: 5 JavaScript files for modular dashboard functionality
+- **Student Pages**: 9 CSS files and 9 JavaScript files for clean code organization
+- **Benefits**:
+  - Improved browser caching and page load performance
+  - Better code maintainability and debugging
+  - Professional project structure
+  - Easy to locate and modify styles and scripts
 
 ## Recent Updates (November 2025)
 

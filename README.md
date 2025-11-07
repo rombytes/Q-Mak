@@ -160,10 +160,16 @@ Q-Mak/
 ├── pages/                       # Frontend HTML pages
 │   ├── index.html               # Homepage/Landing page
 │   ├── admin/                   # Admin portal pages
+│   │   ├── assets/              # Admin page assets
+│   │   │   ├── css/             # External CSS files
+│   │   │   └── js/              # External JavaScript files (5 files)
 │   │   ├── admin_login.html     # Admin authentication with reCAPTCHA
 │   │   ├── admin_dashboard.html # Main admin interface
 │   │   └── security_dashboard.html # Security monitoring
 │   └── student/                 # Student portal pages
+│       ├── assets/              # Student page assets
+│       │   ├── css/             # External CSS files (9 files)
+│       │   └── js/              # External JavaScript files (9 files)
 │       ├── student_login.html   # Student authentication with reCAPTCHA
 │       ├── student_register.html # Account creation
 │       ├── student_dashboard.html # Student main page

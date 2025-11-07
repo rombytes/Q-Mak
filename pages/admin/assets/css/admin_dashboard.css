@@ -1,0 +1,612 @@
+/**
+ * Admin Dashboard Styles
+ * Q-Mak Queue Management System
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* ============================================================================
+   SETTINGS TAB STYLES
+   ============================================================================ */
+
+/* Settings Tab Styles */
+.settings-tab {
+    transition: all 0.2s ease;
+    border-bottom-width: 2px;
+}
+
+.settings-tab:hover {
+    text-decoration: none;
+    color: #111827;
+    background-color: rgba(243, 244, 246, 0.5);
+}
+
+.settings-tab svg {
+    transition: transform 0.2s ease;
+}
+
+.settings-tab:hover svg {
+    transform: scale(1.1);
+}
+
+.settings-content {
+    display: block;
+    animation: settingsFadeIn 0.3s ease-out;
+}
+
+.settings-content.hidden {
+    display: none;
+}
+
+@keyframes settingsFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Settings Input Enhancements */
+.settings-content input[type="number"],
+.settings-content input[type="text"],
+.settings-content input[type="email"],
+.settings-content input[type="time"],
+.settings-content input[type="date"],
+.settings-content input[type="password"],
+.settings-content select {
+    transition: all 0.2s ease;
+    border: 1.5px solid #e5e7eb;
+}
+
+.settings-content input:hover:not(:disabled),
+.settings-content select:hover:not(:disabled) {
+    border-color: #d1d5db;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.settings-content input:focus,
+.settings-content select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Settings Section Cards */
+.settings-content > div > div {
+    transition: box-shadow 0.2s ease;
+}
+
+/* Toggle Switch Enhanced */
+.settings-content input[type="checkbox"]:checked + div {
+    background-color: #3b82f6;
+}
+
+.settings-content input[type="checkbox"] + div {
+    transition: all 0.2s ease;
+}
+
+/* Settings Button Enhanced */
+.settings-content button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.settings-content button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.settings-content button:not(:disabled):active {
+    transform: translateY(0);
+}
+
+.settings-content button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Loading State for Buttons */
+.btn-loading {
+    pointer-events: none;
+    position: relative;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Settings Item Hover Effect */
+.settings-content .pb-6 {
+    transition: background-color 0.2s ease;
+    padding: 1.5rem;
+    margin: 0 -1.5rem;
+    border-radius: 0.5rem;
+}
+
+.settings-content .pb-6:hover {
+    background-color: rgba(249, 250, 251, 0.5);
+}
+
+/* Tooltip Styles */
+.tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: help;
+    margin-left: 6px;
+    transition: all 0.2s ease;
+}
+
+.tooltip-icon:hover {
+    background-color: #3b82f6;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Success/Error Message Animations */
+.settings-message {
+    animation: messageSlide 0.3s ease-out;
+}
+
+@keyframes messageSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================================
+   SCROLLBAR CUSTOMIZATION
+   ============================================================================ */
+
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+/* Border width utility */
+.border-b-3 {
+    border-bottom-width: 3px;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-15px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.25s ease-out;
+}
+
+/* Notification panel smooth transitions */
+#notificationList {
+    transition: opacity 0.3s ease;
+}
+
+.notif-tab {
+    transition: all 0.2s ease;
+}
+
+/* Smooth notification item animations */
+@keyframes notifSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Notification animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* ============================================================================
+   MODAL STYLES
+   ============================================================================ */
+
+/* Custom Modal Styles */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.custom-modal-content {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 28rem;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.animate-modal-in {
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================================
+   SIDEBAR STYLES
+   ============================================================================ */
+
+/* Retractable Sidebar Styles */
+.sidebar {
+    width: 80px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: fixed;
+    z-index: 100;
+}
+
+.sidebar:hover {
+    width: 280px;
+}
+
+.sidebar-content {
+    width: 280px;
+}
+
+.menu-text {
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.sidebar:hover .menu-text {
+    opacity: 1;
+    transition-delay: 0.1s;
+}
+
+.logo-text {
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    transition: opacity 0.2s, max-width 0.3s;
+}
+
+.sidebar:hover .logo-text {
+    opacity: 1;
+    max-width: 200px;
+    transition-delay: 0.1s;
+}
+
+.menu-icon {
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar nav li {
+    position: relative;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-radius: 50%;
+    border: 3px solid #1e3a8a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 4px 12px -1px rgba(30, 58, 138, 0.4);
+    padding: 3px;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.main-content-adjusted {
+    margin-left: 0;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   CARD & BUTTON STYLES
+   ============================================================================ */
+
+/* Enhanced Card Styles */
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Button Hover Effects */
+.btn-primary {
+    background: linear-gradient(135deg, #F97316, #EA580C);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4);
+}
+
+/* ============================================================================
+   TABLE STYLES
+   ============================================================================ */
+
+/* Table Enhancements */
+.table-row {
+    transition: all 0.2s ease;
+}
+
+.table-row:hover {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.05), rgba(249, 115, 22, 0.05));
+    transform: translateX(4px);
+}
+
+/* ============================================================================
+   GLASSMORPHISM & EFFECTS
+   ============================================================================ */
+
+/* Glassmorphism Effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Force hide tabs */
+.tab-content.hidden {
+    display: none !important;
+}
+
+.tab-content {
+    display: block;
+}
+
+/* ============================================================================
+   QR SCANNER STYLES
+   ============================================================================ */
+
+/* Floating QR Scanner Button */
+.qr-scan-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #F97316, #EA580C);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(249, 115, 22, 0.5);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: 3px solid white;
+}
+
+.qr-scan-button:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 15px 35px rgba(249, 115, 22, 0.6);
+}
+
+.qr-scan-button:active {
+    transform: scale(0.95);
+}
+
+.qr-scan-button i {
+    color: white;
+    font-size: 24px;
+}
+
+/* QR Scanner Modal */
+.qr-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-modal.active {
+    display: flex;
+}
+
+.qr-modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#qr-reader {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#qr-reader__dashboard_section_swaplink {
+    display: none !important;
+}
+
+/* Ensure active tab hover works properly with border effect */
+nav li.bg-orange-500:hover {
+    background-color: rgb(234 88 12) !important; /* hover:bg-orange-600 */
+    border-left-color: rgb(251 146 60) !important; /* hover:border-orange-400 */
+}
+
+/* ============================================================================
+   STOCK MODAL STYLES (Inline)
+   ============================================================================ */
+
+.modal.active { 
+    display: flex !important; 
+}
+
+.stock-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.stock-in { 
+    background-color: #d1fae5; 
+    color: #065f46; 
+}
+
+.stock-low { 
+    background-color: #fef3c7; 
+    color: #92400e; 
+}
+
+.stock-out { 
+    background-color: #fee2e2; 
+    color: #991b1b; 
+}
