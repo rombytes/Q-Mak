@@ -1,0 +1,202 @@
+/**
+ * Root CSS Variables for Q-Mak Queue Management System
+ * Modern Professional Color Palette
+ */
+
+:root {
+    /* Primary Colors - Use for headers, navigation, main UI elements */
+    --primary-900: #0f172a;      /* Slate 900 - Deep navy for headers */
+    --primary-800: #1e293b;      /* Slate 800 - Dark backgrounds */
+    --primary-700: #334155;      /* Slate 700 - Secondary text */
+    --primary-600: #475569;      /* Slate 600 - Muted text */
+    --primary-500: #64748b;      /* Slate 500 - Subtle elements */
+    --primary-400: #94a3b8;      /* Slate 400 - Light muted elements */
+
+    /* Accent Colors - Use for CTAs, links, interactive elements */
+    --accent-700: #1d4ed8;       /* Blue 700 - Dark CTA */
+    --accent-600: #2563eb;       /* Blue 600 - Primary CTA buttons */
+    --accent-500: #3b82f6;       /* Blue 500 - Hover/Active states */
+    --accent-400: #60a5fa;       /* Blue 400 - Light accents */
+    --accent-300: #93c5fd;       /* Blue 300 - Lighter accents */
+
+    /* Success & Status Colors - Use for order states, notifications */
+    --success-700: #15803d;      /* Green 700 - Dark success */
+    --success-600: #16a34a;      /* Green 600 - Success states */
+    --success-500: #22c55e;      /* Green 500 - Success light */
+    --success-400: #4ade80;      /* Green 400 - Light success */
+    
+    --warning-700: #c2410c;      /* Orange 700 - Dark warning */
+    --warning-600: #ea580c;      /* Orange 600 - Warning states */
+    --warning-500: #f97316;      /* Orange 500 - Warning light */
+    --warning-400: #fb923c;      /* Orange 400 - Light warning */
+    
+    --danger-700: #b91c1c;       /* Red 700 - Dark danger */
+    --danger-600: #dc2626;       /* Red 600 - Danger/Error states */
+    --danger-500: #ef4444;       /* Red 500 - Danger light */
+    --danger-400: #f87171;       /* Red 400 - Light danger */
+
+    /* Info Colors */
+    --info-600: #0891b2;        /* Cyan 600 - Info states */
+    --info-500: #06b6d4;        /* Cyan 500 - Info light */
+
+    /* Neutral/Background Colors - Use for layouts, cards, borders */
+    --gray-50: #f8fafc;          /* Light background */
+    --gray-100: #f1f5f9;         /* Card backgrounds */
+    --gray-200: #e2e8f0;         /* Borders */
+    --gray-300: #cbd5e1;         /* Darker borders */
+    --gray-400: #94a3b8;         /* Muted elements */
+    --white: #ffffff;            /* Pure white */
+    --black: #000000;            /* Pure black */
+
+    /* Shadow definitions */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* Transition definitions */
+    --transition-fast: all 0.2s ease;
+    --transition-medium: all 0.3s ease;
+    --transition-slow: all 0.4s ease;
+
+    /* Border radius definitions */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-full: 9999px;
+}
+
+/* Dark mode support (optional - for future enhancement) */
+/* @media (prefers-color-scheme: dark) {
+    :root {
+        Dark mode color overrides can be added here
+    }
+} */
+
+/* Utility classes for quick color application */
+.text-primary-900 { color: var(--primary-900); }
+.text-primary-800 { color: var(--primary-800); }
+.text-primary-700 { color: var(--primary-700); }
+.text-primary-600 { color: var(--primary-600); }
+.text-primary-500 { color: var(--primary-500); }
+
+.text-accent-600 { color: var(--accent-600); }
+.text-accent-500 { color: var(--accent-500); }
+
+.text-success-600 { color: var(--success-600); }
+.text-success-500 { color: var(--success-500); }
+
+.text-warning-600 { color: var(--warning-600); }
+.text-warning-500 { color: var(--warning-500); }
+
+.text-danger-600 { color: var(--danger-600); }
+.text-danger-500 { color: var(--danger-500); }
+
+.text-info-600 { color: var(--info-600); }
+.text-info-500 { color: var(--info-500); }
+
+.bg-primary-900 { background-color: var(--primary-900); }
+.bg-primary-800 { background-color: var(--primary-800); }
+.bg-primary-700 { background-color: var(--primary-700); }
+
+.bg-accent-600 { background-color: var(--accent-600); }
+.bg-accent-500 { background-color: var(--accent-500); }
+
+.bg-success-600 { background-color: var(--success-600); }
+.bg-warning-600 { background-color: var(--warning-600); }
+.bg-danger-600 { background-color: var(--danger-600); }
+.bg-info-600 { background-color: var(--info-600); }
+
+.bg-gray-50 { background-color: var(--gray-50); }
+.bg-gray-100 { background-color: var(--gray-100); }
+.bg-gray-200 { background-color: var(--gray-200); }
+
+/* Button base styles */
+.btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: var(--transition-fast);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background-color: var(--accent-600);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-700);
+}
+
+.btn-success {
+    background-color: var(--success-600);
+    color: var(--white);
+}
+
+.btn-success:hover {
+    background-color: var(--success-700);
+}
+
+.btn-warning {
+    background-color: var(--warning-600);
+    color: var(--white);
+}
+
+.btn-warning:hover {
+    background-color: var(--warning-700);
+}
+
+.btn-danger {
+    background-color: var(--danger-600);
+    color: var(--white);
+}
+
+.btn-danger:hover {
+    background-color: var(--danger-700);
+}
+
+/* Card styles */
+.card {
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 1.5rem;
+}
+
+/* Alert styles */
+.alert {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background-color: #dcfce7;
+    border-left: 4px solid var(--success-600);
+    color: var(--success-700);
+}
+
+.alert-warning {
+    background-color: #fed7aa;
+    border-left: 4px solid var(--warning-600);
+    color: var(--warning-700);
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    border-left: 4px solid var(--danger-600);
+    color: var(--danger-700);
+}
+
+.alert-info {
+    background-color: #cffafe;
+    border-left: 4px solid var(--info-600);
+    color: #0c7792;
+}

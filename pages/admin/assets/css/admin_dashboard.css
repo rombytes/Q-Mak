@@ -21,8 +21,8 @@ body {
 
 .settings-tab:hover {
     text-decoration: none;
-    color: #111827;
-    background-color: rgba(243, 244, 246, 0.5);
+    color: var(--primary-900);
+    background-color: var(--gray-50);
 }
 
 .settings-tab svg {
@@ -56,19 +56,19 @@ body {
 .settings-content input[type="password"],
 .settings-content select {
     transition: all 0.2s ease;
-    border: 1.5px solid #e5e7eb;
+    border: 1.5px solid var(--gray-200);
 }
 
 .settings-content input:hover:not(:disabled),
 .settings-content select:hover:not(:disabled) {
-    border-color: #d1d5db;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-color: var(--gray-300);
+    box-shadow: var(--shadow-sm);
 }
 
 .settings-content input:focus,
 .settings-content select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-500);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Settings Section Cards */
@@ -78,7 +78,7 @@ body {
 
 /* Toggle Switch Enhanced */
 .settings-content input[type="checkbox"]:checked + div {
-    background-color: #3b82f6;
+    background-color: var(--accent-500);
 }
 
 .settings-content input[type="checkbox"] + div {
@@ -94,7 +94,7 @@ body {
 
 .settings-content button:not(:disabled):hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-lg);
 }
 
 .settings-content button:not(:disabled):active {
@@ -140,7 +140,7 @@ body {
 }
 
 .settings-content .pb-6:hover {
-    background-color: rgba(249, 250, 251, 0.5);
+    background-color: var(--gray-50);
 }
 
 /* Tooltip Styles */

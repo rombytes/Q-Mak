@@ -33,16 +33,16 @@
     width: 10px;
 }
 ::-webkit-scrollbar-track {
-    background: #f8fafc;
+    background: var(--gray-50);
     border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #6366f1, #8b5cf6);
+    background: linear-gradient(to bottom, var(--accent-600), var(--accent-500));
     border-radius: 8px;
-    border: 2px solid #f8fafc;
+    border: 2px solid var(--gray-50);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, #4f46e5, #7c3aed);
+    background: linear-gradient(to bottom, var(--accent-700), var(--accent-600));
 }
 
 /* Focus states */
@@ -50,7 +50,7 @@ button:focus-visible,
 input:focus,
 select:focus,
 textarea:focus {
-    outline: 3px solid rgba(99, 102, 241, 0.5);
+    outline: 3px solid rgba(37, 99, 235, 0.5); /* accent-600 with opacity */
     outline-offset: 2px;
 }
 
@@ -67,7 +67,7 @@ textarea:focus {
 
 /* Gradient text */
 .gradient-text {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, var(--accent-600) 0%, var(--accent-500) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

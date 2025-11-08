@@ -7,10 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <!-- HTML5 QR Code Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="../assets/css/root.css">
     <link rel="stylesheet" href="assets/css/admin_dashboard.css">
 </head>
 <body class="flex h-screen bg-gray-50">
@@ -138,7 +140,7 @@
                     
                     <!-- Notification Bell -->
                     <button onclick="toggleNotifications()" class="relative p-2 hover:bg-blue-50 rounded-lg transition-all duration-200" title="System Notifications">
-                        <i class="fas fa-bell text-gray-700 text-xl"></i>
+                        <i class="bi bi-bell-fill text-gray-700 text-xl"></i>
                         <span id="notificationBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-semibold shadow-lg">0</span>
                     </button>
                 </div>

@@ -7,6 +7,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
 
 $__autoload = __DIR__ . '/../../vendor/autoload.php';
@@ -131,37 +132,66 @@ class EmailService {
      */
     public static function generateQRCodeDataUri($dataString) {
         try {
-            // Check if Endroid QR Code library is available
+            // Ensure data string is not empty
+            if (empty($dataString)) {
+                error_log("QR Code: Empty data string provided");
+                return '';
+            }
+
+            // Check if QrCode class is available
             if (!class_exists('Endroid\\QrCode\\QrCode')) {
                 error_log("QR Code: Endroid library not found. Run: composer require endroid/qr-code");
                 return '';
             }
 
-            // Create QR Code using Endroid v6 syntax (constructor parameters)
-            $qrCode = new QrCode(
-                data: $dataString,
-                size: 200,
-                margin: 10
-            );
-            
-            // Generate PNG image using PngWriter
-            $writer = new PngWriter();
-            $result = $writer->write($qrCode);
-            
-            // Convert to base64 data URI
-            $imageData = $result->getString();
-            
-            if (empty($imageData)) {
-                error_log("QR Code: Generated image is empty");
-                return '';
+            // Try named parameters (PHP 8.0+, Endroid v6)
+            try {
+                $qrCode = new QrCode(
+                    data: $dataString,
+                    size: 200,
+                    margin: 10
+                );
+                
+                $writer = new PngWriter();
+                $result = $writer->write($qrCode);
+                $imageData = $result->getString();
+                
+                if (!empty($imageData)) {
+                    error_log("QR Code: ✓ Generated successfully (" . strlen($imageData) . " bytes)");
+                    return 'data:image/png;base64,' . base64_encode($imageData);
+                } else {
+                    error_log("QR Code: Generated image is empty");
+                    return '';
+                }
+            } catch (\Throwable $e) {
+                error_log("QR Code: Named params failed, trying fallback: " . $e->getMessage());
+                
+                // Fallback: Try QrCode::create() method (Endroid v5)
+                try {
+                    if (method_exists('Endroid\\QrCode\\QrCode', 'create')) {
+                        $qrCode = QrCode::create($dataString)
+                            ->setSize(200)
+                            ->setMargin(10);
+                        
+                        $writer = new PngWriter();
+                        $result = $writer->write($qrCode);
+                        $imageData = $result->getString();
+                        
+                        if (!empty($imageData)) {
+                            error_log("QR Code: ✓ Generated successfully using fallback (" . strlen($imageData) . " bytes)");
+                            return 'data:image/png;base64,' . base64_encode($imageData);
+                        }
+                    }
+                } catch (\Throwable $e2) {
+                    error_log("QR Code: Fallback method also failed: " . $e2->getMessage());
+                }
             }
-            
-            error_log("QR Code: ✓ Generated successfully using Endroid v6 (" . strlen($imageData) . " bytes)");
-            return 'data:image/png;base64,' . base64_encode($imageData);
+
+            error_log("QR Code: All generation methods failed");
+            return '';
             
         } catch (\Throwable $e) {
             error_log("QR Code: ✗ Generation failed - " . $e->getMessage());
-            error_log("QR Code: Stack trace: " . $e->getTraceAsString());
             return '';
         }
     }

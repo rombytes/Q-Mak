@@ -1,10 +1,20 @@
+-- ============================================================
 -- Q-Mak Database Schema
 -- University of Makati Cooperative Queue Management System
--- Created: 2025
+-- Version: 1.0.0
+-- Created: November 2025
+-- Description: Complete database schema for queue management,
+--              inventory tracking, and admin/student portals
+-- ============================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
 -- Database: qmak_db
 CREATE DATABASE IF NOT EXISTS `qmak_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -35,8 +45,8 @@ CREATE TABLE IF NOT EXISTS `admin_accounts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert default Super Admin Account
--- Email: superadmin@umak.edu.ph
--- Password: SuperAdmin123
+-- NOTE: Change password after first login for security
+-- Default Login: superadmin@umak.edu.ph / SuperAdmin123
 INSERT INTO `admin_accounts` 
 (`username`, `email`, `password`, `full_name`, `is_super_admin`) 
 VALUES 
@@ -44,11 +54,11 @@ VALUES
  'superadmin@umak.edu.ph', 
  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 
  'Super Administrator', 
- 1);
+ 1)
+ON DUPLICATE KEY UPDATE username = username;
 
 -- Insert default Regular Admin Account
--- Email: admin@umak.edu.ph
--- Password: Admin123
+-- Default Login: admin@umak.edu.ph / Admin123
 INSERT INTO `admin_accounts` 
 (`username`, `email`, `password`, `full_name`, `is_super_admin`) 
 VALUES 
@@ -56,7 +66,8 @@ VALUES
  'admin@umak.edu.ph', 
  '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', 
  'Regular Administrator', 
- 0);
+ 0)
+ON DUPLICATE KEY UPDATE username = username;
 
 -- --------------------------------------------------------
 -- Table structure for table `students`
@@ -940,5 +951,34 @@ ALTER TABLE `students`
 -- END OF SECURITY TABLES
 -- ============================================================
 
+-- ============================================================
+-- FINAL STEPS
+-- ============================================================
+
+-- Reset AUTO_INCREMENT for fresh installation
+-- ALTER TABLE `orders` AUTO_INCREMENT = 1;
+-- ALTER TABLE `students` AUTO_INCREMENT = 1;
+-- ALTER TABLE `admin_accounts` AUTO_INCREMENT = 3;
+-- ALTER TABLE `inventory_items` AUTO_INCREMENT = 9;
+
+-- Enable event scheduler for analytics
+SET GLOBAL event_scheduler = ON;
+
 COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- ============================================================
+-- Installation Complete!
+-- ============================================================
+-- Next Steps:
+-- 1. Update php/config/database.php with your database credentials
+-- 2. Update php/config/constants.php with your SMTP settings
+-- 3. Run composer install to install dependencies
+-- 4. Change default admin passwords immediately
+-- 5. Configure working hours in admin panel
+-- 6. Add inventory items through admin dashboard
+-- ============================================================
 

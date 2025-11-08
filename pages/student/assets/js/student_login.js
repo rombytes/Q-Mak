@@ -1,4 +1,4 @@
-﻿/** Student Login Page Script - Q-Mak Queue Management System
+/** Student Login Page Script - Q-Mak Queue Management System
  * Handles student authentication with reCAPTCHA protection and password reset
  */
 
@@ -160,7 +160,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             loginBtn.classList.remove('btn-primary');
             loginBtn.classList.add('bg-green-600');
             
-            // Wait a bit longer to ensure session cookie is saved
+            // Store login state in sessionStorage as optimization
+            sessionStorage.setItem('studentLoggedIn', 'true');
+            
+            // Wait a bit to ensure session cookie is saved
             setTimeout(() => {
                 window.location.href = 'student_dashboard.html';
             }, 800);

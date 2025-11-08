@@ -24,6 +24,12 @@ async function loadCoopStatus() {
             const status = data.current_status;
             const statusDisplay = document.getElementById('statusDisplay');
             
+            // Check if statusDisplay element exists
+            if (!statusDisplay) {
+                console.warn('statusDisplay element not found');
+                return;
+            }
+            
             // Update Status Display Card
             if (status.open) {
                 const timeLeft = formatTimeLeft(status.time_until_closing || (status.minutes_until_closing * 60));
@@ -49,9 +55,12 @@ async function loadCoopStatus() {
                 `;
                 
                 // Update hero queue info
-                document.getElementById('queueInfo').innerHTML = `
-                    <i class="fas fa-users"></i> ${data.today_stats.pending_orders} orders in queue • Place yours now!
-                `;
+                const queueInfo = document.getElementById('queueInfo');
+                if (queueInfo) {
+                    queueInfo.innerHTML = `
+                        <i class="fas fa-users"></i> ${data.today_stats.pending_orders} orders in queue • Place yours now!
+                    `;
+                }
             } else {
                 const nextOpen = status.opens_at ? formatTime(status.opens_at) : 
                                 status.reopens_at ? formatTime(status.reopens_at) : '';
@@ -84,16 +93,24 @@ async function loadCoopStatus() {
                 `;
                 
                 // Update hero queue info
-                document.getElementById('queueInfo').innerHTML = `
-                    <i class="fas fa-moon"></i> Pre-order now for next business day delivery
-                `;
+                const queueInfo = document.getElementById('queueInfo');
+                if (queueInfo) {
+                    queueInfo.innerHTML = `
+                        <i class="fas fa-moon"></i> Pre-order now for next business day delivery
+                    `;
+                }
             }
             
             // Update Today's Stats Card
-            document.getElementById('totalOrders').textContent = data.today_stats.total_orders;
-            document.getElementById('completedOrders').textContent = data.today_stats.completed_orders;
-            document.getElementById('pendingOrders').textContent = data.today_stats.pending_orders;
-            document.getElementById('avgWait').textContent = Math.round(data.today_stats.avg_estimated_wait || 10) + ' min';
+            const totalOrders = document.getElementById('totalOrders');
+            const completedOrders = document.getElementById('completedOrders');
+            const pendingOrders = document.getElementById('pendingOrders');
+            const avgWait = document.getElementById('avgWait');
+            
+            if (totalOrders) totalOrders.textContent = data.today_stats.total_orders;
+            if (completedOrders) completedOrders.textContent = data.today_stats.completed_orders;
+            if (pendingOrders) pendingOrders.textContent = data.today_stats.pending_orders;
+            if (avgWait) avgWait.textContent = Math.round(data.today_stats.avg_estimated_wait || 10) + ' min';
             
             // Update Schedule Preview (next 3 days)
             if (data.schedule && data.schedule.length > 0) {
@@ -342,14 +359,190 @@ function goToSlide(index) {
     updateCarousel();
 }
 
-// Auto-advance carousel every 8 seconds
-let carouselInterval = setInterval(nextSlide, 8000);
+// Initialize carousel with auto-advance and event listeners
+let carouselInterval;
 
-// Pause auto-advance when hovering over carousel
-document.getElementById('carouselWrapper').addEventListener('mouseenter', function() {
-    clearInterval(carouselInterval);
-});
-
-document.getElementById('carouselWrapper').addEventListener('mouseleave', function() {
+function initializeCarousel() {
+    const carouselWrapper = document.getElementById('carouselWrapper');
+    if (!carouselWrapper) {
+        console.warn('Carousel wrapper not found');
+        return;
+    }
+    
+    // Initialize carousel display
+    updateCarousel();
+    
+    // Auto-advance carousel every 8 seconds
     carouselInterval = setInterval(nextSlide, 8000);
+    
+    // Pause auto-advance when hovering over carousel
+    carouselWrapper.addEventListener('mouseenter', function() {
+        clearInterval(carouselInterval);
+    });
+    
+    carouselWrapper.addEventListener('mouseleave', function() {
+        carouselInterval = setInterval(nextSlide, 8000);
+    });
+}
+
+// ============================================================================
+// FAQ FUNCTIONALITY
+// ============================================================================
+
+function toggleFAQ(number) {
+    const content = document.getElementById(`faq-content-${number}`);
+    const icon = document.getElementById(`faq-icon-${number}`);
+    
+    if (content && icon) {
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    loadCoopStatus();
+    
+    // Auto-refresh status every 5 minutes
+    setInterval(loadCoopStatus, 5 * 60 * 1000);
+    
+    // Initialize carousel
+    initializeCarousel();
+    
+    // Initialize FAQ toggle functionality
+    const faqToggles = document.querySelectorAll('.faq-toggle');
+    faqToggles.forEach((toggle, index) => {
+        toggle.addEventListener('click', function() {
+            toggleFAQ(index + 1);
+        });
+    });
 });
+
+// ============================================================================
+// ANIMATED COUNTER
+// ============================================================================
+
+function animateCounter(element, target, duration = 2000) {
+    const start = 0;
+    const increment = target / (duration / 16); // 60fps
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            element.textContent = target.toLocaleString();
+            clearInterval(timer);
+        } else {
+            element.textContent = Math.floor(current).toLocaleString();
+        }
+    }, 16);
+}
+
+// Initialize counters when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate statistics counters
+    const counters = document.querySelectorAll('[data-counter]');
+    
+    // Use Intersection Observer to trigger animation when visible
+    const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.classList.contains('animated')) {
+                entry.target.classList.add('animated');
+                const target = parseInt(entry.target.getAttribute('data-counter'));
+                animateCounter(entry.target, target);
+                counterObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    counters.forEach(counter => {
+        counterObserver.observe(counter);
+    });
+});
+
+// ============================================================================
+// MOBILE MENU FUNCTIONALITY
+// ============================================================================
+
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const icon = document.getElementById('menuIcon');
+    
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        menu.classList.add('animate-fade-in');
+        icon.classList.remove('bi-list');
+        icon.classList.add('bi-x');
+    } else {
+        menu.classList.add('hidden');
+        icon.classList.remove('bi-x');
+        icon.classList.add('bi-list');
+    }
+}
+
+function closeMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const icon = document.getElementById('menuIcon');
+    
+    menu.classList.add('hidden');
+    icon.classList.remove('bi-x');
+    icon.classList.add('bi-list');
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('mobileMenu');
+    const menuButton = event.target.closest('button[onclick="toggleMobileMenu()"]');
+    const menuContent = document.getElementById('mobileMenu');
+    
+    if (!menuButton && !menuContent?.contains(event.target) && !menu?.classList.contains('hidden')) {
+        closeMobileMenu();
+    }
+});
+
+// ============================================================================
+// FAQ SEARCH FUNCTIONALITY
+// ============================================================================
+
+function searchFAQs() {
+    const searchInput = document.getElementById('faqSearch');
+    const searchTerm = searchInput.value.toLowerCase();
+    const faqList = document.getElementById('faqList');
+    const faqItems = faqList.querySelectorAll('.bg-white');
+    
+    let visibleCount = 0;
+    
+    faqItems.forEach(item => {
+        const question = item.querySelector('button span').textContent.toLowerCase();
+        const answer = item.querySelector('[id^="faq-content-"]')?.textContent.toLowerCase() || '';
+        
+        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+            item.style.display = '';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Show "no results" message if needed
+    let noResults = document.getElementById('noResultsMessage');
+    if (visibleCount === 0 && searchTerm !== '') {
+        if (!noResults) {
+            noResults = document.createElement('div');
+            noResults.id = 'noResultsMessage';
+            noResults.className = 'text-center py-12';
+            noResults.innerHTML = `
+                <i class="bi bi-search text-gray-300 text-5xl mb-3"></i>
+                <p class="text-gray-500 text-lg">No FAQs found matching your search.</p>
+                <p class="text-gray-400 text-sm mt-2">Try different keywords or <a href="#contact" class="text-accent-600 hover:underline">contact us</a> directly.</p>
+            `;
+            faqList.appendChild(noResults);
+        }
+    } else if (noResults) {
+        noResults.remove();
+    }
+}

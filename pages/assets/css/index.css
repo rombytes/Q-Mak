@@ -31,6 +31,22 @@ body {
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+/* Mobile menu animation */
+.animate-fade-in {
+    animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Hero background with animated blob */
 .hero-background {
     background-image: url('../../../images/UMak-Facade-Admin-2024.jpg');
@@ -42,7 +58,7 @@ body {
 }
 
 .hero-overlay {
-    background: rgba(30, 58, 138, 0.85);
+    background: rgba(15, 23, 42, 0.85);  /* Using primary-900 with opacity */
     backdrop-filter: blur(2px);
 }
 
@@ -54,7 +70,7 @@ body {
     right: -50%;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle, rgba(249, 115, 22, 0.3) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.3) 0%, transparent 70%);  /* Using accent-600 */
     animation: blob 7s ease-in-out infinite;
     will-change: transform;
 }
@@ -105,7 +121,7 @@ body {
 
 /* Gradient text effect */
 .gradient-text {
-    background: linear-gradient(135deg, #1e3a8a 0%, #f97316 100%);
+    background: linear-gradient(135deg, var(--primary-900) 0%, var(--accent-600) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -117,16 +133,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: var(--gray-100);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #3b82f6, #1e40af);
+    background: linear-gradient(180deg, var(--accent-500), var(--accent-700));
     border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #2563eb, #1e3a8a);
+    background: linear-gradient(180deg, var(--accent-600), var(--primary-900));
 }
 
 /* Logo hover effects */
@@ -157,4 +173,81 @@ body {
 
 .link-icon:hover {
     transform: scale(1.15) rotate(5deg);
+}
+
+/* FAQ Rotation */
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Mobile bottom navigation safe area */
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Bounce animation for floating button */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-bounce-slow {
+    animation: bounce 2s infinite;
+}
+
+/* Fade in up animation for sections */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Skeleton loader for status cards */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.skeleton {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(
+        to right,
+        #f0f0f0 0%,
+        #e0e0e0 20%,
+        #f0f0f0 40%,
+        #f0f0f0 100%
+    );
+    background-size: 1000px 100%;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 70px; /* Space for bottom nav */
+    }
+    
+    .hero-background {
+        min-height: 500px !important;
+    }
+    
+    h1 {
+        font-size: 2.5rem !important;
+    }
 }
