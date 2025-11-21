@@ -169,13 +169,22 @@ class BruteForceProtection {
             return;
         }
         
-        // Reset attempts for this identifier
+        // Reset attempts for this identifier (email)
         $stmt = $this->db->prepare("
             DELETE FROM security_attempts
             WHERE identifier = ? 
             AND attempt_type = ?
         ");
         $stmt->execute([$identifier, $attemptType]);
+        
+        // Also reset attempts for this IP address for same attempt type
+        $stmt = $this->db->prepare("
+            DELETE FROM security_attempts
+            WHERE identifier = ?
+            AND identifier_type = 'ip'
+            AND attempt_type = ?
+        ");
+        $stmt->execute([$this->clientIP, $attemptType]);
         
         // Log successful login
         $this->logSecurityEvent('login_success', 'info',
@@ -499,6 +508,9 @@ class BruteForceProtection {
             }
         } else {
             // Create new record
+            // Debug: Log what we're inserting
+            error_log("Inserting security_attempt: identifier=$identifier, identifierType=$identifierType, attemptType=$attemptType");
+            
             $stmt = $this->db->prepare("
                 INSERT INTO security_attempts
                 (identifier, identifier_type, attempt_type, failed_attempts, 

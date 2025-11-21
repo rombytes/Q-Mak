@@ -3,7 +3,7 @@
  * Export Orders to Excel (CSV format)
  */
 
-session_start();
+require_once __DIR__ . '/../../config/session_config.php';
 require_once __DIR__ . '/../../config/database.php';
 
 // Check admin authentication

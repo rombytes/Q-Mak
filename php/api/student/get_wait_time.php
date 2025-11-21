@@ -82,20 +82,15 @@ try {
         exit;
     }
     
-    // Calculate current position in queue
-    $positionStmt = $db->prepare("
-        SELECT COUNT(*) as position
-        FROM orders
-        WHERE queue_date = ?
-          AND status IN ('pending', 'processing')
-          AND order_id < ?
-    ");
-    $positionStmt->execute([$order['queue_date'], $order['order_id']]);
-    $positionData = $positionStmt->fetch();
-    $currentPosition = $positionData['position'] + 1;
+    // Get accurate queue position based on queue_number
+    $positionData = getOrderQueuePosition($db, $order['queue_number'], $order['queue_date']);
+    $currentPosition = $positionData['queue_position'];
     
-    // Recalculate wait time based on current queue
-    $waitTimeData = calculateWaitTime($db, $order['item_ordered']);
+    // Use the wait time from position data
+    $waitTimeData = [
+        'estimated_minutes' => $positionData['estimated_minutes'],
+        'queue_position' => $positionData['queue_position']
+    ];
     
     // Check if being processed
     $isProcessing = ($order['status'] === 'processing');
@@ -130,7 +125,7 @@ try {
         'minutes_elapsed' => $minutesElapsed,
         'is_processing' => $isProcessing,
         'orders_processing' => (int)$processingData['processing_count'],
-        'orders_ahead' => max(0, $currentPosition - 1),
+        'orders_ahead' => $positionData['orders_ahead'],
         'item_ordered' => $order['item_ordered'],
         'created_at' => $order['created_at'],
         'timestamp' => date('c')

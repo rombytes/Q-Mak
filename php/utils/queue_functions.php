@@ -37,17 +37,17 @@ function generateQueueNumber($db, $date = null) {
 
 /**
  * Generate Random Reference Number
- * Returns unique alphanumeric reference for tracking (REF-XXXXXXXX)
+ * Returns unique alphanumeric reference for tracking (QMAK-XXXXXX)
  */
 function generateReferenceNumber($db) {
     // Get settings
     $prefixStmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = 'reference_prefix'");
     $prefixStmt->execute();
-    $prefix = $prefixStmt->fetchColumn() ?? 'REF';
+    $prefix = $prefixStmt->fetchColumn() ?? 'QMAK';
     
     $lengthStmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = 'reference_length'");
     $lengthStmt->execute();
-    $length = (int)($lengthStmt->fetchColumn() ?? 8);
+    $length = (int)($lengthStmt->fetchColumn() ?? 6);
     
     $attempts = 0;
     $maxAttempts = 10;
@@ -137,7 +137,19 @@ function calculateWaitTime($db, $itemsOrdered) {
     $maxStmt->execute();
     $maxWaitTime = (int)($maxStmt->fetchColumn() ?? 60);
     
-    // 6. Calculate wait time
+    // 6. Calculate estimated position in queue
+    // This will be the next queue number
+    $todayDate = date('Y-m-d');
+    $posStmt = $db->prepare("
+        SELECT COUNT(*) + 1 as position
+        FROM orders 
+        WHERE queue_date = ? 
+        AND status IN ('pending', 'processing')
+    ");
+    $posStmt->execute([$todayDate]);
+    $queuePosition = (int)$posStmt->fetchColumn();
+    
+    // 7. Calculate wait time
     // Base time = (pending orders * average processing time) + current item time
     $baseWaitTime = ($pendingCount * $avgProcessingTime) + $totalItemTime;
     
@@ -149,10 +161,49 @@ function calculateWaitTime($db, $itemsOrdered) {
     
     return [
         'estimated_minutes' => $estimatedWaitTime,
-        'queue_position' => $pendingCount + 1,
+        'queue_position' => $queuePosition,
         'items_time' => $totalItemTime,
         'pending_orders' => $pendingCount,
         'avg_processing_time' => round($avgProcessingTime, 1)
+    ];
+}
+
+/**
+ * Get Queue Position for Existing Order
+ * Returns the actual position based on queue_number order for today's date
+ */
+function getOrderQueuePosition($db, $queueNumber, $queueDate) {
+    // Extract numeric part from queue number (Q-1, Q-2, etc.)
+    $currentNum = (int)substr($queueNumber, 2);
+    
+    // Count how many orders with lower queue numbers are still pending/processing
+    $stmt = $db->prepare("
+        SELECT COUNT(*) as position
+        FROM orders 
+        WHERE queue_date = ? 
+        AND CAST(SUBSTRING(queue_number, 3) AS UNSIGNED) < ?
+        AND status IN ('pending', 'processing')
+    ");
+    $stmt->execute([$queueDate, $currentNum]);
+    $ordersAhead = (int)$stmt->fetchColumn();
+    
+    // Position is orders ahead + 1
+    $position = $ordersAhead + 1;
+    
+    // Calculate wait time based on position
+    $avgProcessingTime = 5; // Default 5 minutes per order
+    $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = 'avg_processing_time'");
+    $stmt->execute();
+    if ($value = $stmt->fetchColumn()) {
+        $avgProcessingTime = (float)$value;
+    }
+    
+    $estimatedMinutes = max(5, $ordersAhead * $avgProcessingTime);
+    
+    return [
+        'queue_position' => $position,
+        'orders_ahead' => $ordersAhead,
+        'estimated_minutes' => $estimatedMinutes
     ];
 }
 

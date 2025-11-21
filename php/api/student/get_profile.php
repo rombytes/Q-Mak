@@ -47,6 +47,7 @@ try {
             s.year_level,
             s.section,
             s.is_verified,
+            s.profile_picture,
             s.created_at,
             s.last_login,
             COUNT(DISTINCT o.order_id) as total_orders,
@@ -64,6 +65,14 @@ try {
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Student not found']);
         exit;
+    }
+    
+    // Format profile picture path to full URL
+    if (!empty($studentData['profile_picture'])) {
+        // If it's a relative path, convert to full path
+        if (strpos($studentData['profile_picture'], '/Q-Mak/') !== 0) {
+            $studentData['profile_picture'] = '/Q-Mak/' . $studentData['profile_picture'];
+        }
     }
     
     echo json_encode([

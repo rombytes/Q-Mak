@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-MAK UI Components Showcase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/root.css">
+    <link rel="stylesheet" href="assets/css/utilities.css">
+    <link rel="stylesheet" href="student/assets/css/dashboard-enhancements.css">
+    
+    <style>
+        .showcase-section {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-8);
+            margin-bottom: var(--spacing-6);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .showcase-title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--primary-900);
+            margin-bottom: var(--spacing-4);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 3px solid var(--accent-600);
+        }
+        
+        .component-demo {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-6);
+            margin-bottom: var(--spacing-4);
+            border: 2px dashed var(--gray-300);
+        }
+        
+        .component-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--primary-700);
+            margin-bottom: var(--spacing-2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .code-block {
+            background: var(--primary-900);
+            color: #a6e3a1;
+            padding: var(--spacing-4);
+            border-radius: var(--radius-md);
+            font-family: var(--font-family-mono);
+            font-size: var(--text-sm);
+            overflow-x: auto;
+            margin-top: var(--spacing-2);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    
+    <!-- Header -->
+    <header class="bg-gradient-primary text-white py-8 mb-8">
+        <div class="container mx-auto px-6">
+            <h1 class="text-4xl font-bold mb-2">Q-MAK UI Components Showcase</h1>
+            <p class="text-xl text-white/80">Phase 1: Critical UX Improvements - Component Library</p>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 pb-12">
+        
+        <!-- Quick Navigation -->
+        <div class="showcase-section sticky top-4 z-10 mb-8">
+            <div class="flex flex-wrap gap-2">
+                <a href="#loaders" class="btn btn-primary">Loading States</a>
+                <a href="#toasts" class="btn btn-primary">Toasts</a>
+                <a href="#badges" class="btn btn-primary">Badges</a>
+                <a href="#cards" class="btn btn-primary">Cards</a>
+                <a href="#buttons" class="btn btn-primary">Buttons</a>
+                <a href="#forms" class="btn btn-primary">Forms</a>
+                <a href="#modals" class="btn btn-primary">Modals</a>
+                <a href="#status" class="btn btn-primary">Status Badges</a>
+            </div>
+        </div>
+
+        <!-- ========== LOADING STATES ========== -->
+        <div id="loaders" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-arrow-repeat text-accent-600"></i> Loading States
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Spinner Loaders</div>
+                <div class="flex items-center gap-6">
+                    <div>
+                        <div class="loader-spinner loader-spinner--sm"></div>
+                        <p class="text-xs text-center mt-2">Small</p>
+                    </div>
+                    <div>
+                        <div class="loader-spinner"></div>
+                        <p class="text-xs text-center mt-2">Default</p>
+                    </div>
+                    <div>
+                        <div class="loader-spinner loader-spinner--lg"></div>
+                        <p class="text-xs text-center mt-2">Large</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Dots Loader</div>
+                <div class="loader-dots">
+                    <div class="loader-dots__dot"></div>
+                    <div class="loader-dots__dot"></div>
+                    <div class="loader-dots__dot"></div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Progress Bars</div>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm mb-2">Determinate (75%)</p>
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm mb-2">Indeterminate</p>
+                        <div class="progress-bar progress-bar--indeterminate">
+                            <div class="progress-bar__fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Skeleton Screens</div>
+                <div class="space-y-3">
+                    <div class="skeleton skeleton--title"></div>
+                    <div class="skeleton skeleton--text"></div>
+                    <div class="skeleton skeleton--text"></div>
+                    <div class="skeleton skeleton--card"></div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Button Loading State</div>
+                <button id="demoButton" class="btn btn-primary" onclick="demoButtonLoading()">
+                    Click to See Loading
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== TOAST NOTIFICATIONS ========== -->
+        <div id="toasts" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-bell text-accent-600"></i> Toast Notifications
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Toast Types</div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="btn btn-success" onclick="Toast.success('Operation successful!')">
+                        Success Toast
+                    </button>
+                    <button class="btn btn-danger" onclick="Toast.error('An error occurred!')">
+                        Error Toast
+                    </button>
+                    <button class="btn btn-warning" onclick="Toast.warning('Please review your input')">
+                        Warning Toast
+                    </button>
+                    <button class="btn btn-primary" onclick="Toast.info('Here is some information')">
+                        Info Toast
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== BADGES ========== -->
+        <div id="badges" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-tag text-accent-600"></i> Badges & Status Indicators
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Badge Variants</div>
+                <div class="flex flex-wrap gap-3">
+                    <span class="badge badge--primary">Primary</span>
+                    <span class="badge badge--success">Success</span>
+                    <span class="badge badge--warning">Warning</span>
+                    <span class="badge badge--danger">Danger</span>
+                    <span class="badge badge--info">Info</span>
+                    <span class="badge badge--warning badge--pulse">Live</span>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Status Dots</div>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <div class="status-dot status-dot--online"></div>
+                        <span class="text-sm">Online</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="status-dot status-dot--offline"></div>
+                        <span class="text-sm">Offline</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="status-dot status-dot--busy"></div>
+                        <span class="text-sm">Busy</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="status-dot status-dot--online status-dot--pulse"></div>
+                        <span class="text-sm">Pulsing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== CARDS ========== -->
+        <div id="cards" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-card-text text-accent-600"></i> Cards
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Enhanced Cards</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="card-enhanced">
+                        <h3 class="font-bold text-lg mb-2">Regular Card</h3>
+                        <p class="text-sm text-gray-600">This card has hover effects</p>
+                    </div>
+                    
+                    <div class="card-enhanced card-enhanced--interactive">
+                        <h3 class="font-bold text-lg mb-2">Interactive Card</h3>
+                        <p class="text-sm text-gray-600">Click me!</p>
+                    </div>
+                    
+                    <div class="card-enhanced glass">
+                        <h3 class="font-bold text-lg mb-2">Glass Card</h3>
+                        <p class="text-sm text-gray-600">Glassmorphism effect</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Stat Cards</div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="stat-icon" style="background-color: #dbeafe; color: var(--accent-600);">
+                                <i class="bi bi-cart-fill"></i>
+                            </div>
+                            <span class="stat-value" style="color: var(--accent-600);">42</span>
+                        </div>
+                        <div class="text-gray-600 font-medium">Total Orders</div>
+                    </div>
+                    
+                    <div class="stat-card stat-card--success">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="stat-icon" style="background-color: #dcfce7; color: var(--success-600);">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <span class="stat-value" style="color: var(--success-600);">38</span>
+                        </div>
+                        <div class="text-gray-600 font-medium">Completed</div>
+                    </div>
+                    
+                    <div class="stat-card stat-card--warning">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="stat-icon" style="background-color: #fed7aa; color: var(--warning-600);">
+                                <i class="bi bi-clock-fill"></i>
+                            </div>
+                            <span class="stat-value" style="color: var(--warning-600);">3</span>
+                        </div>
+                        <div class="text-gray-600 font-medium">Pending</div>
+                    </div>
+                    
+                    <div class="stat-card stat-card--danger">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="stat-icon" style="background-color: #fee2e2; color: var(--danger-600);">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </div>
+                            <span class="stat-value" style="color: var(--danger-600);">1</span>
+                        </div>
+                        <div class="text-gray-600 font-medium">Cancelled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== BUTTONS ========== -->
+        <div id="buttons" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-hand-index text-accent-600"></i> Buttons with Effects
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Button Variants</div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="btn btn-primary">Primary</button>
+                    <button class="btn btn-success">Success</button>
+                    <button class="btn btn-warning">Warning</button>
+                    <button class="btn btn-danger">Danger</button>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Buttons with Hover Effects</div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="btn btn-primary hover-lift">Lift on Hover</button>
+                    <button class="btn btn-primary hover-scale">Scale on Hover</button>
+                    <button class="btn btn-primary hover-glow">Glow on Hover</button>
+                    <button class="btn btn-primary btn-ripple">Ripple Effect</button>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Buttons with Icons</div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        <span>Approve</span>
+                    </button>
+                    <button class="btn btn-success">
+                        <i class="bi bi-download"></i>
+                        <span>Download</span>
+                    </button>
+                    <button class="btn btn-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>Warning</span>
+                    </button>
+                    <button class="btn btn-danger">
+                        <i class="bi bi-trash"></i>
+                        <span>Delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FORMS ========== -->
+        <div id="forms" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-ui-checks text-accent-600"></i> Form Components
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Input Fields</div>
+                <div class="space-y-4 max-w-md">
+                    <div class="form-group">
+                        <label class="form-label" for="demo-input">Normal Input</label>
+                        <input type="text" id="demo-input" class="form-input" placeholder="Enter text">
+                        <span class="form-help">This is help text</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="demo-error">Input with Error</label>
+                        <input type="text" id="demo-error" class="form-input error" value="Invalid value">
+                        <span class="form-error">
+                            <i class="bi bi-exclamation-circle"></i>
+                            This field has an error
+                        </span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="demo-success">Input with Success</label>
+                        <input type="text" id="demo-success" class="form-input success" value="Valid value">
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Select & Textarea</div>
+                <div class="space-y-4 max-w-md">
+                    <div class="form-group">
+                        <label class="form-label" for="demo-select">Select Dropdown</label>
+                        <select id="demo-select" class="form-select">
+                            <option>Select an option</option>
+                            <option>Option 1</option>
+                            <option>Option 2</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="demo-textarea">Textarea</label>
+                        <textarea id="demo-textarea" class="form-textarea" rows="3" placeholder="Enter notes"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== MODALS ========== -->
+        <div id="modals" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-window text-accent-600"></i> Modals
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Modal Sizes</div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="btn btn-primary" onclick="showDemoModal('small')">Small Modal</button>
+                    <button class="btn btn-primary" onclick="showDemoModal('medium')">Medium Modal</button>
+                    <button class="btn btn-primary" onclick="showDemoModal('large')">Large Modal</button>
+                    <button class="btn btn-primary" onclick="showDemoModal('full')">Full Modal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== ORDER STATUS BADGES ========== -->
+        <div id="status" class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-bookmark-star text-accent-600"></i> Order Status Badges
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">All Status Types</div>
+                <div class="flex flex-wrap gap-3">
+                    <span class="order-status order-status--pending">
+                        <i class="bi bi-clock"></i>
+                        Pending
+                    </span>
+                    
+                    <span class="order-status order-status--approved">
+                        <i class="bi bi-check-circle"></i>
+                        Approved
+                    </span>
+                    
+                    <span class="order-status order-status--preparing">
+                        <i class="bi bi-fire"></i>
+                        Preparing
+                    </span>
+                    
+                    <span class="order-status order-status--ready">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Ready
+                    </span>
+                    
+                    <span class="order-status order-status--completed">
+                        <i class="bi bi-check-all"></i>
+                        Completed
+                    </span>
+                    
+                    <span class="order-status order-status--cancelled">
+                        <i class="bi bi-x-circle"></i>
+                        Cancelled
+                    </span>
+                    
+                    <span class="order-status order-status--rejected">
+                        <i class="bi bi-x-octagon"></i>
+                        Rejected
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== EMPTY STATES ========== -->
+        <div class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-inbox text-accent-600"></i> Empty States
+            </h2>
+
+            <div class="component-demo">
+                <div class="empty-state">
+                    <div class="empty-state__icon">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <h3 class="empty-state__title">No Orders Yet</h3>
+                    <p class="empty-state__description">
+                        You haven't placed any orders yet. Start by creating your first order!
+                    </p>
+                    <a href="#" class="empty-state__action">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Create Order</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== UTILITY CLASSES ========== -->
+        <div class="showcase-section">
+            <h2 class="showcase-title">
+                <i class="bi bi-magic text-accent-600"></i> Utility Classes
+            </h2>
+
+            <div class="component-demo">
+                <div class="component-label">Gradient Backgrounds</div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="bg-gradient-primary text-white p-6 rounded-lg text-center font-semibold">
+                        Primary
+                    </div>
+                    <div class="bg-gradient-accent text-white p-6 rounded-lg text-center font-semibold">
+                        Accent
+                    </div>
+                    <div class="bg-gradient-success text-white p-6 rounded-lg text-center font-semibold">
+                        Success
+                    </div>
+                    <div class="bg-gradient-warning text-white p-6 rounded-lg text-center font-semibold">
+                        Warning
+                    </div>
+                    <div class="bg-gradient-danger text-white p-6 rounded-lg text-center font-semibold">
+                        Danger
+                    </div>
+                    <div class="bg-gradient-info text-white p-6 rounded-lg text-center font-semibold">
+                        Info
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Gradient Text</div>
+                <h1 class="text-gradient text-4xl">Beautiful Gradient Text</h1>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Glassmorphism</div>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 12px;">
+                    <div class="glass p-6 rounded-lg">
+                        <h3 class="font-bold text-lg mb-2">Glass Effect Card</h3>
+                        <p>This card has a glassmorphism effect</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="component-demo">
+                <div class="component-label">Fun Effects</div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="btn btn-primary" onclick="Confetti.trigger()">
+                        <i class="bi bi-stars"></i>
+                        Trigger Confetti
+                    </button>
+                    <button class="btn btn-primary" onclick="Clipboard.copy('Hello World!')">
+                        <i class="bi bi-clipboard"></i>
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/ui-utilities.js?v=1"></script>
+    <script>
+        function demoButtonLoading() {
+            const button = document.getElementById('demoButton');
+            LoadingStates.showButtonLoading(button);
+            
+            setTimeout(() => {
+                LoadingStates.hideButtonLoading(button, 'Success!');
+                Toast.success('Loading complete!');
+                
+                setTimeout(() => {
+                    button.innerHTML = 'Click to See Loading';
+                }, 1500);
+            }, 2000);
+        }
+
+        function showDemoModal(size) {
+            Modal.show(`
+                <p>This is a <strong>${size}</strong> modal example.</p>
+                <p class="mt-4">Modals can contain any HTML content and come in different sizes.</p>
+            `, {
+                title: size.charAt(0).toUpperCase() + size.slice(1) + ' Modal',
+                size: size,
+                closeButton: true
+            });
+        }
+
+        // Add ripple to all buttons
+        document.querySelectorAll('.btn-ripple').forEach(btn => {
+            RippleEffect.add(btn);
+        });
+    </script>
+</body>
+</html>

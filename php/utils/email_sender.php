@@ -288,10 +288,402 @@ The UMak COOP Team
 University of Makati © " . date('Y') . " | Q-Mak System";
     }
     
+
+    
     /**
-     * Log email to database
+     * Send Order Confirmation Email with QR Code
      */
-    private static function logToDatabase($email, $type, $success, $error) {
+    public static function sendOrderConfirmation($toEmail, $orderData, $studentName = '') {
+        self::log("=== STARTING ORDER CONFIRMATION EMAIL ===");
+        self::log("Target Email", $toEmail);
+        self::log("Order Data", $orderData);
+        
+        // Check PHPMailer
+        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            self::log("ERROR: PHPMailer class not found!");
+            return ['success' => false, 'error' => 'PHPMailer not installed'];
+        }
+        
+        // Get SMTP config
+        $smtpConfig = self::getSMTPConfig();
+        if (!$smtpConfig['valid']) {
+            self::log("ERROR: Invalid SMTP Configuration");
+            return ['success' => false, 'error' => 'SMTP configuration not set'];
+        }
+        
+        // Generate QR Code
+        $qrCodeBase64 = self::generateQRCode($orderData);
+        
+        $mail = new PHPMailer(true);
+        
+        try {
+            if (self::$debugMode) {
+                $mail->SMTPDebug = 2;
+                $mail->Debugoutput = function($str, $level) {
+                    self::log("PHPMailer Debug [$level]", $str);
+                };
+            }
+            
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host = $smtpConfig['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $smtpConfig['username'];
+            $mail->Password = $smtpConfig['password'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = $smtpConfig['port'];
+            $mail->CharSet = 'UTF-8';
+            $mail->Timeout = 30;
+            
+            // Recipients
+            $mail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
+            $mail->addAddress($toEmail);
+            $mail->addReplyTo($smtpConfig['from_email'], $smtpConfig['from_name']);
+            
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = "Order Confirmed - Queue {$orderData['queue_number']}";
+            $mail->Body = self::getOrderConfirmationHTML($orderData, $studentName, $qrCodeBase64);
+            $mail->AltBody = self::getOrderConfirmationPlainText($orderData, $studentName);
+            
+            // Send
+            $result = $mail->send();
+            
+            if ($result) {
+                self::log("✓✓✓ ORDER CONFIRMATION EMAIL SENT! ✓✓✓");
+                self::logToDatabase($toEmail, 'order_confirmation', true, null, $orderData['order_id'] ?? 0);
+                return ['success' => true, 'message' => 'Order confirmation sent'];
+            }
+            
+        } catch (Exception $e) {
+            self::log("✗✗✗ EXCEPTION: " . $e->getMessage());
+            self::logToDatabase($toEmail, 'order_confirmation', false, $mail->ErrorInfo, $orderData['order_id'] ?? 0);
+            return ['success' => false, 'error' => $mail->ErrorInfo ?: $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Send Security Alert Email
+     */
+    public static function sendSecurityAlert($toEmail, $alertData) {
+        self::log("=== STARTING SECURITY ALERT EMAIL ===");
+        self::log("Target Email", $toEmail);
+        
+        if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
+            return ['success' => false, 'error' => 'PHPMailer not installed'];
+        }
+        
+        $smtpConfig = self::getSMTPConfig();
+        if (!$smtpConfig['valid']) {
+            return ['success' => false, 'error' => 'SMTP configuration not set'];
+        }
+        
+        $mail = new PHPMailer(true);
+        
+        try {
+            $mail->isSMTP();
+            $mail->Host = $smtpConfig['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $smtpConfig['username'];
+            $mail->Password = $smtpConfig['password'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = $smtpConfig['port'];
+            $mail->CharSet = 'UTF-8';
+            
+            $mail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
+            $mail->addAddress($toEmail);
+            
+            $mail->isHTML(true);
+            $mail->Subject = "Security Alert - " . ($alertData['alert_type'] ?? 'Account Activity');
+            $mail->Body = self::getSecurityAlertHTML($alertData);
+            $mail->AltBody = self::getSecurityAlertPlainText($alertData);
+            
+            $result = $mail->send();
+            
+            if ($result) {
+                self::log("✓✓✓ SECURITY ALERT EMAIL SENT! ✓✓✓");
+                return ['success' => true];
+            }
+            
+        } catch (Exception $e) {
+            self::log("✗ Security alert failed: " . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Generate QR Code using Endroid library (same as email.php)
+     */
+    private static function generateQRCode($orderData) {
+        try {
+            // Ensure data string is not empty
+            if (empty($orderData['queue_number'])) {
+                self::log("QR Code: Empty queue number provided");
+                return '';
+            }
+
+            // Check if QrCode class is available
+            if (!class_exists('Endroid\\QrCode\\QrCode')) {
+                self::log("QR Code: Endroid library not found. Run: composer require endroid/qr-code");
+                return '';
+            }
+
+            // Create JSON data for QR code
+            $qrData = json_encode([
+                'queue_number' => $orderData['queue_number'],
+                'reference_number' => $orderData['reference_number'] ?? '',
+                'timestamp' => date('c'),
+                'type' => 'umak_coop_order'
+            ]);
+
+            // Try named parameters (PHP 8.0+, Endroid v6)
+            try {
+                $qrCode = new \Endroid\QrCode\QrCode(
+                    data: $qrData,
+                    size: 200,
+                    margin: 10
+                );
+                
+                $writer = new \Endroid\QrCode\Writer\PngWriter();
+                $result = $writer->write($qrCode);
+                $imageData = $result->getString();
+                
+                if (!empty($imageData)) {
+                    self::log("QR Code: Generated successfully (" . strlen($imageData) . " bytes)");
+                    return 'data:image/png;base64,' . base64_encode($imageData);
+                } else {
+                    self::log("QR Code: Generated image is empty");
+                    return '';
+                }
+            } catch (\Throwable $e) {
+                self::log("QR Code: Named params failed, trying fallback: " . $e->getMessage());
+                
+                // Fallback: Try QrCode::create() method (Endroid v5)
+                try {
+                    if (method_exists('Endroid\\QrCode\\QrCode', 'create')) {
+                        $qrCode = \Endroid\QrCode\QrCode::create($qrData)
+                            ->setSize(200)
+                            ->setMargin(10);
+                        
+                        $writer = new \Endroid\QrCode\Writer\PngWriter();
+                        $result = $writer->write($qrCode);
+                        $imageData = $result->getString();
+                        
+                        if (!empty($imageData)) {
+                            self::log("QR Code: Generated successfully using fallback (" . strlen($imageData) . " bytes)");
+                            return 'data:image/png;base64,' . base64_encode($imageData);
+                        }
+                    }
+                } catch (\Throwable $e2) {
+                    self::log("QR Code: Fallback method also failed: " . $e2->getMessage());
+                }
+            }
+
+            self::log("QR Code: All generation methods failed");
+            return '';
+            
+        } catch (\Throwable $e) {
+            self::log("QR Code: Generation failed - " . $e->getMessage());
+            return '';
+        }
+    }
+    
+    /**
+     * Get Order Confirmation Email HTML
+     */
+    private static function getOrderConfirmationHTML($orderData, $studentName, $qrCodeBase64) {
+        $greeting = $studentName ? "Hello $studentName," : "Hello,";
+        $queueNumber = $orderData['queue_number'] ?? 'N/A';
+        $referenceNumber = $orderData['reference_number'] ?? 'N/A';
+        $items = $orderData['items'] ?? 'N/A';
+        $waitTime = $orderData['estimated_wait_time'] ?? 'N/A';
+        $orderType = $orderData['order_type'] ?? 'immediate';
+        $scheduledDate = $orderData['scheduled_date'] ?? '';
+        
+        $qrImageHtml = $qrCodeBase64 ? "<img src='$qrCodeBase64' alt='QR Code' style='width: 200px; height: 200px; display: block; margin: 0 auto;' />" : "<p style='color: #64748b;'>QR Code will be available at pickup</p>";
+        
+        $orderTypeInfo = $orderType === 'pre-order' && $scheduledDate ? 
+            "<p style='margin: 10px 0; font-size: 14px; color: #7c3aed;'><strong>Pre-Order for:</strong> " . date('F d, Y', strtotime($scheduledDate)) . "</p>" :
+            "<p style='margin: 10px 0; font-size: 14px; color: #2563eb;'><strong>Estimated Wait Time:</strong> $waitTime minutes</p>";
+        
+        return "<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+</head>
+<body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f7;'>
+    <table width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color: #f4f4f7; padding: 20px;'>
+        <tr>
+            <td align='center'>
+                <table width='600' cellpadding='0' cellspacing='0' border='0' style='background-color: #ffffff; border-radius: 8px; overflow: hidden;'>
+                    <tr>
+                        <td style='background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: #ffffff; padding: 30px; text-align: center;'>
+                            <h1 style='margin: 0 0 10px; font-size: 28px;'>Order Confirmed!</h1>
+                            <p style='margin: 0; font-size: 16px; opacity: 0.9;'>Your queue number is ready</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 40px 30px;'>
+                            <p style='margin: 0 0 20px; font-size: 16px; color: #333;'>$greeting</p>
+                            <p style='margin: 0 0 25px; font-size: 15px; color: #333;'>Your order has been confirmed. Present this QR code at the COOP counter:</p>
+                            
+                            <div style='background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 30px; margin: 20px 0; text-align: center;'>
+                                $qrImageHtml
+                                <div style='margin-top: 25px; padding-top: 20px; border-top: 1px solid #cbd5e1;'>
+                                    <p style='margin: 0 0 15px; font-size: 14px; color: #64748b;'>Queue Number</p>
+                                    <p style='margin: 0 0 20px; font-size: 32px; font-weight: bold; color: #1e3a8a; letter-spacing: 2px;'>$queueNumber</p>
+                                    <p style='margin: 0 0 5px; font-size: 13px; color: #64748b;'>Reference Number</p>
+                                    <p style='margin: 0; font-size: 16px; font-weight: 600; color: #7c3aed; font-family: monospace;'>$referenceNumber</p>
+                                </div>
+                            </div>
+                            
+                            <div style='background: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; margin: 25px 0; border-radius: 4px;'>
+                                <h3 style='margin: 0 0 10px; font-size: 16px; color: #1e40af;'>Order Details</h3>
+                                <p style='margin: 5px 0; font-size: 14px; color: #334155;'><strong>Items:</strong> $items</p>
+                                $orderTypeInfo
+                            </div>
+                            
+                            <div style='background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 20px 25px; margin: 25px 0; border-radius: 0 8px 8px 0;'>
+                                <h4 style='margin: 0 0 10px; color: #1e3a8a; font-size: 16px; font-weight: 600;'>Next Steps:</h4>
+                                <ul style='margin: 0; padding-left: 20px;'>
+                                    <li style='margin-bottom: 6px; font-size: 14px; color: #475569;'>Proceed to the UMak COOP counter</li>
+                                    <li style='margin-bottom: 6px; font-size: 14px; color: #475569;'>Present your Queue Number or scan the QR Code above for verification</li>
+                                    <li style='margin-bottom: 6px; font-size: 14px; color: #475569;'>Wait for your number to be called to collect your item</li>
+                                    <li style='margin-bottom: 6px; font-size: 14px; color: #475569;'>Keep this email as proof of your order</li>
+                                </ul>
+                            </div>
+                            
+                            <p style='margin: 20px 0 0; font-size: 13px; color: #64748b; text-align: center;'>Thank you for using UMak COOP Order Hub!</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='background-color: #f1f5f9; padding: 20px; text-align: center;'>
+                            <p style='margin: 0; font-size: 12px; color: #64748b;'>University of Makati © " . date('Y') . " | Q-Mak System</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+    }
+    
+    /**
+     * Get Order Confirmation Plain Text
+     */
+    private static function getOrderConfirmationPlainText($orderData, $studentName) {
+        $greeting = $studentName ? "Hello $studentName," : "Hello,";
+        $queueNumber = $orderData['queue_number'] ?? 'N/A';
+        $referenceNumber = $orderData['reference_number'] ?? 'N/A';
+        $items = $orderData['items'] ?? 'N/A';
+        $waitTime = $orderData['estimated_wait_time'] ?? 'N/A';
+        
+        return "UMak COOP - Order Confirmation
+
+$greeting
+
+Your order has been confirmed!
+
+Queue Number: $queueNumber
+Reference Number: $referenceNumber
+Items: $items
+Estimated Wait Time: $waitTime minutes
+
+What to do next:
+1. Present your queue number at the COOP counter
+2. Wait for your number to be called
+3. Collect your order
+
+Thank you for using UMak COOP Order Hub!
+
+---
+University of Makati © " . date('Y') . " | Q-Mak System";
+    }
+    
+    /**
+     * Get Security Alert HTML Email
+     */
+    private static function getSecurityAlertHTML($alertData) {
+        $alertType = $alertData['alert_type'] ?? 'Account Activity';
+        $action = $alertData['action'] ?? 'unknown action';
+        $timestamp = $alertData['timestamp'] ?? date('F d, Y \\a\\t g:i A');
+        $ipAddress = $alertData['ip_address'] ?? 'Unknown';
+        $device = $alertData['device'] ?? 'Unknown device';
+        $location = $alertData['location'] ?? 'Unknown location';
+        
+        return "<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+</head>
+<body style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f7;'>
+    <table width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color: #f4f4f7; padding: 20px;'>
+        <tr>
+            <td align='center'>
+                <table width='600' cellpadding='0' cellspacing='0' border='0' style='background-color: #ffffff; border-radius: 8px; overflow: hidden;'>
+                    <tr>
+                        <td style='background-color: #dc2626; color: #ffffff; padding: 30px; text-align: center;'>
+                            <h1 style='margin: 0; font-size: 24px;'>🔒 Security Alert</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 40px 30px;'>
+                            <p style='margin: 0 0 20px; font-size: 16px; color: #333;'>We detected a new activity on your account:</p>
+                            
+                            <div style='background: #fef2f2; border-left: 4px solid #dc2626; padding: 20px; margin: 20px 0;'>
+                                <p style='margin: 5px 0; font-size: 14px; color: #333;'><strong>Action:</strong> $action</p>
+                                <p style='margin: 5px 0; font-size: 14px; color: #333;'><strong>Time:</strong> $timestamp</p>
+                                <p style='margin: 5px 0; font-size: 14px; color: #333;'><strong>IP Address:</strong> $ipAddress</p>
+                                <p style='margin: 5px 0; font-size: 14px; color: #333;'><strong>Device:</strong> $device</p>
+                                <p style='margin: 5px 0; font-size: 14px; color: #333;'><strong>Location:</strong> $location</p>
+                            </div>
+                            
+                            <p style='margin: 20px 0; font-size: 14px; color: #333;'>If this was you, no action is needed.</p>
+                            <p style='margin: 10px 0; font-size: 14px; color: #333;'>If you don't recognize this activity, please contact the admin immediately and change your password.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='background-color: #f1f5f9; padding: 20px; text-align: center;'>
+                            <p style='margin: 0; font-size: 12px; color: #64748b;'>University of Makati © " . date('Y') . " | Q-Mak System</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+    }
+    
+    /**
+     * Get Security Alert Plain Text
+     */
+    private static function getSecurityAlertPlainText($alertData) {
+        $action = $alertData['action'] ?? 'unknown action';
+        $timestamp = $alertData['timestamp'] ?? date('F d, Y \\a\\t g:i A');
+        $ipAddress = $alertData['ip_address'] ?? 'Unknown';
+        
+        return "Security Alert - UMak COOP
+
+We detected a new activity on your account:
+
+Action: $action
+Time: $timestamp
+IP Address: $ipAddress
+
+If this was you, no action is needed.
+If you don't recognize this activity, please contact admin immediately.
+
+---
+University of Makati © " . date('Y') . " | Q-Mak System";
+    }
+    
+    /**
+     * Log email to database (updated with order_id support)
+     */
+    private static function logToDatabase($email, $type, $success, $error, $orderId = 0) {
         try {
             if (!function_exists('getDB')) {
                 require_once __DIR__ . '/../config/database.php';
@@ -299,7 +691,6 @@ University of Makati © " . date('Y') . " | Q-Mak System";
             
             $db = getDB();
             
-            // Get student_id if exists
             $studentId = 0;
             $stmt = $db->prepare("SELECT student_id FROM students WHERE email = ? LIMIT 1");
             $stmt->execute([$email]);
@@ -308,18 +699,17 @@ University of Makati © " . date('Y') . " | Q-Mak System";
                 $studentId = $student['student_id'];
             }
             
-            // Insert log
             $stmt = $db->prepare("
                 INSERT INTO email_logs (order_id, student_id, email_to, email_type, subject, message, status, sent_at, error_message)
-                VALUES (0, ?, ?, ?, 'Your UMak COOP Verification Code', 'OTP Email', ?, NOW(), ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
             ");
+            $subject = $type === 'order_confirmation' ? 'Order Confirmed' : 'Security Alert';
             $status = $success ? 'sent' : 'failed';
-            $stmt->execute([$studentId, $email, $type, $status, $error]);
+            $stmt->execute([$orderId, $studentId, $email, $type, $subject, 'Email sent', $status, $error]);
             
             self::log("✓ Email logged to database");
         } catch (Exception $e) {
             self::log("Warning: Could not log to database", $e->getMessage());
-            // Don't fail if logging fails
         }
     }
     

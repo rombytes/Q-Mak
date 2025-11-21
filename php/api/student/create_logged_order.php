@@ -16,6 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/session_config.php';
+require_once __DIR__ . '/../../utils/queue_functions.php';
+require_once __DIR__ . '/../../utils/email_sender.php';
+
+// Start output buffering to catch any stray output
+ob_start();
 
 // Check if student is logged in
 if (!isset($_SESSION['student_id'])) {
@@ -75,34 +80,14 @@ try {
         }
     }
     
-    // Generate queue number (format: Q-YYYYMMDD-XXX)
+    // Generate queue number (format: Q-1, Q-2, etc.)
     $today = date('Y-m-d');
     $queueDateForNumber = ($orderType === 'pre-order' && $scheduledDate) ? $scheduledDate : $today;
     
-    // Get the last queue number for today
-    $queueStmt = $db->prepare("
-        SELECT queue_number 
-        FROM orders 
-        WHERE queue_date = ? 
-        ORDER BY order_id DESC 
-        LIMIT 1
-    ");
-    $queueStmt->execute([$queueDateForNumber]);
-    $lastQueue = $queueStmt->fetch(PDO::FETCH_ASSOC);
+    $queueNumber = generateQueueNumber($db, $queueDateForNumber);
     
-    if ($lastQueue) {
-        // Extract number from format Q-YYYYMMDD-XXX
-        $parts = explode('-', $lastQueue['queue_number']);
-        $lastNumber = intval(end($parts));
-        $newNumber = $lastNumber + 1;
-    } else {
-        $newNumber = 1;
-    }
-    
-    $queueNumber = 'Q-' . str_replace('-', '', $queueDateForNumber) . '-' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
-    
-    // Generate unique reference number
-    $referenceNumber = 'ORD-' . strtoupper(uniqid());
+    // Generate unique reference number in QMAK format
+    $referenceNumber = 'QMAK-' . strtoupper(substr(md5(uniqid() . time()), 0, 6));
     
     // Determine if order is placed outside hours
     $currentHour = (int)date('H');
@@ -115,6 +100,7 @@ try {
             student_id,
             queue_number,
             queue_date,
+            item_name,
             item_ordered,
             quantity,
             notes,
@@ -124,11 +110,11 @@ try {
             ordered_outside_hours,
             estimated_wait_time,
             created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     
     $status = ($orderType === 'pre-order') ? 'pending' : 'pending';
-    $quantity = substr_count(strtolower($items), 'x') + 1; // Rough estimate
+    $quantity = substr_count(strtolower($items), ',') + 1; // Count commas + 1 for number of items
     $estimatedWaitTime = $quantity * 5; // 5 minutes per item
     
     $stmt->execute([
@@ -136,7 +122,8 @@ try {
         $studentId,
         $queueNumber,
         $queueDateForNumber,
-        $items,
+        $items,  // item_name (same as item_ordered for compatibility)
+        $items,  // item_ordered
         $quantity,
         $notes,
         $status,
@@ -147,6 +134,11 @@ try {
     ]);
     
     $orderId = $db->lastInsertId();
+    
+    // Get student email and name for confirmation
+    $studentStmt = $db->prepare("SELECT email, first_name, last_name FROM students WHERE student_id = ?");
+    $studentStmt->execute([$studentId]);
+    $studentInfo = $studentStmt->fetch(PDO::FETCH_ASSOC);
     
     // Create notification for the student
     try {
@@ -177,6 +169,40 @@ try {
         error_log("Failed to create notification: " . $e->getMessage());
     }
     
+    // Send order confirmation email with QR code
+    if ($studentInfo && !empty($studentInfo['email'])) {
+        try {
+            $orderData = [
+                'order_id' => $orderId,
+                'queue_number' => $queueNumber,
+                'reference_number' => $referenceNumber,
+                'items' => $items,
+                'estimated_wait_time' => $estimatedWaitTime,
+                'order_type' => $orderType,
+                'scheduled_date' => $scheduledDate
+            ];
+            
+            $studentName = $studentInfo['first_name'] . ' ' . $studentInfo['last_name'];
+            
+            $emailResult = EmailSender::sendOrderConfirmation(
+                $studentInfo['email'],
+                $orderData,
+                $studentName
+            );
+            
+            if ($emailResult['success']) {
+                error_log("✓ Order confirmation email sent to {$studentInfo['email']}");
+            } else {
+                error_log("✗ Failed to send order confirmation email: " . ($emailResult['error'] ?? 'Unknown error'));
+            }
+        } catch (Exception $emailError) {
+            error_log("✗ Exception sending order confirmation: " . $emailError->getMessage());
+            // Don't fail the order if email fails
+        }
+    }
+    
+    // Clear any buffered output and send only JSON
+    ob_clean();
     echo json_encode([
         'success' => true,
         'message' => 'Order created successfully!',
@@ -190,6 +216,7 @@ try {
     
 } catch (PDOException $e) {
     error_log("Create Order Error: " . $e->getMessage());
+    ob_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false,
@@ -198,6 +225,7 @@ try {
     ]);
 } catch (Exception $e) {
     error_log("Create Order Error: " . $e->getMessage());
+    ob_clean();
     http_response_code(500);
     echo json_encode([
         'success' => false,

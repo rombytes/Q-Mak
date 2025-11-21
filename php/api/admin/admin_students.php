@@ -18,14 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/admin_logger.php';
-
-// Configure session before starting it
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_samesite', 'Lax');
-    ini_set('session.cookie_httponly', '1');
-    ini_set('session.use_strict_mode', '1');
-    session_start();
-}
+require_once __DIR__ . '/../../config/session_config.php';
 
 // Debug: Log session data on every request
 error_log("=== admin_students.php Session Debug ===");

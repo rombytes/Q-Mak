@@ -10,6 +10,7 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/root.css">
+    <link rel="stylesheet" href="assets/css/utilities.css">
     <link rel="stylesheet" href="assets/css/index.css">
     
     <!-- Inline CSS removed - now in assets/css/index.css -->
@@ -30,7 +31,7 @@
                 <i class="bi bi-search text-xl text-gray-600"></i>
                 <span class="text-xs text-gray-600 mt-1">Track</span>
             </button>
-            <button class="flex flex-col items-center py-2 px-4 hover:bg-gray-50 rounded-lg transition-all" onclick="showLoginModal()">
+            <button class="flex flex-col items-center py-2 px-4 hover:bg-gray-50 rounded-lg transition-all" onclick="window.location.href='login.html'">
                 <i class="bi bi-person-circle text-xl text-gray-600"></i>
                 <span class="text-xs text-gray-600 mt-1">Login</span>
             </button>
@@ -38,7 +39,7 @@
     </nav>
     
     <!-- Floating Quick Order Button (Desktop/Tablet) -->
-    <button class="hidden md:flex fixed bottom-6 right-6 w-16 h-16 bg-warning-500 hover:bg-warning-600 rounded-full shadow-2xl items-center justify-center text-white z-40 hover:scale-110 transition-all duration-300 group"
+    <button class="hidden md:flex fixed bottom-6 right-6 w-16 h-16 bg-primary-900 hover:bg-primary-800 rounded-full items-center justify-center text-white z-40 hover:scale-110 transition-all duration-300 group floating-order-btn"
             onclick="showOrderModal()"
             title="Quick Order">
         <i class="bi bi-cart-plus-fill text-2xl group-hover:animate-pulse"></i>
@@ -63,7 +64,7 @@
                     <a href="#about" class="hover:text-warning-400 transition-all duration-300 font-medium">About</a>
                     <a href="#how-it-works" class="hover:text-warning-400 transition-all duration-300 font-medium">How It Works</a>
                     <a href="#contact" class="hover:text-warning-400 transition-all duration-300 font-medium">Contact</a>
-                    <button onclick="showLoginModal()" class="border-2 border-warning-500 text-warning-500 hover:bg-warning-500 hover:text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg btn-hover">
+                    <button onclick="window.location.href='login.html'" class="border-2 border-warning-500 text-warning-500 hover:bg-warning-500 hover:text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg btn-hover">
                         <i class="bi bi-box-arrow-in-right mr-2"></i>Login
                     </button>
                 </nav>
@@ -90,7 +91,7 @@
                 <a href="#contact" class="text-white hover:text-warning-400 transition-all py-2 font-medium" onclick="closeMobileMenu()">
                     <i class="bi bi-telephone-fill mr-2"></i>Contact
                 </a>
-                <button onclick="showLoginModal(); closeMobileMenu();" class="bg-warning-500 hover:bg-warning-600 text-white px-6 py-3 rounded-lg font-semibold transition-all text-left">
+                <button onclick="window.location.href='login.html'; closeMobileMenu();" class="bg-warning-500 hover:bg-warning-600 text-white px-6 py-3 rounded-lg font-semibold transition-all text-left">
                     <i class="bi bi-box-arrow-in-right mr-2"></i>Login
                 </button>
             </nav>
@@ -99,7 +100,7 @@
 
     <div class="pt-20">
         <!-- Hero Section with UMak Background -->
-        <div class="relative text-white py-32 px-8 min-h-[600px] flex items-center overflow-hidden">
+        <div class="relative text-white pt-32 pb-20 px-8 min-h-[600px] flex items-center overflow-hidden">
             <!-- Background Image - Full brightness -->
             <div class="absolute inset-0">
                 <img src="../images/UMak-Facade-Admin-2024.jpg" alt="" class="w-full h-full object-cover">
@@ -113,7 +114,7 @@
             
             <div class="max-w-7xl mx-auto text-center relative z-10">
                 <!-- Content Box with lower opacity - lets the UMak building show through -->
-                <div class="bg-primary-900/40 backdrop-blur-lg rounded-3xl p-12 shadow-2xl border border-white/30 animate-fade-in">
+                <div class="bg-primary-900/40 backdrop-blur-lg rounded-3xl p-12 mb-0 shadow-2xl border border-white/30 animate-fade-in">
                     <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight" style="text-shadow: 2px 4px 12px rgba(0,0,0,0.8);">
                         Q-Mak: <span class="text-warning-400">Queue smarter,</span><br class="hidden md:block">
                         <span class="text-white">not harder.</span>
@@ -157,26 +158,26 @@
         </div>
 
         <!-- Features Banner Section -->
-        <div class="bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 py-8 border-t-4 border-warning-500">
+        <div class="bg-primary-900 py-10 border-t-4 border-warning-500 relative z-10">
             <div class="max-w-7xl mx-auto px-8">
                 <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
                     <div class="text-center">
-                        <p class="text-white/60 text-sm mb-2 uppercase tracking-wide">Powered by</p>
-                        <p class="text-white font-bold text-xl">Smart Queue Technology</p>
+                        <p class="text-gray-300 text-base mb-2 uppercase tracking-wide font-semibold">Powered by</p>
+                        <p class="text-white font-bold text-2xl">Smart Queue Technology</p>
                     </div>
-                    <div class="hidden md:block w-px h-12 bg-white/20"></div>
-                    <div class="flex flex-wrap justify-center gap-6 md:gap-8">
-                        <div class="flex items-center gap-2 text-white">
-                            <i class="bi bi-lightning-fill text-warning-400 text-xl"></i>
-                            <span class="font-medium">Fast Processing</span>
+                    <div class="hidden md:block w-px h-16 bg-gray-600"></div>
+                    <div class="flex flex-wrap justify-center gap-8 md:gap-10">
+                        <div class="flex items-center gap-3 text-white">
+                            <i class="bi bi-lightning-fill text-warning-500 text-2xl"></i>
+                            <span class="font-semibold text-lg">Fast Processing</span>
                         </div>
-                        <div class="flex items-center gap-2 text-white">
-                            <i class="bi bi-shield-lock-fill text-success-400 text-xl"></i>
-                            <span class="font-medium">Secure</span>
+                        <div class="flex items-center gap-3 text-white">
+                            <i class="bi bi-shield-lock-fill text-success-500 text-2xl"></i>
+                            <span class="font-semibold text-lg">Secure</span>
                         </div>
-                        <div class="flex items-center gap-2 text-white">
-                            <i class="bi bi-phone-fill text-accent-400 text-xl"></i>
-                            <span class="font-medium">Mobile Friendly</span>
+                        <div class="flex items-center gap-3 text-white">
+                            <i class="bi bi-phone-fill text-accent-500 text-2xl"></i>
+                            <span class="font-semibold text-lg">Mobile Friendly</span>
                         </div>
                     </div>
                 </div>
@@ -184,13 +185,13 @@
         </div>
 
         <!-- About Section with Full-Width Carousel -->
-        <div id="about" class="relative my-12 bg-gray-100">
-            <div class="overflow-hidden pb-8">
+        <div id="about" class="relative bg-gradient-to-br from-gray-50 to-gray-100">
+            <div class="relative overflow-hidden">
                 <!-- Carousel Wrapper -->
-                <div id="carouselWrapper" class="flex transition-all duration-1000 ease-out" style="transform: translateX(0%);">
+                <div id="carouselWrapper" class="flex transition-transform duration-700 ease-in-out" style="transform: translateX(0%); will-change: transform;">
                     <!-- Slide 1: About & Why Choose Us -->
-                    <div class="min-w-full flex-shrink-0 min-h-[500px] bg-gray-100">
-                        <div class="max-w-7xl mx-auto px-8 pt-8">
+                    <div class="min-w-full flex-shrink-0 min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100">
+                        <div class="max-w-7xl mx-auto px-8 pt-8 pb-8">
                             <h2 class="text-4xl font-extrabold mb-8 text-center animate-fade-in">
                                 About <span class="gradient-text">UMak COOP</span>
                             </h2>
@@ -198,7 +199,7 @@
                             <!-- About Info -->
                             <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
                                 <h3 class="text-xl font-semibold text-primary-900 mb-3 flex items-center gap-2">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-accent-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
                                         <i class="bi bi-mortarboard-fill text-white text-lg"></i>
                                     </div>
                                     The UMak Experience
@@ -217,35 +218,35 @@
                             <!-- Why Choose Us -->
                             <div class="bg-gradient-to-br from-accent-50 via-indigo-50 to-purple-50 rounded-2xl shadow-xl p-6 border border-accent-100">
                                 <h3 class="text-2xl font-bold text-primary-900 mb-6 flex items-center justify-center gap-2">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-warning-400 to-warning-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
                                         <i class="bi bi-star-fill text-white text-lg"></i>
                                     </div>
                                     Why Choose Us?
                                 </h3>
                                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-orange-400">
-                                        <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
                                             <i class="bi bi-rocket-takeoff-fill text-white text-xl"></i>
                                         </div>
                                         <p class="font-bold text-gray-900 mb-1 text-base">Fast & Convenient</p>
                                         <p class="text-xs text-gray-600">Quick ordering system</p>
                                     </div>
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-green-400">
-                                        <div class="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
                                             <i class="bi bi-graph-up text-white text-xl"></i>
                                         </div>
                                         <p class="font-bold text-gray-900 mb-1 text-base">Real-time Tracking</p>
                                         <p class="text-xs text-gray-600">Know your queue status</p>
                                     </div>
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-400">
-                                        <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
                                             <i class="bi bi-award-fill text-white text-xl"></i>
                                         </div>
                                         <p class="font-bold text-gray-900 mb-1 text-base">Quality Products</p>
                                         <p class="text-xs text-gray-600">For students' needs</p>
                                     </div>
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-purple-400">
-                                        <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
                                             <i class="bi bi-shield-fill-check text-white text-xl"></i>
                                         </div>
                                         <p class="font-bold text-gray-900 mb-1 text-base">Secure Service</p>
@@ -257,8 +258,8 @@
                     </div>
                     
                     <!-- Slide 2: COOP Status Dashboard -->
-                    <div class="min-w-full flex-shrink-0 min-h-[500px] bg-gray-100">
-                        <div class="max-w-7xl mx-auto px-8 pt-8">
+                    <div class="min-w-full flex-shrink-0 min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100">
+                        <div class="max-w-7xl mx-auto px-8 pt-8 pb-8">
                             <h2 class="text-4xl font-extrabold mb-3 text-center animate-fade-in">
                                 Live <span class="gradient-text">COOP Dashboard</span>
                             </h2>
@@ -270,9 +271,9 @@
                             <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-3xl p-6 mb-6">
                                 <div class="grid lg:grid-cols-3 gap-6">
                                     <!-- Current Status Card -->
-                                    <div id="coopStatusCard" class="bg-white rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-accent-100 hover:border-accent-300">
+                                    <div id="coopStatusCard" class="rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-accent-100 hover:border-accent-300" style="background: white !important;">
                                     <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-accent-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
                                             <i class="bi bi-shop text-white text-lg"></i>
                                         </div>
                                         <h3 class="text-xl font-bold text-primary-900">COOP Status</h3>
@@ -283,7 +284,7 @@
                                 </div>
                                 
                                 <!-- Today's Queue Stats Card -->
-                                <div class="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-blue-400">
+                                <div class="text-white rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-primary-600" style="background: linear-gradient(to bottom right, #1d4ed8, #1e40af, #1e3a8a) !important;">
                                     <div class="flex items-center gap-2 mb-4">
                                         <div class="w-12 h-12 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg border border-white/30">
                                             <i class="bi bi-pie-chart-fill text-white text-lg"></i>
@@ -293,43 +294,43 @@
                                     <div class="space-y-3">
                                         <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30">
                                             <div class="flex items-center justify-between">
-                                                <span class="text-blue-100 font-medium text-base">Total Orders</span>
-                                                <span id="totalOrders" class="text-3xl font-bold">--</span>
+                                                <span class="text-white font-medium text-base">Total Orders</span>
+                                                <span id="totalOrders" class="text-3xl font-bold text-white">--</span>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 gap-3">
                                             <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/30">
                                                 <i class="bi bi-check-circle-fill text-green-300 text-2xl mb-1"></i>
-                                                <p id="completedOrders" class="text-2xl font-bold">--</p>
-                                                <p class="text-xs text-blue-100 font-medium mt-1">Completed</p>
+                                                <p id="completedOrders" class="text-2xl font-bold text-white">--</p>
+                                                <p class="text-xs text-white font-medium mt-1">Completed</p>
                                             </div>
                                             <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/30">
                                                 <i class="bi bi-clock-fill text-orange-300 text-2xl mb-1"></i>
-                                                <p id="pendingOrders" class="text-2xl font-bold">--</p>
-                                                <p class="text-xs text-blue-100 font-medium mt-1">Pending</p>
+                                                <p id="pendingOrders" class="text-2xl font-bold text-white">--</p>
+                                                <p class="text-xs text-white font-medium mt-1">Pending</p>
                                             </div>
                                         </div>
                                         <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30">
                                             <div class="flex items-center justify-between">
-                                                <span class="text-blue-100 font-medium text-base">Avg Wait</span>
-                                                <span id="avgWait" class="text-2xl font-bold">--</span>
+                                                <span class="text-white font-medium text-base">Avg Wait</span>
+                                                <span id="avgWait" class="text-2xl font-bold text-white">--</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <!-- Operating Hours Card -->
-                                <div class="bg-white rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-purple-100 hover:border-purple-300">
+                                <div class="rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-primary-100 hover:border-primary-300" style="background: white !important;">
                                     <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
                                             <i class="bi bi-clock-fill text-white text-lg"></i>
                                         </div>
-                                        <h3 class="text-xl font-bold text-purple-900">Schedule</h3>
+                                        <h3 class="text-xl font-bold text-primary-900">Schedule</h3>
                                     </div>
                                     <div id="schedulePreview" class="space-y-2 text-sm mb-4">
                                         <!-- Schedule will be loaded here -->
                                     </div>
-                                    <button onclick="window.location.href='student/queue_dashboard.html'" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 font-bold flex items-center justify-center gap-2 transform hover:scale-105 text-base">
+                                    <button onclick="window.location.href='student/queue_dashboard.html'" class="w-full text-white py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 font-bold flex items-center justify-center gap-2 transform hover:scale-105 text-base" style="background: linear-gradient(to right, #f97316, #ea580c) !important;">
                                         <i class="bi bi-box-arrow-up-right"></i> 
                                         View Full Dashboard
                                     </button>
@@ -339,18 +340,17 @@
                     </div>
                 </div>
                 </div>
-            </div>
-            
-            <!-- Navigation Arrows -->
-            <button onclick="previousSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:-translate-x-1">
-                <i class="bi bi-chevron-left text-xl font-bold"></i>
-            </button>
-            <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-gradient-to-r from-warning-500 to-warning-600 hover:from-warning-600 hover:to-warning-700 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:translate-x-1">
-                <i class="bi bi-chevron-right text-xl font-bold"></i>
-            </button>
-            
-            <!-- Dots Indicator - Inside carousel container with background -->
-            <div class="flex justify-center items-center gap-3 pt-6 pb-8 bg-gradient-to-b from-gray-100 to-gray-50">
+                
+                <!-- Navigation Arrows -->
+                <button onclick="previousSlide()" class="carousel-arrow absolute left-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:-translate-x-1">
+                    <i class="bi bi-chevron-left text-xl font-bold"></i>
+                </button>
+                <button onclick="nextSlide()" class="carousel-arrow absolute right-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:translate-x-1">
+                    <i class="bi bi-chevron-right text-xl font-bold"></i>
+                </button>
+                
+                <!-- Dots Indicator - Inside carousel container with background -->
+                <div class="flex justify-center items-center gap-3 pt-6 pb-8 bg-gradient-to-b from-gray-100 to-gray-50">
             <button onclick="goToSlide(0)" class="carousel-dot group transition-all duration-300" data-slide="0">
                 <div class="w-4 h-4 rounded-full bg-gradient-to-br from-accent-500 to-accent-600 shadow-lg group-hover:scale-125 transition-all duration-300 ring-2 ring-accent-200"></div>
             </button>
@@ -821,88 +821,88 @@
     </div>
 
     <!-- Order Modal -->
-    <div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-60 modal-backdrop flex items-center justify-center z-50 p-4" onclick="closeModalOnBackdrop(event, 'orderModal')">
-        <div class="bg-white rounded-3xl p-10 max-w-2xl w-full shadow-2xl modal-content">
-            <div class="flex justify-between items-center mb-6">
+    <div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-70 modal-backdrop flex items-center justify-center z-50 p-4" onclick="closeModalOnBackdrop(event, 'orderModal')">
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 max-w-3xl w-full shadow-2xl modal-content border-2 border-primary-100">
+            <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h3 class="text-4xl font-extrabold gradient-text">COOP Orders</h3>
-                    <p class="text-gray-500 text-sm mt-1">Choose how you want to order</p>
+                    <h3 class="text-4xl font-extrabold text-primary-900 mb-1">COOP Orders</h3>
+                    <p class="text-gray-600 text-base">Choose how you want to order</p>
                 </div>
-                <button onclick="hideOrderModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-300">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                <button onclick="hideOrderModal()" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full p-3 transition-all duration-300 hover:rotate-90">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
             
             <!-- COOP Status Display -->
-            <div id="modalCoopStatus" class="mb-6 p-4 rounded-xl text-sm">
+            <div id="modalCoopStatus" class="mb-8 p-5 rounded-2xl text-sm shadow-lg border-2 border-primary-100">
                 <!-- Status will be loaded here -->
             </div>
             
-            <div class="grid md:grid-cols-2 gap-4 mt-8">
-                <!-- Student Dashboard -->
-                <button onclick="window.location.href='student/student_login.html'" class="group relative overflow-hidden bg-gradient-to-br from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 text-white p-6 rounded-2xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1">
-                    <div class="text-left">
-                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm mb-3">
-                            <i class="bi bi-speedometer2 text-2xl"></i>
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <!-- Login to Dashboard -->
+                <button onclick="window.location.href='login.html'" class="group relative overflow-hidden text-white p-8 rounded-2xl transition-all duration-300 hover:shadow-2xl shadow-xl transform hover:-translate-y-2 border-4 border-primary-500 hover:border-primary-400" style="background: linear-gradient(to bottom right, #1e40af, #1e3a8a) !important;">
+                    <div class="text-left relative z-10">
+                        <div class="w-16 h-16 bg-white/30 rounded-xl flex items-center justify-center backdrop-blur-sm mb-4 shadow-lg">
+                            <i class="bi bi-box-arrow-in-right text-white text-3xl"></i>
                         </div>
-                        <div class="font-bold text-lg mb-1">Student Dashboard</div>
-                        <div class="text-sm text-white/80 mb-2">Full access with login</div>
-                        <div class="flex items-center gap-1 text-xs text-white/70">
-                            <i class="bi bi-check-circle-fill"></i> Order history
+                        <div class="font-bold text-2xl mb-2 text-white">Login to Dashboard</div>
+                        <div class="text-base text-white mb-3 font-medium">Access your account</div>
+                        <div class="flex items-center gap-2 text-sm text-white mb-1">
+                            <i class="bi bi-check-circle-fill text-white text-lg"></i> Order history
                         </div>
-                        <div class="flex items-center gap-1 text-xs text-white/70">
-                            <i class="bi bi-check-circle-fill"></i> Saved preferences
+                        <div class="flex items-center gap-2 text-sm text-white">
+                            <i class="bi bi-check-circle-fill text-white text-lg"></i> Saved preferences
                         </div>
                     </div>
-                    <i class="bi bi-arrow-right-circle text-2xl absolute bottom-4 right-4 group-hover:translate-x-1 transition-transform"></i>
+                    <i class="bi bi-arrow-right-circle text-white text-4xl absolute bottom-6 right-6 opacity-90 group-hover:translate-x-1 group-hover:opacity-100 transition-all z-10"></i>
                 </button>
                 
                 <!-- Quick Order -->
-                <button onclick="window.location.href='student/create_order.html'" class="group relative overflow-hidden bg-white border-3 border-warning-500 hover:bg-warning-50 p-6 rounded-2xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1">
-                    <div class="text-left">
-                        <div class="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center mb-3">
-                            <i class="bi bi-lightning-charge-fill text-warning-600 text-2xl"></i>
+                <button onclick="window.location.href='student/create_order.html'" class="group relative overflow-hidden text-white p-8 rounded-2xl transition-all duration-300 hover:shadow-2xl shadow-xl transform hover:-translate-y-2 border-4 border-warning-400 hover:border-warning-300" style="background: linear-gradient(to bottom right, #f97316, #ea580c) !important;">
+                    <div class="text-left relative z-10">
+                        <div class="w-16 h-16 bg-white/30 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                            <i class="bi bi-lightning-charge-fill text-white text-3xl"></i>
                         </div>
-                        <div class="font-bold text-lg mb-1 text-gray-900">Quick Order</div>
-                        <div class="text-sm text-gray-600 mb-2">No login required</div>
-                        <div class="flex items-center gap-1 text-xs text-gray-500">
-                            <i class="bi bi-check-circle-fill"></i> Fast checkout
+                        <div class="font-bold text-2xl mb-2 text-white">Quick Order</div>
+                        <div class="text-base text-white mb-3 font-medium">No login required</div>
+                        <div class="flex items-center gap-2 text-sm text-white mb-1">
+                            <i class="bi bi-check-circle-fill text-white text-lg"></i> Fast checkout
                         </div>
-                        <div class="flex items-center gap-1 text-xs text-gray-500">
-                            <i class="bi bi-check-circle-fill"></i> Guest ordering
+                        <div class="flex items-center gap-2 text-sm text-white">
+                            <i class="bi bi-check-circle-fill text-white text-lg"></i> Guest ordering
                         </div>
                     </div>
-                    <i class="bi bi-arrow-right-circle text-2xl text-warning-600 absolute bottom-4 right-4 group-hover:translate-x-1 transition-transform"></i>
+                    <i class="bi bi-arrow-right-circle text-white text-4xl absolute bottom-6 right-6 opacity-90 group-hover:translate-x-1 group-hover:opacity-100 transition-all z-10"></i>
                 </button>
             </div>
             
             <!-- Additional Options -->
-            <div class="grid md:grid-cols-2 gap-4 mt-4">
-                <button onclick="window.location.href='student/check_status.html'" class="group bg-gray-50 hover:bg-gray-100 p-4 rounded-xl transition-all duration-300 hover:shadow-lg text-left border-2 border-gray-200 hover:border-gray-300">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <i class="bi bi-search text-gray-600 text-lg"></i>
+            <div class="grid md:grid-cols-2 gap-6 mt-6">
+                <button onclick="window.location.href='student/check_status.html'" class="group bg-white hover:bg-gray-50 p-6 rounded-2xl transition-all duration-300 hover:shadow-xl shadow-lg text-left border-2 border-gray-300 hover:border-primary-400 transform hover:-translate-y-1" style="background: white !important;">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #3b82f6, #2563eb) !important;">
+                            <i class="bi bi-search text-white text-xl"></i>
                         </div>
-                        <div>
-                            <div class="font-bold text-gray-900">Check Order Status</div>
-                            <div class="text-xs text-gray-500">Track your order</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-gray-900 text-lg mb-1">Check Order Status</div>
+                            <div class="text-sm text-gray-600">Track your order</div>
                         </div>
-                        <i class="bi bi-arrow-right text-gray-400 ml-auto group-hover:translate-x-1 transition-transform"></i>
+                        <i class="bi bi-arrow-right text-xl text-gray-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all"></i>
                     </div>
                 </button>
                 
-                <button onclick="window.location.href='student/queue_dashboard.html'" class="group bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 p-4 rounded-xl transition-all duration-300 hover:shadow-lg text-left">
-                    <div class="flex items-center gap-3 text-white">
-                        <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                            <i class="bi bi-bar-chart-line text-lg"></i>
+                <button onclick="window.location.href='student/queue_dashboard.html'" class="group p-6 rounded-2xl transition-all duration-300 hover:shadow-xl shadow-lg text-left transform hover:-translate-y-1 border-2 border-accent-400" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
+                    <div class="flex items-center gap-4 text-white">
+                        <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
+                            <i class="bi bi-bar-chart-line text-white text-xl"></i>
                         </div>
-                        <div>
-                            <div class="font-bold">Queue Dashboard</div>
-                            <div class="text-xs text-white/80">Live statistics</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-white text-lg mb-1">Queue Dashboard</div>
+                            <div class="text-sm text-white">Live statistics</div>
                         </div>
-                        <i class="bi bi-arrow-right ml-auto group-hover:translate-x-1 transition-transform"></i>
+                        <i class="bi bi-arrow-right text-white text-xl group-hover:translate-x-1 transition-transform"></i>
                     </div>
                 </button>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -913,6 +913,15 @@
             </div>
     <!-- Inline JavaScript removed - now in assets/js/index.js -->
     <!-- External JavaScript -->
+    <!-- Phase 1: Core Utilities -->
+    <script src="assets/js/ui-utilities.js?v=1"></script>
+    
+    <!-- Phase 2: Enhanced Interactions -->
+    <script src="assets/js/gesture-system.js?v=1"></script>
+    <script src="assets/js/keyboard-shortcuts.js?v=1"></script>
+    <script src="assets/js/command-palette.js?v=1"></script>
+    
+    <!-- Original Scripts -->
     <script src="assets/js/index.js"></script>
 </body>
 </html>

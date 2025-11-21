@@ -30,15 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/session_config.php';
 require_once __DIR__ . '/../../utils/brute_force_protection.php';
 
 // Initialize brute force protection
 $security = new BruteForceProtection();
-
-// Start session at the beginning
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ob_end_clean();

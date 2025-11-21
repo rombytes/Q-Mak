@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-session_start();
+require_once __DIR__ . '/../../config/session_config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if admin was logged in

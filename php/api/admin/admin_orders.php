@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/email.php';
 
-session_start();
+require_once __DIR__ . '/../../config/session_config.php';
 
 // Check admin authentication
 if (!isset($_SESSION['admin_id'])) {
@@ -44,7 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 o.order_id,
                 o.queue_number,
                 o.reference_number,
-                o.item_name as item_ordered,
+                COALESCE(o.item_ordered, o.item_name, 'N/A') as item_ordered,
+                o.quantity,
                 o.status as order_status,
                 o.created_at,
                 o.updated_at,
@@ -84,6 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $params[] = $date;
         }
         
+        // Filter by specific student_id if provided
+        if (!empty($_GET['student_id'])) {
+            $query .= " AND s.student_id = ?";
+            $params[] = $_GET['student_id'];
+        }
+        
         if (!empty($search)) {
             $query .= " AND (o.queue_number LIKE ? OR s.student_id LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ?)";
             $searchParam = "%$search%";
@@ -93,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $params[] = $searchParam;
         }
         
-        $query .= " ORDER BY o.created_at ASC";
+        $query .= " ORDER BY o.created_at DESC";
         
         $stmt = $db->prepare($query);
         $stmt->execute($params);

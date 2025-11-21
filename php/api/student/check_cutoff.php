@@ -25,10 +25,16 @@ try {
     
     if (!$status['open']) {
         $response['can_order'] = false;
+        
+        // Get next business day
+        $nextBusinessDay = getNextBusinessDay($db);
+        $nextBusinessDayFormatted = $nextBusinessDay ? date('l, F j', strtotime($nextBusinessDay)) : 'Unknown';
+        
         $response['warning'] = [
             'level' => 'error',
             'message' => 'COOP is currently closed. Your order will be scheduled as a pre-order for the next business day.',
-            'reason' => $status['reason'] ?? 'Closed'
+            'reason' => $status['reason'] ?? 'Closed',
+            'next_business_day' => $nextBusinessDayFormatted
         ];
     } else {
         // Check cutoff time

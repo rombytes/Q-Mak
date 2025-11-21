@@ -92,23 +92,29 @@ function displayScannedOrder(qrData) {
     const resultDiv = document.getElementById('qr-scan-result');
 
     detailsDiv.innerHTML = `
-        <div class="grid grid-cols-2 gap-3">
-            <div>
-                <span class="font-semibold">Queue Number:</span>
-                <p class="text-lg font-bold text-green-600">${qrData.queue_number || 'N/A'}</p>
+        <div class="bg-white/50 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between pb-3 border-b-2 border-green-200">
+                <div>
+                    <span class="text-xs font-semibold text-green-700 uppercase tracking-wide">Queue Number</span>
+                    <p class="text-2xl font-bold text-green-600 mt-1">${qrData.queue_number || 'N/A'}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-md">
+                    <i class="fas fa-ticket-alt text-white text-xl"></i>
+                </div>
             </div>
             <div>
-                <span class="font-semibold">Email:</span>
-                <p class="text-sm">${qrData.email || 'N/A'}</p>
+                <span class="text-xs font-semibold text-green-700 uppercase tracking-wide">Student Email</span>
+                <p class="text-sm font-medium text-green-900 mt-1">${qrData.email || 'N/A'}</p>
             </div>
-            <div class="col-span-2">
-                <span class="font-semibold">Scanned At:</span>
-                <p class="text-sm">${new Date().toLocaleString()}</p>
+            <div>
+                <span class="text-xs font-semibold text-green-700 uppercase tracking-wide">Scanned At</span>
+                <p class="text-sm font-medium text-green-900 mt-1">${new Date().toLocaleString()}</p>
             </div>
         </div>
     `;
 
     resultDiv.classList.remove('hidden');
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // Process scanned order

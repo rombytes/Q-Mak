@@ -42,14 +42,35 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    $input = json_decode(file_get_contents('php://input'), true);
+    // Check if this is a file upload (multipart/form-data) or JSON
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
     
-    // Validate required fields
-    $required = ['studentId', 'fname', 'lname', 'email', 'college', 'program', 'year', 'purchasing'];
+    if (strpos($contentType, 'multipart/form-data') !== false) {
+        // File upload - use $_POST and $_FILES
+        $input = $_POST;
+        $isFileUpload = true;
+    } else {
+        // JSON data
+        $input = json_decode(file_get_contents('php://input'), true);
+        $isFileUpload = false;
+    }
+    
+    // Determine service type
+    $serviceType = $input['order_type_service'] ?? 'items';
+    
+    // Validate required fields based on service type
+    $required = ['studentId', 'fname', 'lname', 'email', 'college', 'program', 'year'];
+    
+    if ($serviceType === 'items') {
+        $required[] = 'purchasing';
+    } else if ($serviceType === 'printing') {
+        $required = array_merge($required, ['page_count', 'color_mode', 'paper_size', 'copies']);
+    }
+    
     foreach ($required as $field) {
         if (empty($input[$field])) {
             if (ob_get_level()) { ob_clean(); }
-            echo json_encode(['success' => false, 'message' => "Field '$field' is required"]);
+            echo json_encode(['success' => false, 'message' => "Field '$field' is required", 'field' => $field, 'received' => $input]);
             exit;
         }
     }
@@ -63,7 +84,49 @@ try {
     $program = trim($input['program']);
     $year = intval($input['year']);
     $section = trim($input['section'] ?? '');
-    $purchasing = trim($input['purchasing']);
+    $purchasing = $serviceType === 'items' ? trim($input['purchasing']) : '';
+    
+    // Handle file upload for printing services
+    $uploadedFileName = null;
+    $storedFileName = null;
+    if ($serviceType === 'printing' && $isFileUpload && isset($_FILES['file'])) {
+        $file = $_FILES['file'];
+        
+        // Validate file
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('File upload error: ' . $file['error']);
+        }
+        
+        // Check file size (10MB max)
+        $maxSize = 10 * 1024 * 1024; // 10MB
+        if ($file['size'] > $maxSize) {
+            throw new Exception('File size exceeds maximum limit of 10MB');
+        }
+        
+        // Check file extension
+        $allowedExtensions = ['pdf', 'doc', 'docx'];
+        $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($fileExt, $allowedExtensions)) {
+            throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed');
+        }
+        
+        // Create upload directory if it doesn't exist
+        $uploadDir = __DIR__ . '/../../../uploads/printing/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        // Generate unique filename
+        $storedFileName = uniqid('print_') . '_' . time() . '.' . $fileExt;
+        $uploadPath = $uploadDir . $storedFileName;
+        
+        // Move uploaded file
+        if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            throw new Exception('Failed to save uploaded file');
+        }
+        
+        $uploadedFileName = $file['name'];
+    }
     
     // Validate email format
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -81,19 +144,26 @@ try {
     
     $db = getDB();
     
-    // Check if email is already registered to a different student ID
+    // Check if email is already registered (has an account)
     try {
-        $checkEmail = $db->prepare("SELECT student_id, first_name, last_name FROM students WHERE email = ? AND student_id != ?");
-        $checkEmail->execute([$email, $studentId]);
+        $checkEmail = $db->prepare("SELECT student_id, first_name, last_name, has_account FROM students WHERE email = ?");
+        $checkEmail->execute([$email]);
         $existingStudent = $checkEmail->fetch();
         
         if ($existingStudent) {
-            if (ob_get_level()) { ob_clean(); }
-            echo json_encode([
-                'success' => false, 
-                'message' => 'This email is already registered to another student account. Please use your registered email or contact admin.'
-            ]);
-            exit;
+            // If the student has an account (has_account = 1), they must login
+            if ($existingStudent['has_account'] == 1) {
+                if (ob_get_level()) { ob_clean(); }
+                echo json_encode([
+                    'success' => false,
+                    'registered' => true,
+                    'message' => 'This email has a registered account. Please login to place your order.',
+                    'redirect' => '../login.html'
+                ]);
+                exit;
+            }
+            // If they don't have an account but email exists (guest order), allow if same student ID
+            // or update to the new student ID (in case they used different ID before)
         }
     } catch (PDOException $e) {
         error_log("Email check error: " . $e->getMessage());
@@ -125,6 +195,34 @@ try {
     $deleteOldOtps = $db->prepare("DELETE FROM otp_verifications WHERE email = ? AND otp_type = 'order'");
     $deleteOldOtps->execute([$email]);
     
+    // Prepare order data to store with OTP
+    $orderData = [
+        'studentId' => $studentId,
+        'fname' => $fname,
+        'lname' => $lname,
+        'minitial' => $minitial,
+        'email' => $email,
+        'college' => $college,
+        'program' => $program,
+        'year' => $year,
+        'section' => $section,
+        'order_type_service' => $serviceType
+    ];
+    
+    if ($serviceType === 'items') {
+        $orderData['purchasing'] = $purchasing;
+    } else if ($serviceType === 'printing') {
+        $orderData['page_count'] = $input['page_count'];
+        $orderData['color_mode'] = $input['color_mode'];
+        $orderData['paper_size'] = $input['paper_size'];
+        $orderData['copies'] = $input['copies'];
+        $orderData['double_sided'] = $input['double_sided'] ?? '0';
+        $orderData['instructions'] = $input['instructions'] ?? '';
+        $orderData['estimated_price'] = $input['estimated_price'] ?? '0';
+        $orderData['file_name'] = $uploadedFileName;
+        $orderData['stored_file_name'] = $storedFileName;
+    }
+    
     // Store OTP using DB time (embed integer for INTERVAL)
     $otpMinutes = (int)(defined('OTP_EXPIRY_MINUTES') ? OTP_EXPIRY_MINUTES : 10);
     $insertOtp = $db->prepare("
@@ -154,17 +252,26 @@ try {
         // Continue anyway
     }
     
+    $responseData = [
+        'otp_id' => $otpId,
+        'email' => $email,
+        'expires_in_minutes' => OTP_EXPIRY_MINUTES,
+        // For development/testing only - remove in production
+        'otp_code' => $otp
+    ];
+    
+    // Include file info for printing orders
+    if ($serviceType === 'printing' && $storedFileName) {
+        $responseData['file_uploaded'] = true;
+        $responseData['stored_file_name'] = $storedFileName;
+        $responseData['original_file_name'] = $uploadedFileName;
+    }
+    
     if (ob_get_level()) { ob_clean(); }
     echo json_encode([
         'success' => true,
         'message' => 'OTP sent to your email',
-        'data' => [
-            'otp_id' => $otpId,
-            'email' => $email,
-            'expires_in_minutes' => OTP_EXPIRY_MINUTES,
-            // For development/testing only - remove in production
-            'otp_code' => $otp
-        ]
+        'data' => $responseData
     ]);
     exit;
     

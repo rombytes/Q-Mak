@@ -47,11 +47,23 @@ function displayOrderDetails() {
     // Wait time with dynamic info
     const waitDiv = document.getElementById('waitTime');
     if (orderData.waitTimeDetails.queue_position) {
+        const position = orderData.waitTimeDetails.queue_position;
+        const ahead = orderData.waitTimeDetails.pending_orders;
+        
+        // Smart position display
+        let positionText = '';
+        if (position === 1 && ahead === 0) {
+            positionText = "You're next in line!";
+        } else if (ahead === 1) {
+            positionText = `Position #${position} • ${ahead} order ahead`;
+        } else {
+            positionText = `Position #${position} • ${ahead} orders ahead`;
+        }
+        
         waitDiv.innerHTML = `
             <span class="text-3xl font-bold">${orderData.waitTime} mins</span>
             <span class="text-sm block text-gray-600 mt-1">
-                Position #${orderData.waitTimeDetails.queue_position} • 
-                ${orderData.waitTimeDetails.pending_orders} orders ahead
+                ${positionText}
             </span>
         `;
     } else {
@@ -213,7 +225,7 @@ function generateClientQRCode() {
         width: 200,
         margin: 2,
         color: {
-            dark: '#1e3a8a',
+            dark: '#000000',
             light: '#ffffff'
         }
     }, function (error) {
@@ -299,30 +311,42 @@ async function updateWaitTime() {
             
             if (data.status === 'completed') {
                 waitDiv.innerHTML = `
-                    <span class="text-3xl font-bold text-green-600">Ready!</span>
+                    <span class="text-3xl font-bold text-green-600">Completed!</span>
                     <span class="text-sm block text-green-600 mt-1">
-                        <i class="fas fa-check-circle"></i> Your order is ready for pickup
+                        <i class="fas fa-check-circle"></i> Order successfully claimed
                     </span>
                 `;
                 clearInterval(pollInterval);
                 
                 // Show notification
                 if (window.notificationManager) {
-                    window.notificationManager.showInAppNotification('Your order is ready!', 'success');
+                    window.notificationManager.showInAppNotification('Order completed successfully!', 'success');
                 }
             } else if (data.status === 'processing') {
                 waitDiv.innerHTML = `
-                    <span class="text-3xl font-bold text-blue-600">${data.estimated_minutes} mins</span>
-                    <span class="text-sm block text-blue-600 mt-1">
-                        <i class="fas fa-spinner fa-spin"></i> Being prepared now
+                    <span class="text-3xl font-bold text-orange-600 animate-pulse">Your Turn!</span>
+                    <span class="text-sm block text-orange-600 mt-1 font-semibold">
+                        <i class="fas fa-bell animate-pulse"></i> Please go to the COOP counter now
                     </span>
                 `;
             } else {
+                // Smart position display for pending orders
+                const position = data.queue_position;
+                const ahead = data.orders_ahead;
+                
+                let positionText = '';
+                if (position === 1 && ahead === 0) {
+                    positionText = "You're next in line!";
+                } else if (ahead === 1) {
+                    positionText = `Position #${position} • ${ahead} order ahead`;
+                } else {
+                    positionText = `Position #${position} • ${ahead} orders ahead`;
+                }
+                
                 waitDiv.innerHTML = `
                     <span class="text-3xl font-bold text-orange-500">${data.estimated_minutes} mins</span>
                     <span class="text-sm block text-gray-600 mt-1">
-                        Position #${data.queue_position} • 
-                        ${data.orders_ahead} orders ahead
+                        ${positionText}
                     </span>
                 `;
             }

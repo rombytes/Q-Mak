@@ -48,24 +48,128 @@
     --white: #ffffff;            /* Pure white */
     --black: #000000;            /* Pure black */
 
-    /* Shadow definitions */
+    /* ========== ENHANCED DESIGN SYSTEM ========== */
+    
+    /* Gradient Definitions */
+    --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    --gradient-accent: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    --gradient-success: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    --gradient-warning: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+    --gradient-danger: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    --gradient-info: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    --gradient-dark: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    
+    /* Glassmorphism Effects */
+    --glass-light: rgba(255, 255, 255, 0.9);
+    --glass-medium: rgba(255, 255, 255, 0.7);
+    --glass-dark: rgba(15, 23, 42, 0.8);
+    --blur-sm: 8px;
+    --blur-md: 12px;
+    --blur-lg: 16px;
+
+    /* Spacing Scale (4px base) */
+    --spacing-0: 0;
+    --spacing-1: 0.25rem;        /* 4px */
+    --spacing-2: 0.5rem;         /* 8px */
+    --spacing-3: 0.75rem;        /* 12px */
+    --spacing-4: 1rem;           /* 16px */
+    --spacing-5: 1.25rem;        /* 20px */
+    --spacing-6: 1.5rem;         /* 24px */
+    --spacing-7: 1.75rem;        /* 28px */
+    --spacing-8: 2rem;           /* 32px */
+    --spacing-10: 2.5rem;        /* 40px */
+    --spacing-12: 3rem;          /* 48px */
+    --spacing-16: 4rem;          /* 64px */
+    --spacing-20: 5rem;          /* 80px */
+    --spacing-24: 6rem;          /* 96px */
+
+    /* Typography Scale */
+    --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    --font-family-display: 'Poppins', 'Inter', sans-serif;
+    --font-family-mono: 'Fira Code', 'Consolas', monospace;
+    
+    --text-xs: 0.75rem;          /* 12px */
+    --text-sm: 0.875rem;         /* 14px */
+    --text-base: 1rem;           /* 16px */
+    --text-lg: 1.125rem;         /* 18px */
+    --text-xl: 1.25rem;          /* 20px */
+    --text-2xl: 1.5rem;          /* 24px */
+    --text-3xl: 1.875rem;        /* 30px */
+    --text-4xl: 2.25rem;         /* 36px */
+    --text-5xl: 3rem;            /* 48px */
+    --text-6xl: 3.75rem;         /* 60px */
+    
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+
+    /* Shadow Elevation Levels */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    
+    /* Colored shadows for emphasis */
+    --shadow-accent: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+    --shadow-success: 0 10px 25px -5px rgba(22, 163, 74, 0.3);
+    --shadow-warning: 0 10px 25px -5px rgba(249, 115, 22, 0.3);
+    --shadow-danger: 0 10px 25px -5px rgba(220, 38, 38, 0.3);
 
-    /* Transition definitions */
-    --transition-fast: all 0.2s ease;
-    --transition-medium: all 0.3s ease;
-    --transition-slow: all 0.4s ease;
+    /* Motion Design System - Standard Transitions */
+    --transition-fast: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-medium: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 350ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-spring: all 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
+    /* Duration presets */
+    --duration-instant: 100ms;
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 350ms;
+    --duration-slower: 500ms;
+    
+    /* Easing functions */
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    /* Border radius definitions */
-    --radius-sm: 0.25rem;
-    --radius-md: 0.375rem;
-    --radius-lg: 0.5rem;
-    --radius-xl: 0.75rem;
-    --radius-2xl: 1rem;
+    /* Border Radius Presets */
+    --radius-none: 0;
+    --radius-sm: 0.25rem;        /* 4px */
+    --radius-md: 0.375rem;       /* 6px */
+    --radius-lg: 0.5rem;         /* 8px */
+    --radius-xl: 0.75rem;        /* 12px */
+    --radius-2xl: 1rem;          /* 16px */
+    --radius-3xl: 1.5rem;        /* 24px */
     --radius-full: 9999px;
+
+    /* Z-Index Scale */
+    --z-base: 1;
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-fixed: 30;
+    --z-modal-backdrop: 40;
+    --z-modal: 50;
+    --z-popover: 60;
+    --z-tooltip: 70;
+    --z-notification: 80;
+    --z-max: 9999;
+
+    /* Touch Target Sizes (for mobile accessibility) */
+    --touch-target-min: 44px;
+    --touch-target-comfortable: 48px;
+    --touch-target-spacious: 56px;
 }
 
 /* Dark mode support (optional - for future enhancement) */

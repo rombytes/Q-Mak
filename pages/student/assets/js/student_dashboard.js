@@ -17,7 +17,7 @@ window.studentData = null;
 // Check session on page load
 async function checkSession() {
     if (!sessionStorage.getItem('studentLoggedIn')) {
-        window.location.href = 'student_login.html';
+        window.location.href = '../login.html';
         return false;
     }
     
@@ -31,7 +31,7 @@ async function checkSession() {
         
         if (!result.success || !result.logged_in) {
             sessionStorage.clear();
-            window.location.href = 'student_login.html';
+            window.location.href = '../login.html';
             return false;
         }
         
@@ -39,7 +39,7 @@ async function checkSession() {
     } catch (error) {
         console.error('Session check error:', error);
         sessionStorage.clear();
-        window.location.href = 'student_login.html';
+        window.location.href = '../login.html';
         return false;
     }
 }
@@ -227,7 +227,11 @@ async function loadCurrentOrder() {
 }
 
 // Display current order in hero section
+// Store current order data globally for download
+let currentActiveOrder = null;
+
 function displayCurrentOrder(order) {
+    currentActiveOrder = order; // Store for download function
     const heroSection = document.getElementById('heroSection');
     
     const statusColors = {
@@ -238,19 +242,19 @@ function displayCurrentOrder(order) {
     
     const statusColor = statusColors[order.order_status] || 'bg-gray-100 text-gray-800 border-gray-300';
     
-    // Progress steps
+    // Progress steps - New flow: Confirmed → Waiting → Processing → Completed
     const steps = [
         { name: 'Confirmed', status: 'completed', icon: 'bi-check-circle-fill' },
-        { name: 'Preparing', status: order.order_status === 'pending' ? 'pending' : 'active', icon: 'bi-hourglass-split' },
-        { name: 'Ready', status: order.order_status === 'ready' ? 'active' : 'pending', icon: 'bi-bell-fill' },
-        { name: 'Claimed', status: 'pending', icon: 'bi-hand-thumbs-up-fill' }
+        { name: 'Waiting', status: order.order_status === 'pending' ? 'active' : 'completed', icon: 'bi-hourglass-split' },
+        { name: 'Processing', status: order.order_status === 'processing' ? 'active' : (order.order_status === 'completed' ? 'completed' : 'pending'), icon: 'bi-bell-fill' },
+        { name: 'Completed', status: order.order_status === 'completed' ? 'completed' : 'pending', icon: 'bi-hand-thumbs-up-fill' }
     ];
     
     heroSection.innerHTML = `
         <div class="bg-gradient-to-r from-accent-600 to-accent-500 rounded-2xl p-8 shadow-2xl text-white" style="background: linear-gradient(to right, #2563eb, #3b82f6); color: #ffffff !important;">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h2 class="text-3xl font-bold mb-2" style="color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Active Order #${order.queue_number}</h2>
+                    <h2 class="text-3xl font-bold mb-2" style="color: #ffffff !important; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">Active Order ${order.queue_number}</h2>
                     <p class="text-accent-100" style="color: #dbeafe !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Placed at ${new Date(order.created_at).toLocaleTimeString()}</p>
                 </div>
                 <span class="px-6 py-3 ${statusColor} rounded-xl font-bold text-sm border-2 shadow-lg">
@@ -265,11 +269,11 @@ function displayCurrentOrder(order) {
                         <div class="flex flex-col items-center flex-1">
                             <div class="w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
                                 step.status === 'completed' ? 'bg-success-500' :
-                                step.status === 'active' ? 'bg-warning-500 animate-pulse' :
+                                step.status === 'active' ? (step.name === 'Processing' ? 'bg-orange-500 animate-pulse' : 'bg-yellow-400 animate-pulse') :
                                 'bg-white bg-opacity-30'
                             }" style="${
                                 step.status === 'completed' ? 'background-color: #22c55e; color: #ffffff;' :
-                                step.status === 'active' ? 'background-color: #eab308; color: #ffffff;' :
+                                step.status === 'active' ? (step.name === 'Processing' ? 'background-color: #f97316; color: #ffffff; animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;' : 'background-color: #facc15; color: #ffffff;') :
                                 'background-color: rgba(255,255,255,0.3); color: #ffffff;'
                             }">
                                 <i class="bi ${step.icon} text-xl" style="color: #ffffff;"></i>
@@ -280,38 +284,216 @@ function displayCurrentOrder(order) {
                 </div>
                 <div class="h-2 bg-white bg-opacity-30 rounded-full" style="background-color: rgba(255,255,255,0.3);">
                     <div class="h-full bg-success-500 rounded-full transition-all duration-500" style="width: ${
-                        order.order_status === 'pending' ? '25%' :
-                        order.order_status === 'processing' ? '50%' :
-                        order.order_status === 'ready' ? '75%' : '100%'
+                        order.order_status === 'pending' ? '33%' :
+                        order.order_status === 'processing' ? '66%' :
+                        order.order_status === 'completed' ? '100%' : '33%'
                     }; background-color: #22c55e;"></div>
                 </div>
             </div>
             
-            <!-- Order Details -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white bg-opacity-10 rounded-xl p-4" style="background-color: rgba(255,255,255,0.15);">
-                    <div class="text-accent-100 text-sm mb-2" style="color: #dbeafe !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Items Ordered</div>
-                    <div class="font-bold text-lg" style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">${order.item_ordered}</div>
+            <!-- Processing Alert -->
+            ${order.order_status === 'processing' ? `
+                <div class="bg-orange-500 text-white rounded-xl p-4 mb-6 shadow-lg animate-pulse" style="background-color: #f97316;">
+                    <div class="flex items-center gap-3">
+                        <i class="bi bi-bell-fill text-3xl"></i>
+                        <div>
+                            <h4 class="font-bold text-lg">Your Turn!</h4>
+                            <p class="text-sm">Please proceed to the COOP counter now</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white bg-opacity-10 rounded-xl p-4" style="background-color: rgba(255,255,255,0.15);">
-                    <div class="text-accent-100 text-sm mb-2" style="color: #dbeafe !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Estimated Wait Time</div>
-                    <div class="font-bold text-lg" style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">${order.estimated_wait_time} minutes</div>
+            ` : ''}
+            
+            <!-- QR Code and Order Details Section -->
+            <div class="bg-white bg-opacity-10 rounded-2xl p-6 mb-6" style="background-color: rgba(255,255,255,0.15);">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- QR Code -->
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="bg-white p-4 rounded-2xl shadow-xl">
+                            <canvas id="activeOrderQRCode" class="mx-auto"></canvas>
+                        </div>
+                        <p class="text-xs text-center mt-3 flex items-center gap-1" style="color: #dbeafe !important;">
+                            <i class="bi bi-qr-code"></i>
+                            Present this at COOP counter
+                        </p>
+                        <button onclick="downloadActiveOrderQR()" class="mt-3 px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-all flex items-center gap-2">
+                            <i class="bi bi-download"></i>
+                            Download QR
+                        </button>
+                    </div>
+                    
+                    <!-- Order Details -->
+                    <div class="flex flex-col gap-3">
+                        <!-- Queue Number -->
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="bi bi-hash text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-gray-600">Queue Number</h4>
+                                    <p class="text-2xl font-extrabold bg-gradient-to-r from-blue-900 to-blue-700" style="background: linear-gradient(to right, #1e3a8a, #1d4ed8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${order.queue_number}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reference Number -->
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <i class="bi bi-upc-scan text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-gray-600">Reference Number</h4>
+                                    <p class="text-base font-bold text-purple-600">${order.reference_number || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Items Ordered -->
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="bi bi-bag-check text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-gray-600">Items Ordered</h4>
+                                    <p class="text-sm font-semibold text-gray-800">${order.item_ordered}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Wait Time -->
+                        <div class="bg-white rounded-xl p-4 shadow-md">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="bi bi-clock text-orange-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-gray-600">Estimated Wait Time</h4>
+                                    <p class="text-base font-bold text-orange-600">${order.estimated_minutes || order.estimated_wait_time} minutes</p>
+                                    ${order.orders_ahead !== undefined ? `<p class="text-xs text-gray-500 mt-1">${order.orders_ahead === 0 ? "You're next!" : order.orders_ahead + ' order' + (order.orders_ahead > 1 ? 's' : '') + ' ahead'}</p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                ${order.queue_position ? `
-                <div class="bg-white bg-opacity-10 rounded-xl p-4" style="background-color: rgba(255,255,255,0.15);">
-                    <div class="text-accent-100 text-sm mb-2" style="color: #dbeafe !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Queue Position</div>
-                    <div class="font-bold text-lg" style="color: #ffffff !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">#${order.queue_position}</div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="bg-white bg-opacity-10 rounded-xl p-5 mb-4" style="background-color: rgba(255,255,255,0.15);">
+                <div class="flex items-start gap-3 mb-3">
+                    <div class="w-9 h-9 bg-white bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="bi bi-list-check text-white text-lg"></i>
+                    </div>
+                    <h4 class="font-bold text-lg" style="color: #ffffff !important;">What to do next:</h4>
                 </div>
-                ` : ''}
-                <div class="bg-white bg-opacity-10 rounded-xl p-4" style="background-color: rgba(255,255,255,0.15);">
-                    <div class="text-accent-100 text-sm mb-2" style="color: #dbeafe !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">QR Code</div>
-                    <button onclick="viewQRCode('${order.queue_number}')" class="px-4 py-2 bg-white text-accent-600 rounded-lg font-semibold hover:bg-accent-50 transition-all" style="background-color: #ffffff; color: #2563eb !important;">
-                        <i class="bi bi-qr-code mr-2"></i>View QR
-                    </button>
+                <div class="space-y-2 ml-12">
+                    <div class="flex items-start gap-3 bg-white bg-opacity-20 rounded-lg p-3">
+                        <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-blue-600 font-bold text-xs">1</span>
+                        </div>
+                        <p class="text-sm" style="color: #ffffff !important;">Wait for your queue number to be called</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-white bg-opacity-20 rounded-lg p-3">
+                        <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-orange-600 font-bold text-xs">2</span>
+                        </div>
+                        <p class="text-sm" style="color: #ffffff !important;">Present QR code (or reference number if not available) at the COOP counter</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-white bg-opacity-20 rounded-lg p-3">
+                        <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-green-600 font-bold text-xs">3</span>
+                        </div>
+                        <p class="text-sm" style="color: #ffffff !important;">Collect your order and enjoy!</p>
+                    </div>
                 </div>
             </div>
         </div>
     `;
+    
+    // Generate QR Code after DOM is ready - matching order_result.html format
+    setTimeout(() => {
+        generateActiveOrderQR(order);
+    }, 100);
+}
+
+// Generate QR Code for active order - standardized format matching order_result.html
+function generateActiveOrderQR(order) {
+    const canvas = document.getElementById('activeOrderQRCode');
+    if (!canvas) {
+        console.error('QR canvas not found');
+        return;
+    }
+    
+    // Create QR data in same format as order_result.html
+    const qrData = JSON.stringify({
+        queue_number: order.queue_number,
+        reference_number: order.reference_number || order.queue_number,
+        email: order.email || 'N/A',
+        queue_date: order.created_at || new Date().toISOString(),
+        order_type: order.order_type || 'immediate',
+        timestamp: new Date().toISOString(),
+        type: 'umak_coop_order'
+    });
+    
+    // Check if QRCode library is loaded
+    if (typeof QRCode === 'undefined' || !QRCode.toCanvas) {
+        console.error('QRCode library not loaded');
+        showQRFallback(canvas, order.reference_number || order.queue_number);
+        return;
+    }
+    
+    // Generate QR code with exact same settings as order_result.html
+    QRCode.toCanvas(canvas, qrData, {
+        width: 200,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#ffffff'
+        }
+    }, function (error) {
+        if (error) {
+            console.error('QR Code generation error:', error);
+            showQRFallback(canvas, order.reference_number || order.queue_number);
+        } else {
+            console.log('Active order QR code generated successfully');
+        }
+    });
+}
+
+// Fallback QR display if generation fails
+function showQRFallback(canvas, identifier) {
+    const ctx = canvas.getContext('2d');
+    canvas.width = 200;
+    canvas.height = 200;
+    
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 200, 200);
+    
+    // Blue border
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, 180, 180);
+    
+    // Corner markers (typical QR pattern)
+    ctx.fillStyle = '#1e3a8a';
+    const markerSize = 25;
+    const positions = [[15, 15], [15, 165], [165, 15]];
+    
+    positions.forEach(pos => {
+        ctx.fillRect(pos[0], pos[1], markerSize, markerSize);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(pos[0] + 5, pos[1] + 5, markerSize - 10, markerSize - 10);
+        ctx.fillStyle = '#1e3a8a';
+    });
+    
+    // Text identifier
+    ctx.fillStyle = '#1e3a8a';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(identifier, 100, 105);
 }
 
 // Display when no current order
@@ -323,7 +505,7 @@ function displayNoCurrentOrder() {
                 <i class="bi bi-cart-x text-accent-600 text-4xl"></i>
             </div>
             <h3 class="text-2xl font-bold text-gray-800 mb-3">No Active Orders</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">You don't have any orders in progress. Ready to order something delicious?</p>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">You don't have any orders in progress. Ready to place an order?</p>
             <button onclick="showQuickOrder()" class="px-8 py-4 bg-accent-600 hover:bg-accent-700 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 inline-flex items-center gap-3">
                 <i class="bi bi-plus-circle-fill text-xl"></i>
                 Create New Order
@@ -350,7 +532,7 @@ async function loadOrderHistory(status = 'all', page = 1) {
             // Update recent activity on dashboard (check if currentTab is defined)
             const activeTab = typeof currentTab !== 'undefined' ? currentTab : 'dashboard';
             if (activeTab === 'dashboard') {
-                displayRecentActivity(orderHistory.slice(0, 5));
+                displayRecentActivity(orderHistory.slice(0, 3));
             }
         } else {
             displayEmptyOrderHistory();
@@ -391,7 +573,7 @@ function displayOrderHistory(orders) {
         
         return `
             <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4 font-mono text-sm font-semibold">${order.queue_number}</td>
+                <td class="px-6 py-4 font-mono text-sm font-semibold text-blue-600">${order.queue_number}</td>
                 <td class="px-6 py-4">${order.item_ordered}</td>
                 <td class="px-6 py-4">
                     <span class="${statusColor} px-3 py-1 rounded-full text-xs font-bold uppercase">
@@ -480,7 +662,7 @@ function displayRecentActivity(recentOrders) {
                         <div class="flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-all">
                             <i class="bi ${status.icon} ${status.color} text-xl mt-1"></i>
                             <div class="flex-1">
-                                <div class="font-semibold text-gray-900">Order ${order.queue_number} - ${order.order_status}</div>
+                                <div class="font-semibold text-gray-900">${order.queue_number} - ${order.order_status}</div>
                                 <div class="text-sm text-gray-600">${order.item_ordered}</div>
                                 <div class="text-xs text-gray-500 mt-1">${time}</div>
                             </div>
@@ -531,6 +713,9 @@ async function fetchInventoryStatus() {
 function showQuickOrder() {
     document.getElementById('createOrderModal').classList.remove('hidden');
     
+    // Reset to items form by default
+    switchOrderTypeModal('items');
+    
     // Add order type toggle listener
     const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
     orderTypeRadios.forEach(radio => {
@@ -547,50 +732,538 @@ function showQuickOrder() {
     });
 }
 
-// Close create order modal
-function closeCreateOrder() {
-    document.getElementById('createOrderModal').classList.add('hidden');
-    document.getElementById('createOrderForm').reset();
-    document.getElementById('scheduledDateField').classList.add('hidden');
+// Switch order type in modal (items vs printing)
+function switchOrderTypeModal(type) {
+    // Update hidden input
+    document.getElementById('modalOrderTypeService').value = type;
+    
+    // Update tab styling
+    const itemsTab = document.getElementById('modalOrderTypeItems');
+    const printingTab = document.getElementById('modalOrderTypePrinting');
+    
+    const itemsSection = document.getElementById('modalItemsFormSection');
+    const printingSection = document.getElementById('modalPrintingFormSection');
+    
+    if (type === 'items') {
+        itemsTab.classList.add('active');
+        printingTab.classList.remove('active');
+        
+        // Show items form, hide printing form
+        itemsSection.classList.remove('hidden');
+        itemsSection.classList.add('active');
+        printingSection.classList.add('hidden');
+        printingSection.classList.remove('active');
+        
+        // Disable printing fields to prevent HTML5 validation
+        const printingFields = printingSection.querySelectorAll('input, select, textarea');
+        printingFields.forEach(field => field.disabled = true);
+        
+        // Enable item fields
+        const itemFields = itemsSection.querySelectorAll('input, select, textarea');
+        itemFields.forEach(field => field.disabled = false);
+    } else {
+        printingTab.classList.add('active');
+        itemsTab.classList.remove('active');
+        
+        // Show printing form, hide items form
+        printingSection.classList.remove('hidden');
+        printingSection.classList.add('active');
+        itemsSection.classList.add('hidden');
+        itemsSection.classList.remove('active');
+        
+        // Disable item fields to prevent HTML5 validation
+        const itemFields = itemsSection.querySelectorAll('input, select, textarea');
+        itemFields.forEach(field => field.disabled = true);
+        
+        // Enable printing fields
+        const printingFields = printingSection.querySelectorAll('input, select, textarea');
+        printingFields.forEach(field => field.disabled = false);
+        
+        // Initialize printing price listeners if not already done
+        if (typeof initializePrintingModalListeners === 'function') {
+            initializePrintingModalListeners();
+        }
+    }
 }
 
-// Submit order
+// Initialize printing form listeners for modal
+function initializePrintingModalListeners() {
+    // File input listener
+    const fileInput = document.getElementById('modalPrintFile');
+    if (fileInput && !fileInput.dataset.listenerAdded) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const feedbackElement = document.getElementById('modalFileFeedback');
+            
+            if (!file) {
+                if (feedbackElement) {
+                    feedbackElement.innerHTML = '';
+                    feedbackElement.classList.add('hidden');
+                }
+                return;
+            }
+            
+            const validation = validatePrintFile(file);
+            
+            if (!validation.valid) {
+                if (feedbackElement) {
+                    feedbackElement.innerHTML = `
+                        <div class="flex items-center gap-2 text-red-600">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            <span>${validation.message}</span>
+                        </div>
+                    `;
+                    feedbackElement.classList.remove('hidden');
+                }
+                e.target.value = '';
+                return;
+            }
+            
+            const fileSizeMB = (file.size / 1048576).toFixed(2);
+            if (feedbackElement) {
+                feedbackElement.innerHTML = `
+                    <div class="flex items-center gap-2 text-green-600">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Ready to upload</span>
+                    </div>
+                `;
+                feedbackElement.classList.remove('hidden');
+            }
+        });
+        fileInput.dataset.listenerAdded = 'true';
+    }
+    
+    // Price calculation listeners
+    const priceInputs = ['modalPageCount', 'modalColorMode', 'modalPaperSize', 'modalCopies', 'modalDoubleSided'];
+    priceInputs.forEach(inputId => {
+        const element = document.getElementById(inputId);
+        if (element && !element.dataset.listenerAdded) {
+            element.addEventListener('change', updateModalPrintingPrice);
+            element.addEventListener('input', updateModalPrintingPrice);
+            element.dataset.listenerAdded = 'true';
+        }
+    });
+}
+
+// Update printing price for modal
+function updateModalPrintingPrice() {
+    const pageCount = parseInt(document.getElementById('modalPageCount')?.value) || 0;
+    const colorMode = document.getElementById('modalColorMode')?.value || 'B&W';
+    const paperSize = document.getElementById('modalPaperSize')?.value || 'A4';
+    const copies = parseInt(document.getElementById('modalCopies')?.value) || 1;
+    const doubleSided = document.getElementById('modalDoubleSided')?.checked || false;
+    
+    if (typeof calculatePrintingPrice === 'function') {
+        const price = calculatePrintingPrice(pageCount, colorMode, paperSize, copies, doubleSided);
+        const priceElement = document.getElementById('modalEstimatedPrice');
+        if (priceElement) {
+            priceElement.textContent = `₱${price.toFixed(2)}`;
+        }
+        return price;
+    }
+    return 0;
+}
+
+// Close create order modal
+function closeCreateOrder() {
+    const modal = document.getElementById('createOrderModal');
+    const form = document.getElementById('createOrderForm');
+    const scheduledField = document.getElementById('scheduledDateField');
+    
+    if (modal) modal.classList.add('hidden');
+    if (form) form.reset();
+    if (scheduledField) scheduledField.classList.add('hidden');
+}
+
+// Global variable to store order data for confirmation
+let pendingOrderData = null;
+
+// Submit order - Show review first
 async function submitOrder(event) {
     event.preventDefault();
     
-    const orderType = document.querySelector('input[name="orderType"]:checked').value;
-    const items = document.getElementById('orderItems').value;
-    const notes = document.getElementById('orderNotes').value;
-    const scheduledDate = orderType === 'pre-order' ? document.getElementById('scheduledDate').value : null;
+    const serviceType = document.getElementById('modalOrderTypeService').value;
+    
+    // Service type specific validation
+    if (serviceType === 'printing') {
+        const printFile = document.getElementById('modalPrintFile').files[0];
+        const pageCount = parseInt(document.getElementById('modalPageCount').value);
+        
+        if (!printFile) {
+            showToast('error', 'Error', 'Please select a file to print');
+            return;
+        }
+        
+        if (!pageCount || pageCount <= 0) {
+            showToast('error', 'Error', 'Please enter the number of pages');
+            return;
+        }
+        
+        // Validate file
+        if (typeof validatePrintFile === 'function') {
+            const validation = validatePrintFile(printFile);
+            if (!validation.valid) {
+                showToast('error', 'Error', validation.message);
+                return;
+            }
+        }
+    } else {
+        // Items validation
+        const items = [];
+        let itemNum = 1;
+        while (document.getElementById(`item${itemNum}`)) {
+            const itemSelect = document.getElementById(`item${itemNum}`);
+            if (itemSelect && itemSelect.value) {
+                items.push(itemSelect.value);
+            }
+            itemNum++;
+        }
+        
+        if (items.length === 0) {
+            showToast('error', 'Error', 'Please select at least one item');
+            return;
+        }
+    }
+    
+    // Show review modal instead of submitting directly
+    showOrderReview();
+}
+
+// Show order review modal with summary
+function showOrderReview() {
+    const serviceType = document.getElementById('modalOrderTypeService').value;
+    const reviewContent = document.getElementById('orderReviewContent');
+    
+    // Alias studentData for easier access
+    window.currentStudent = window.studentData;
+    
+    let summaryHTML = '';
+    
+    // Student Information (from session)
+    if (window.currentStudent) {
+        summaryHTML += `
+            <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                <h5 class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <i class="bi bi-person-fill"></i> Student Information
+                </h5>
+                <div class="space-y-1 text-sm">
+                    <p><span class="font-semibold">Student ID:</span> ${window.currentStudent.student_id || 'N/A'}</p>
+                    <p><span class="font-semibold">Name:</span> ${window.currentStudent.first_name || ''} ${window.currentStudent.last_name || ''}</p>
+                    <p><span class="font-semibold">Email:</span> ${window.currentStudent.email || 'N/A'}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (serviceType === 'items') {
+        // Items Order Summary
+        const items = [];
+        let itemNum = 1;
+        while (document.getElementById(`item${itemNum}`)) {
+            const itemSelect = document.getElementById(`item${itemNum}`);
+            if (itemSelect && itemSelect.value) {
+                const itemText = itemSelect.options[itemSelect.selectedIndex].text;
+                items.push(itemText);
+            }
+            itemNum++;
+        }
+        
+        summaryHTML += `
+            <div class="bg-orange-50 rounded-lg p-4">
+                <h5 class="font-bold text-orange-900 mb-2 flex items-center gap-2">
+                    <i class="bi bi-bag-fill"></i> Items Order
+                </h5>
+                <div class="space-y-2 text-sm">
+                    <p><span class="font-semibold">Quantity:</span> ${items.length} item(s)</p>
+                    <div class="mt-2">
+                        <p class="font-semibold mb-1">Selected Items:</p>
+                        ${items.map(item => `<p class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-orange-600"></i> ${item.split(' -')[0].trim()}</p>`).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        // Printing Order Summary
+        const fileInput = document.getElementById('modalPrintFile');
+        const fileName = fileInput.files[0]?.name || 'No file selected';
+        const pageCount = document.getElementById('modalPageCount').value;
+        const colorMode = document.getElementById('modalColorMode').value;
+        const paperSize = document.getElementById('modalPaperSize').value;
+        const copies = document.getElementById('modalCopies').value;
+        const doubleSided = document.getElementById('modalDoubleSided').checked ? 'Yes' : 'No';
+        const instructions = document.getElementById('modalPrintInstructions').value || 'None';
+        const estimatedPrice = updateModalPrintingPrice();
+        
+        summaryHTML += `
+            <div class="bg-purple-50 rounded-lg p-4">
+                <h5 class="font-bold text-purple-900 mb-2 flex items-center gap-2">
+                    <i class="bi bi-printer-fill"></i> Printing Order
+                </h5>
+                <div class="space-y-1 text-sm">
+                    <p><span class="font-semibold">File:</span> ${fileName}</p>
+                    <p><span class="font-semibold">Pages:</span> ${pageCount}</p>
+                    <p><span class="font-semibold">Color Mode:</span> ${colorMode}</p>
+                    <p><span class="font-semibold">Paper Size:</span> ${paperSize}</p>
+                    <p><span class="font-semibold">Copies:</span> ${copies}</p>
+                    <p><span class="font-semibold">Double-Sided:</span> ${doubleSided}</p>
+                    <p><span class="font-semibold">Instructions:</span> ${instructions}</p>
+                    <div class="mt-3 pt-3 border-t border-purple-200">
+                        <p class="text-lg"><span class="font-semibold">Estimated Price:</span> <span class="text-purple-700 font-bold text-xl">₱${estimatedPrice.toFixed(2)}</span></p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    reviewContent.innerHTML = summaryHTML;
+    document.getElementById('orderReviewModal').classList.remove('hidden');
+}
+
+// Close order review modal
+function closeOrderReview() {
+    document.getElementById('orderReviewModal').classList.add('hidden');
+}
+
+// Confirm order - Send OTP request using existing create_order.php API
+async function confirmOrder() {
+    const confirmBtn = document.getElementById('confirmOrderBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin mr-2"></i> Sending OTP...';
     
     try {
-        const response = await fetch(`${API_BASE}/student/create_logged_order.php`, {
+        const serviceType = document.getElementById('modalOrderTypeService').value;
+        
+        // Get student data from session
+        const student = window.studentData;
+        if (!student) {
+            throw new Error('Student session not found');
+        }
+        
+        let requestOptions = {
+            method: 'POST'
+        };
+        
+        // Prepare order data using same format as guest orders (matching create_order.php expectations)
+        if (serviceType === 'items') {
+            const items = [];
+            let itemNum = 1;
+            while (document.getElementById(`item${itemNum}`)) {
+                const itemSelect = document.getElementById(`item${itemNum}`);
+                if (itemSelect && itemSelect.value) {
+                    items.push(itemSelect.value);
+                }
+                itemNum++;
+            }
+            
+            const orderData = {
+                studentId: student.student_id,
+                fname: student.first_name,
+                lname: student.last_name,
+                minitial: student.middle_initial || '',
+                email: student.email,
+                college: student.college || 'UMAK',
+                program: student.program || 'N/A',
+                year: student.year_level || 'N/A',
+                section: student.section || '',
+                order_type: 'immediate',
+                order_type_service: 'items',
+                purchasing: items.join(', ')
+            };
+            
+            pendingOrderData = orderData;
+            
+            requestOptions.headers = { 'Content-Type': 'application/json' };
+            requestOptions.body = JSON.stringify(orderData);
+        } else {
+            // Printing service - use FormData
+            const formData = new FormData();
+            formData.append('studentId', student.student_id);
+            formData.append('fname', student.first_name);
+            formData.append('lname', student.last_name);
+            formData.append('minitial', student.middle_initial || '');
+            formData.append('email', student.email);
+            formData.append('college', student.college || 'UMAK');
+            formData.append('program', student.program || 'N/A');
+            formData.append('year', student.year_level || 'N/A');
+            formData.append('section', student.section || '');
+            formData.append('order_type', 'immediate');
+            formData.append('order_type_service', 'printing');
+            formData.append('file', document.getElementById('modalPrintFile').files[0]);
+            formData.append('page_count', document.getElementById('modalPageCount').value);
+            formData.append('color_mode', document.getElementById('modalColorMode').value);
+            formData.append('paper_size', document.getElementById('modalPaperSize').value);
+            formData.append('copies', document.getElementById('modalCopies').value);
+            formData.append('double_sided', document.getElementById('modalDoubleSided').checked ? '1' : '0');
+            formData.append('instructions', document.getElementById('modalPrintInstructions').value);
+            formData.append('estimated_price', updateModalPrintingPrice());
+            
+            // Store all printing data for verification
+            pendingOrderData = {
+                studentId: student.student_id,
+                fname: student.first_name,
+                lname: student.last_name,
+                minitial: student.middle_initial || '',
+                email: student.email,
+                college: student.college || 'UMAK',
+                program: student.program || 'N/A',
+                year: student.year_level || 'N/A',
+                section: student.section || '',
+                order_type: 'immediate',
+                order_type_service: 'printing',
+                page_count: document.getElementById('modalPageCount').value,
+                color_mode: document.getElementById('modalColorMode').value,
+                paper_size: document.getElementById('modalPaperSize').value,
+                copies: document.getElementById('modalCopies').value,
+                double_sided: document.getElementById('modalDoubleSided').checked ? '1' : '0',
+                instructions: document.getElementById('modalPrintInstructions').value,
+                estimated_price: updateModalPrintingPrice(),
+                file_name: document.getElementById('modalPrintFile').files[0]?.name || ''
+            };
+            
+            requestOptions.body = formData;
+        }
+        
+        // Use existing create_order.php API
+        const response = await fetch(`${API_BASE}/student/create_order.php`, requestOptions);
+        const result = await response.json();
+        
+        if (result.success) {
+            // Store stored_file_name for printing
+            if (result.data && result.data.stored_file_name) {
+                pendingOrderData.stored_file_name = result.data.stored_file_name;
+            }
+            
+            // Debug log OTP code (check console instead)
+            if (result.data && result.data.otp_code) {
+                console.log('OTP Code:', result.data.otp_code);
+            }
+            
+            closeOrderReview();
+            document.getElementById('otpVerificationModal').classList.remove('hidden');
+            document.getElementById('otpInput').focus();
+            showToast('success', 'OTP Sent', 'Check your email for the verification code');
+        } else {
+            showToast('error', 'Error', result.message || 'Failed to send OTP');
+        }
+    } catch (error) {
+        console.error('Error requesting OTP:', error);
+        showToast('error', 'Error', 'Failed to send OTP. Please try again.');
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Confirm Order';
+    }
+}
+
+// Verify OTP and place order using existing verify_otp.php API
+async function verifyOTP() {
+    const otpInput = document.getElementById('otpInput');
+    const otpCode = otpInput.value.trim();
+    
+    if (otpCode.length !== 6) {
+        showToast('error', 'Invalid OTP', 'Please enter a 6-digit code');
+        return;
+    }
+    
+    const verifyBtn = document.getElementById('verifyOTPBtn');
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="bi bi-hourglass-split animate-spin mr-2"></i> Verifying...';
+    
+    try {
+        // Use existing verify_otp.php API (same as guest orders)
+        const requestData = {
+            email: pendingOrderData.email,
+            otp_code: otpCode,
+            otp_type: 'order',
+            order_data: pendingOrderData
+        };
+        
+        const response = await fetch(`${API_BASE}/student/verify_otp.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                order_type: orderType,
-                items: items,
-                notes: notes,
-                scheduled_date: scheduledDate
-            })
+            body: JSON.stringify(requestData)
         });
         
         const result = await response.json();
         
         if (result.success) {
-            showToast('success', 'Order Created', result.message || 'Your order has been placed successfully!');
+            showToast('success', 'Success', 'Order placed successfully!');
+            closeOTPVerification();
             closeCreateOrder();
             
-            // Reload current order and order history
-            loadCurrentOrder();
-            loadOrderHistory();
+            // Reload dashboard
+            await loadCurrentOrder();
+            await loadOrderHistory();
+            calculateOrderStats();
+            updateDashboardStats();
         } else {
-            showToast('error', 'Order Failed', result.message || 'Failed to create order');
+            showToast('error', 'Error', result.message || 'Failed to verify OTP');
         }
     } catch (error) {
-        console.error('Error creating order:', error);
-        showToast('error', 'Error', 'Failed to create order. Please try again.');
+        console.error('Error verifying OTP:', error);
+        showToast('error', 'Error', 'Failed to verify OTP. Please try again.');
+    } finally {
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="bi bi-shield-check mr-2"></i> Verify & Place Order';
+    }
+}
+
+// Close OTP verification modal
+function closeOTPVerification() {
+    document.getElementById('otpVerificationModal').classList.add('hidden');
+    document.getElementById('otpInput').value = '';
+}
+
+// Select quantity and generate item fields
+function selectQuantity(qty) {
+    // Update button styles
+    for (let i = 1; i <= 5; i++) {
+        const btn = document.getElementById(`qty${i}Btn`);
+        if (btn) {
+            if (i === qty) {
+                btn.className = 'py-3 px-4 border-2 border-blue-900 bg-blue-900 text-white rounded-lg font-bold hover:bg-blue-800 transition-all';
+            } else {
+                btn.className = 'py-3 px-4 border-2 border-gray-300 bg-white text-gray-700 rounded-lg font-bold hover:border-blue-900 hover:bg-blue-50 transition-all';
+            }
+        }
+    }
+    
+    // Generate item fields
+    const container = document.getElementById('itemFieldsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Base options - will be enhanced by inventory helper if available
+    const itemOptions = `
+        <option value="">Select Item</option>
+        <option value="id lace">ID Lace</option>
+        <option value="school uniform">School Uniform</option>
+        <option value="pe uniform">PE Uniform</option>
+        <option value="nstp shirt">NSTP Shirt</option>
+        <option value="book">Book</option>
+        <option value="printing services">Printing Services</option>
+    `;
+    
+    for (let i = 1; i <= qty; i++) {
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Item ${i} <span class="text-red-500">*</span></label>
+            <select id="item${i}" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                ${itemOptions}
+            </select>
+        `;
+        container.appendChild(div);
+        
+        // Populate with real inventory if helper is available
+        if (typeof populateInventorySelect === 'function') {
+            populateInventorySelect(`item${i}`, false); // Don't show out of stock
+        }
+    }
+    
+    // Show the order items container
+    const orderItemsContainer = document.getElementById('orderItemsContainer');
+    if (orderItemsContainer) {
+        orderItemsContainer.style.display = 'block';
     }
 }
 
@@ -663,7 +1336,7 @@ function displayOrderDetailsContent(order) {
                 </div>
                 <div class="text-right">
                     <p class="text-sm ${status.text} font-semibold">Queue Number</p>
-                    <p class="text-2xl font-bold ${status.text} font-mono">${order.queue_number}</p>
+                    <p class="text-2xl font-bold ${status.text} font-mono text-blue-700">${order.queue_number}</p>
                 </div>
             </div>
             
@@ -753,7 +1426,7 @@ function displayOrderDetailsContent(order) {
             
             <!-- Actions -->
             <div class="flex gap-3">
-                ${order.order_status === 'pending' || order.order_status === 'processing' || order.order_status === 'ready' ? `
+                ${order.order_status === 'pending' || order.order_status === 'processing' ? `
                 <button onclick="viewQRCode('${order.queue_number}')" class="flex-1 bg-accent-600 hover:bg-accent-700 text-white py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2" style="background-color: #2563eb; color: #ffffff;">
                     <i class="bi bi-qr-code"></i>
                     View QR Code
@@ -780,21 +1453,45 @@ function viewQRCode(queueNumber) {
     // Clear previous QR code
     qrDisplay.innerHTML = '';
     
-    // Generate QR code from queue number
-    if (typeof QRCode !== 'undefined') {
+    // Generate QR code from queue number using toCanvas method
+    if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
         try {
-            new QRCode(qrDisplay, {
-                text: queueNumber,
+            // Create canvas element
+            const canvas = document.createElement('canvas');
+            qrDisplay.appendChild(canvas);
+            
+            // Generate QR code on canvas
+            QRCode.toCanvas(canvas, queueNumber.toString(), {
                 width: 256,
                 height: 256,
-                colorDark: '#0f172a',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            }, function (error) {
+                if (error) {
+                    console.error('QR Code generation error:', error);
+                    qrDisplay.innerHTML = `
+                        <div class="text-center p-6">
+                            <i class="bi bi-exclamation-triangle text-danger-600 text-4xl mb-3 block"></i>
+                            <p class="text-gray-600">Failed to generate QR code</p>
+                            <p class="text-sm text-gray-500 mt-2">Queue Number: <strong>${queueNumber}</strong></p>
+                        </div>
+                    `;
+                }
             });
+            
             modal.classList.remove('hidden');
         } catch (error) {
             console.error('Error generating QR code:', error);
-            qrDisplay.innerHTML = `<div class="text-danger-600 p-4">Error generating QR code</div>`;
+            qrDisplay.innerHTML = `
+                <div class="text-center p-6">
+                    <i class="bi bi-exclamation-triangle text-danger-600 text-4xl mb-3 block"></i>
+                    <p class="text-gray-600">Error generating QR code</p>
+                    <p class="text-sm text-gray-500 mt-2">Queue Number: <strong>${queueNumber}</strong></p>
+                </div>
+            `;
             modal.classList.remove('hidden');
         }
     } else {
@@ -804,6 +1501,7 @@ function viewQRCode(queueNumber) {
                 <i class="bi bi-exclamation-triangle text-warning-500 text-4xl mb-3 block"></i>
                 <p class="text-gray-600">QR Code library not loaded.</p>
                 <p class="text-sm text-gray-500 mt-2">Queue Number: <strong>${queueNumber}</strong></p>
+                <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700">Reload Page</button>
             </div>
         `;
         modal.classList.remove('hidden');
@@ -820,10 +1518,27 @@ function downloadQRCode() {
     const qrCanvas = document.querySelector('#qrCodeDisplay canvas');
     if (qrCanvas) {
         const link = document.createElement('a');
-        link.download = 'qr-code.png';
+        link.download = 'order-qr-code.png';
         link.href = qrCanvas.toDataURL();
         link.click();
-        showToast('success', 'Downloaded', 'QR code saved to your downloads');
+    }
+}
+
+// Download QR code from active order card
+function downloadActiveOrderQR() {
+    const qrCanvas = document.getElementById('activeOrderQRCode');
+    if (qrCanvas) {
+        // Use stored order data for proper filename matching order_result.html format
+        const queueNum = currentActiveOrder?.queue_number || 'ORDER';
+        const refNum = currentActiveOrder?.reference_number || Date.now();
+        
+        const link = document.createElement('a');
+        link.download = `UMAK-COOP-${queueNum}-${refNum}.png`;
+        link.href = qrCanvas.toDataURL('image/png');
+        link.click();
+        showToast('success', 'Downloaded', 'QR code downloaded successfully');
+    } else {
+        showToast('error', 'Error', 'QR code not found');
     }
 }
 
@@ -923,7 +1638,7 @@ window.logout = async function logout() {
         }
         
         sessionStorage.clear();
-        window.location.href = 'student_login.html';
+        window.location.href = '../login.html';
     }
 }
 
@@ -1015,37 +1730,126 @@ function previewImage(input) {
     }
 }
 
-function uploadProfilePicture() {
+async function uploadProfilePicture() {
     const fileInput = document.getElementById('profilePictureInput');
     if (!fileInput.files[0]) {
         showToast('warning', 'No Image', 'Please select an image first');
         return;
     }
     
-    // TODO: Implement actual upload to server
-    showToast('success', 'Success', 'Profile picture updated successfully!');
-    closeProfilePicture();
+    // Validate file size (max 5MB)
+    if (fileInput.files[0].size > 5 * 1024 * 1024) {
+        showToast('error', 'File Too Large', 'Please select an image smaller than 5MB');
+        return;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(fileInput.files[0].type)) {
+        showToast('error', 'Invalid File', 'Please select a valid image file (JPG, PNG, GIF)');
+        return;
+    }
+    
+    showToast('info', 'Uploading', 'Uploading your profile picture...');
+    
+    try {
+        const formData = new FormData();
+        formData.append('profile_picture', fileInput.files[0]);
+        
+        const response = await fetch(`${API_BASE}/student/upload_profile_picture.php`, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Get response text first to check if it's empty
+        const responseText = await response.text();
+        if (!responseText || responseText.trim() === '') {
+            throw new Error('Server returned empty response. Please check if you are logged in.');
+        }
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            console.error('Response text:', responseText);
+            throw new Error('Invalid response from server: ' + responseText.substring(0, 100));
+        }
+        
+        if (result.success) {
+            // Update all profile pictures with the new URL
+            const newImageUrl = result.data.profile_picture_url + '?t=' + Date.now();
+            
+            const avatars = [
+                'navAvatarImg',
+                'dropdownAvatarImg', 
+                'profileAvatarLargeImg',
+                'previewProfilePicture'
+            ];
+            
+            avatars.forEach(id => {
+                const img = document.getElementById(id);
+                if (img) {
+                    img.src = newImageUrl;
+                    img.style.display = 'block';
+                }
+            });
+            
+            showToast('success', 'Success', 'Profile picture updated successfully!');
+            closeProfilePicture();
+        } else {
+            showToast('error', 'Upload Failed', result.message || 'Failed to upload profile picture');
+        }
+    } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        showToast('error', 'Error', 'Failed to upload profile picture. Please try again.');
+    }
 }
 
-function resetToDefault() {
-    // Reset to Herons.png
-    const defaultImage = '../../../images/Herons.png';
-    document.getElementById('previewProfilePicture').src = defaultImage;
-    
-    // Update all profile pictures
-    const avatars = [
-        'navAvatarImg',
-        'dropdownAvatarImg', 
-        'profileAvatarLargeImg'
-    ];
-    
-    avatars.forEach(id => {
-        const img = document.getElementById(id);
-        if (img) img.src = defaultImage;
-    });
-    
-    showToast('success', 'Reset', 'Profile picture reset to default');
-    closeProfilePicture();
+async function resetToDefault() {
+    try {
+        // Call API to reset profile picture in database
+        const response = await fetch(`${API_BASE}/student/reset_profile_picture.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Reset to Herons.png
+            const defaultImage = '/Q-Mak/images/Herons.png';
+            document.getElementById('previewProfilePicture').src = defaultImage;
+            
+            // Update all profile pictures
+            const avatars = [
+                'navAvatarImg',
+                'dropdownAvatarImg', 
+                'profileAvatarLargeImg'
+            ];
+            
+            avatars.forEach(id => {
+                const img = document.getElementById(id);
+                if (img) img.src = defaultImage;
+            });
+            
+            showToast('success', 'Reset', 'Profile picture reset to default');
+            closeProfilePicture();
+        } else {
+            showToast('error', 'Error', result.message || 'Failed to reset profile picture');
+        }
+    } catch (error) {
+        console.error('Error resetting profile picture:', error);
+        showToast('error', 'Error', 'Failed to reset profile picture. Please try again.');
+    }
 }
 
 // Orders Management Functions

@@ -106,17 +106,18 @@ CREATE TABLE IF NOT EXISTS `students` (
 
 CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `reference_number` VARCHAR(20) NOT NULL COMMENT 'Unique reference number for order tracking',
+  `reference_number` VARCHAR(20) NOT NULL COMMENT 'Unique reference number for order tracking (QMAK-XXXXXX)',
   `student_id` VARCHAR(50) NOT NULL,
   `queue_number` VARCHAR(50) NOT NULL,
   `queue_date` DATE NOT NULL COMMENT 'Date for daily queue resets',
-  `item_name` TEXT NULL COMMENT 'Legacy field for single items',
+  `item_name` TEXT NULL COMMENT 'For printing orders, always set to "Printing Services"',
   `item_ordered` TEXT NULL COMMENT 'Comma-separated list of items',
   `purchasing` TEXT NULL COMMENT 'Alias for item_ordered',
   `quantity` INT(11) NOT NULL DEFAULT 1 COMMENT 'Number of items in order',
   `notes` TEXT NULL,
-  `status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
-  `order_status` ENUM('pending', 'processing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  `status` ENUM('pending', 'processing', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  `order_status` ENUM('pending', 'processing', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  `cancellation_reason` TEXT NULL COMMENT 'Reason for cancellation (if status is cancelled)',
   `order_type` ENUM('walk-in', 'online', 'immediate', 'pre-order') NOT NULL DEFAULT 'online' COMMENT 'Order source type',
   `scheduled_date` DATE NULL COMMENT 'For pre-orders, the date customer wants to pick up the order',
   `moved_from_date` DATE NULL COMMENT 'Original date if order was auto-moved',
@@ -149,6 +150,32 @@ CREATE TABLE IF NOT EXISTS `orders` (
   INDEX `idx_completed_at` (`completed_at`),
   INDEX `idx_is_archived` (`is_archived`),
   FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `printing_jobs`
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `printing_jobs` (
+  `job_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `order_id` INT(11) NOT NULL,
+  `file_path` VARCHAR(255) NOT NULL COMMENT 'Location of the uploaded PDF/Doc',
+  `file_name` VARCHAR(255) NOT NULL COMMENT 'Original filename (e.g. Thesis_Final.pdf)',
+  `file_size` INT(11) NOT NULL DEFAULT 0 COMMENT 'File size in bytes',
+  `page_count` INT(11) DEFAULT NULL COMMENT 'Number of pages detected',
+  `color_mode` ENUM('B&W', 'Colored') NOT NULL DEFAULT 'B&W',
+  `paper_size` ENUM('Short', 'Long', 'A4') NOT NULL DEFAULT 'A4',
+  `copies` INT(11) NOT NULL DEFAULT 1,
+  `collate` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Collate multiple copies',
+  `double_sided` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Print on both sides',
+  `instructions` TEXT NULL COMMENT 'Extra notes like "Back to back" or "Slide handout mode"',
+  `estimated_price` DECIMAL(10,2) NULL COMMENT 'Calculated price based on settings',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`job_id`),
+  INDEX `idx_order_id` (`order_id`),
+  INDEX `idx_created_at` (`created_at`),
+  FOREIGN KEY (`order_id`) REFERENCES `orders`(`order_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -454,8 +481,8 @@ INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
 ('queue_reset_time', '00:00:00', 'Time to reset queue counter daily'),
 ('queue_max_per_day', '999', 'Maximum queue numbers allowed per day'),
 ('max_queue_per_day', '999', 'Maximum queue numbers per day'),
-('reference_prefix', 'REF', 'Prefix for reference numbers'),
-('reference_length', '8', 'Length of random reference number'),
+('reference_prefix', 'QMAK', 'Prefix for reference numbers'),
+('reference_length', '6', 'Length of random reference number'),
 ('wait_time_buffer_percent', '20', 'Buffer percentage added to calculated wait time'),
 ('wait_time_min', '5', 'Minimum wait time in minutes'),
 ('wait_time_max', '60', 'Maximum wait time in minutes'),
@@ -479,6 +506,14 @@ INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
 ('otp_max_attempts', '3', 'Maximum OTP verification attempts'),
 ('email_from_name', 'UMak COOP', 'From name in emails'),
 ('email_from_address', 'coop@umak.edu.ph', 'From email address'),
+('printing_price_bw_short', '1.00', 'Price per page: Black & White on Short bond'),
+('printing_price_bw_long', '1.50', 'Price per page: Black & White on Long bond'),
+('printing_price_bw_a4', '1.25', 'Price per page: Black & White on A4'),
+('printing_price_colored_short', '5.00', 'Price per page: Colored on Short bond'),
+('printing_price_colored_long', '7.50', 'Price per page: Colored on Long bond'),
+('printing_price_colored_a4', '6.00', 'Price per page: Colored on A4'),
+('printing_max_file_size', '10485760', 'Maximum file size for printing in bytes (10MB default)'),
+('printing_allowed_extensions', 'pdf,doc,docx', 'Allowed file extensions for printing'),
 ('avg_processing_time', '5', 'Average processing time per order in minutes'),
 ('item_complexity_factor', '2', 'Additional time per item in order (minutes)');
 

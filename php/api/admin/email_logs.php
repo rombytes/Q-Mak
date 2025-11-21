@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../../config/database.php';
 
-session_start();
+require_once __DIR__ . '/../../config/session_config.php';
 
 // Check admin authentication
 if (!isset($_SESSION['admin_id'])) {
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 log_id,
                 order_id,
                 student_id,
-                recipient_email,
+                email_to as recipient_email,
                 email_type,
                 subject,
                 status,
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         // Search by recipient email
         if (!empty($search)) {
-            $query .= " AND recipient_email LIKE ?";
+            $query .= " AND email_to LIKE ?";
             $params[] = "%$search%";
         }
         

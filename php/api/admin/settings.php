@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-session_start();
+require_once __DIR__ . '/../../config/session_config.php';
 
 // Check if admin is logged in
 if (!isset($_SESSION['admin_id'])) {

@@ -4,7 +4,7 @@
  * Handle archiving orders and email logs
  */
 
-session_start();
+require_once __DIR__ . '/../../config/session_config.php';
 require_once __DIR__ . '/../../config/database.php';
 
 header('Content-Type: application/json');

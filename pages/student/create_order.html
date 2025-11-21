@@ -5,22 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Order - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="../../js/notifications.js"></script>
     <script src="../../js/inventory_helper.js"></script>
     <script src="../../js/modal_utils.js"></script>
+    <script src="../../js/printing_helper.js"></script>
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/create_order.css">
+    <link rel="stylesheet" href="assets/css/service_type_styles.css">
+    
+    <style>
+        /* Multi-step form animations */
+        .order-step {
+            display: none;
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        
+        .order-step.active {
+            display: block;
+            animation: slideIn 0.4s ease forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Progress indicator active state */
+        .step-indicator-active {
+            background-color: #2563eb !important;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .step-indicator-completed {
+            background-color: #10b981 !important;
+        }
+        
+        .progress-line-active {
+            background-color: #10b981 !important;
+        }
+    </style>
+    
+    <!-- Core Functions - Load Early -->
+    <script>
+        // Global state for service type
+        let currentServiceType = 'items';
+        
+        // Function to select service type (items or printing)
+        function selectServiceType(type) {
+            currentServiceType = type;
+            
+            // Update hidden input
+            const orderTypeInput = document.getElementById('orderTypeService');
+            if (orderTypeInput) {
+                orderTypeInput.value = type;
+            }
+            
+            // Update card styling
+            const itemsCard = document.getElementById('serviceTypeItems');
+            const printingCard = document.getElementById('serviceTypePrinting');
+            
+            if (itemsCard && printingCard) {
+                if (type === 'items') {
+                    itemsCard.classList.add('active');
+                    printingCard.classList.remove('active');
+                    
+                    // Show items form, hide printing form
+                    const itemsSection = document.getElementById('itemsFormSection');
+                    const printingSection = document.getElementById('printingFormSection');
+                    if (itemsSection) {
+                        itemsSection.classList.remove('hidden');
+                        itemsSection.classList.add('active');
+                    }
+                    if (printingSection) {
+                        printingSection.classList.add('hidden');
+                        printingSection.classList.remove('active');
+                    }
+                } else {
+                    printingCard.classList.add('active');
+                    itemsCard.classList.remove('active');
+                    
+                    // Show printing form, hide items form
+                    const itemsSection = document.getElementById('itemsFormSection');
+                    const printingSection = document.getElementById('printingFormSection');
+                    if (printingSection) {
+                        printingSection.classList.remove('hidden');
+                        printingSection.classList.add('active');
+                    }
+                    if (itemsSection) {
+                        itemsSection.classList.add('hidden');
+                        itemsSection.classList.remove('active');
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full my-8">
         <!-- Cutoff Warning Banner (will be inserted by JavaScript) -->
         <div id="cutoffWarningBanner"></div>
         
+        <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h3 class="text-3xl font-bold text-blue-900">Create New Order</h3>
-                <p class="text-gray-600 mt-1">Fill out the form to place your order</p>
+                <p class="text-gray-600 mt-1">Complete the steps to place your order</p>
             </div>
             <button onclick="window.location.href='../index.html'" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,45 +127,97 @@
                 </svg>
             </button>
         </div>
+        
+        <!-- Progress Indicator -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between max-w-3xl mx-auto">
+                <!-- Step 1 -->
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step1Indicator" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mb-2 transition-all">1</div>
+                    <span class="text-xs text-center text-gray-600">Student Info</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2" id="progress1to2"></div>
+                
+                <!-- Step 2 -->
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step2Indicator" class="w-10 h-10 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold mb-2 transition-all">2</div>
+                    <span class="text-xs text-center text-gray-600">Academic Info</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2" id="progress2to3"></div>
+                
+                <!-- Step 3 -->
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step3Indicator" class="w-10 h-10 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold mb-2 transition-all">3</div>
+                    <span class="text-xs text-center text-gray-600">Service Type</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2" id="progress3to4"></div>
+                
+                <!-- Step 4 -->
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step4Indicator" class="w-10 h-10 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold mb-2 transition-all">4</div>
+                    <span class="text-xs text-center text-gray-600">Order Details</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-300 mx-2" id="progress4to5"></div>
+                
+                <!-- Step 5 -->
+                <div class="flex flex-col items-center flex-1">
+                    <div id="step5Indicator" class="w-10 h-10 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold mb-2 transition-all">5</div>
+                    <span class="text-xs text-center text-gray-600">Review</span>
+                </div>
+            </div>
+        </div>
+        
         <form id="orderForm" class="space-y-6">
-            <!-- Student Information -->
-            <div class="bg-blue-50 rounded-xl p-6">
-                <h4 class="text-lg font-semibold text-blue-900 mb-4">Student Information</h4>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Student ID <span class="text-red-500">*</span></label>
-                        <input type="text" id="studentId" placeholder="e.g., K12345678" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- STEP 1: Student Information -->
+            <div class="order-step active" id="step1" data-step="1">
+                <div class="bg-white rounded-xl p-6 border-2 border-gray-200">
+                    <h4 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-2">
+                        <i class="bi bi-person-badge-fill text-blue-600"></i>
+                        Student Information
+                    </h4>
+                    <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">First Name <span class="text-red-500">*</span></label>
-                            <input type="text" id="fname" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Student ID <span class="text-red-500">*</span></label>
+                            <input type="text" id="studentId" name="studentId" placeholder="e.g., K12345678, A123456" maxlength="15" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                            <p class="text-xs text-gray-500 mt-1">Format: Letter followed by numbers (e.g., K12345678, A123456)</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">First Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="firstName" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="lastName" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">M.I.</label>
+                                <input type="text" id="middleInitial" maxlength="1" placeholder="Optional" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name <span class="text-red-500">*</span></label>
-                            <input type="text" id="lname" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">UMak Student Email <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="studentID@umak.edu.ph" required />
+                            <p class="text-xs text-gray-500 mt-1">Must be a valid @umak.edu.ph email address</p>
+                            <div id="emailFeedback" class="mt-2 hidden"></div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">M.I.</label>
-                            <input type="text" id="minitial" maxlength="1" placeholder="Optional" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">UMak Student Email <span class="text-red-500">*</span></label>
-                        <input type="email" id="email" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="studentID@umak.edu.ph" required />
-                        <div id="emailFeedback" class="mt-2 hidden"></div>
                     </div>
                 </div>
             </div>
             
-            <!-- Academic Information -->
-            <div class="bg-orange-50 rounded-xl p-6">
-                <h4 class="text-lg font-semibold text-blue-900 mb-4">Academic Information</h4>
-                <div class="space-y-4">
+            <!-- STEP 2: Academic Information -->
+            <div class="order-step" id="step2" data-step="2">
+                <div class="bg-white rounded-xl p-6 border-2 border-gray-200">
+                    <h4 class="text-2xl font-bold text-orange-900 mb-6 flex items-center gap-2">
+                        <i class="bi bi-mortarboard-fill text-orange-600"></i>
+                        Academic Information
+                    </h4>
+                    <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">College/School/Institute <span class="text-red-500">*</span></label>
-                            <select id="college" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                            <select id="college" name="college" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                 <option value="">Select College/School/Institute</option>
                                 <optgroup label="Colleges">
                                     <option value="CLAS">CLAS</option>
@@ -98,13 +249,13 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Program <span class="text-red-500">*</span></label>
-                            <input type="text" id="program" placeholder="e.g., BS Computer Science" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required />
+                            <input type="text" id="program" name="program" placeholder="e.g., BS Computer Science" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Year Level <span class="text-red-500">*</span></label>
-                            <select id="year" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                            <select id="year" name="year" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                 <option value="">Select Year Level</option>
                                 <option value="1">1st Year</option>
                                 <option value="2">2nd Year</option>
@@ -118,10 +269,50 @@
                             <input type="text" id="section" placeholder="e.g., A, B, C (Optional)" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                         </div>
                     </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Order Quantity -->
+            <!-- STEP 3: Service Type Selection -->
+            <div class="order-step" id="step3" data-step="3">
+                <div class="bg-white rounded-xl p-6 border-2 border-gray-200">
+                    <h4 class="text-2xl font-bold text-gray-900 mb-6 text-center">What would you like to order?</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Items Option -->
+                        <button type="button" onclick="selectServiceType('items')" id="serviceTypeItems" class="service-type-card active group">
+                            <div class="service-icon items-icon">
+                                <i class="bi bi-bag-check-fill"></i>
+                            </div>
+                            <h5 class="font-bold text-lg mb-2">School Items</h5>
+                            <p class="text-sm text-gray-600">
+                                Uniforms, Books, Supplies, Merchandise
+                            </p>
+                        </button>
+                        
+                        <!-- Printing Option -->
+                        <button type="button" onclick="selectServiceType('printing')" id="serviceTypePrinting" class="service-type-card group">
+                            <div class="service-icon printing-icon">
+                                <i class="bi bi-printer-fill"></i>
+                            </div>
+                            <h5 class="font-bold text-lg mb-2">Printing Services</h5>
+                            <p class="text-sm text-gray-600">
+                                Documents, Files, Printing & Copying
+                            </p>
+                        </button>
+                        
+                    </div>
+                    
+                    <!-- Hidden input to track selected type -->
+                    <input type="hidden" id="orderTypeService" name="order_type_service" value="items">
+                </div>
+            </div>
+            
+            <!-- STEP 4: Order Details -->
+            <div class="order-step" id="step4" data-step="4">
+                <!-- ITEMS FORM SECTION -->
+                <div id="itemsFormSection" class="form-section active">
+                <!-- Order Quantity -->
             <div class="bg-blue-50 rounded-xl p-6">
                 <h4 class="text-lg font-semibold text-blue-900 mb-4">Order Quantity</h4>
                 <label class="block text-sm font-semibold text-gray-700 mb-3">How many items would you like to order? <span class="text-red-500">*</span></label>
@@ -156,7 +347,7 @@
                     <!-- Item 1 -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Item 1 <span class="text-red-500">*</span></label>
-                        <select id="purchasing" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
+                        <select id="purchasing" name="purchasing" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                             <option value="">Select Item</option>
                             <option value="id lace">ID Lace</option>
                             <option value="uniform">School Uniform</option>
@@ -234,27 +425,591 @@
                     </div>
                 </div>
             </div>
+            </div>
+            <!-- END ITEMS FORM SECTION -->
             
-            <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 pt-6">
-                <button type="submit" id="submitOrderBtn" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg hover:scale-105 flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Submit Order
+            <!-- PRINTING FORM SECTION -->
+            <div id="printingFormSection" class="form-section hidden">
+                <!-- File Upload -->
+                <div class="bg-purple-50 rounded-xl p-6 mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="bi bi-file-earmark-arrow-up text-purple-600"></i>
+                        Upload Document
+                    </h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Select File <span class="text-red-500">*</span></label>
+                            <input type="file" id="printFile" name="print_file" accept=".pdf,.doc,.docx" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200">
+                            <p class="text-xs text-gray-600 mt-2">
+                                <i class="bi bi-info-circle"></i> Accepted formats: PDF, DOC, DOCX (Max 10MB)
+                            </p>
+                            <div id="fileFeedback" class="mt-2 hidden"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Number of Pages <span class="text-red-500">*</span></label>
+                            <input type="number" id="pageCount" name="page_count" min="1" max="500" placeholder="e.g., 50" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                            <p class="text-xs text-gray-600 mt-1">Enter the total number of pages in your document</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Printing Options -->
+                <div class="bg-indigo-50 rounded-xl p-6 mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="bi bi-gear-fill text-indigo-600"></i>
+                        Printing Options
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Color Mode -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Color Mode <span class="text-red-500">*</span></label>
+                            <select id="colorMode" name="color_mode" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                                <option value="B&W">Black & White</option>
+                                <option value="Colored">Colored</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Paper Size -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Paper Size <span class="text-red-500">*</span></label>
+                            <select id="paperSize" name="paper_size" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                                <option value="A4">A4</option>
+                                <option value="Short">Short Bond</option>
+                                <option value="Long">Long Bond</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Copies -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Number of Copies <span class="text-red-500">*</span></label>
+                            <input type="number" id="copies" name="copies" min="1" max="100" value="1" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+                        </div>
+                        
+                        <!-- Double Sided -->
+                        <div class="flex items-center pt-8">
+                            <input type="checkbox" id="doubleSided" name="double_sided" class="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                            <label for="doubleSided" class="ml-3 text-sm font-semibold text-gray-700">Double-Sided Printing</label>
+                        </div>
+                    </div>
+                    
+                    <!-- Special Instructions -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Special Instructions</label>
+                        <textarea id="printInstructions" name="instructions" rows="3" placeholder="e.g., Collated, Stapled, etc." class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Price Estimate -->
+                <div class="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl p-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-700 mb-1">Estimated Price</p>
+                            <p class="text-xs text-gray-600">Final price may vary based on actual page count</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-3xl font-bold text-purple-700" id="estimatedPrice">₱0.00</span>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <!-- END PRINTING FORM SECTION -->
+            </div>
+            
+            <!-- STEP 5: Review & Confirm -->
+            <div class="order-step" id="step5" data-step="5">
+                <div class="bg-white rounded-xl p-6 border-2 border-gray-200">
+                    <h4 class="text-2xl font-bold text-green-900 mb-6 flex items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-green-600"></i>
+                        Review Your Order
+                    </h4>
+                    
+                    <div class="space-y-4" id="reviewSummary">
+                        <!-- Summary will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between items-center pt-6">
+                <button type="button" id="prevBtn" onclick="previousStep()" class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all flex items-center gap-2" style="display: none;">
+                    <i class="bi bi-arrow-left"></i>
+                    Back
                 </button>
-                <button type="reset" class="flex-1 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-lg flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Clear Form
+                
+                <div class="flex-1"></div>
+                
+                <button type="button" id="nextBtn" onclick="nextStep()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
+                    Continue
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+                
+                <button type="submit" id="submitBtn" class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl" style="display: none;">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Submit Order
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- Inline JavaScript removed - now in assets/js/create_order.js -->
-    
     <!-- External JavaScript -->
     <script src="assets/js/create_order.js"></script>
+    
+    <!-- Step Navigation Script -->
+    <script>
+        // Helper function for notifications
+        function showNotification(message, type = 'info') {
+            if (window.notificationManager) {
+                if (type === 'error') {
+                    window.notificationManager.error(message);
+                } else if (type === 'success') {
+                    window.notificationManager.success(message);
+                } else if (type === 'warning') {
+                    window.notificationManager.warning(message);
+                } else {
+                    window.notificationManager.info(message);
+                }
+            } else {
+                // Fallback to alert if notification manager not loaded
+                alert(message);
+            }
+        }
+        
+        // Multi-step form state
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        // Show specific step
+        function showStep(stepNumber) {
+            // Hide all steps
+            document.querySelectorAll('.order-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show current step
+            const currentStepElement = document.getElementById(`step${stepNumber}`);
+            if (currentStepElement) {
+                currentStepElement.classList.add('active');
+            }
+            
+            // Update progress indicators
+            updateProgressIndicators(stepNumber);
+            
+            // Update button visibility
+            updateNavigationButtons(stepNumber);
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Update progress indicators
+        function updateProgressIndicators(stepNumber) {
+            for (let i = 1; i <= totalSteps; i++) {
+                const indicator = document.getElementById(`step${i}Indicator`);
+                if (!indicator) continue;
+                
+                // Remove all state classes
+                indicator.classList.remove('step-indicator-active', 'step-indicator-completed');
+                
+                if (i < stepNumber) {
+                    // Completed steps
+                    indicator.classList.add('step-indicator-completed');
+                    indicator.innerHTML = '<i class="bi bi-check-lg"></i>';
+                } else if (i === stepNumber) {
+                    // Current step
+                    indicator.classList.add('step-indicator-active');
+                    indicator.textContent = i;
+                } else {
+                    // Future steps
+                    indicator.textContent = i;
+                }
+            }
+            
+            // Update progress lines
+            for (let i = 1; i < totalSteps; i++) {
+                const progressLine = document.getElementById(`progress${i}to${i+1}`);
+                if (progressLine) {
+                    if (i < stepNumber) {
+                        progressLine.classList.add('progress-line-active');
+                    } else {
+                        progressLine.classList.remove('progress-line-active');
+                    }
+                }
+            }
+        }
+        
+        // Update navigation button visibility
+        function updateNavigationButtons(stepNumber) {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Back button (hide on step 1)
+            if (prevBtn) {
+                prevBtn.style.display = stepNumber === 1 ? 'none' : 'flex';
+            }
+            
+            // Continue button (hide on step 5)
+            if (nextBtn) {
+                nextBtn.style.display = stepNumber === totalSteps ? 'none' : 'flex';
+            }
+            
+            // Submit button (show only on step 5)
+            if (submitBtn) {
+                submitBtn.style.display = stepNumber === totalSteps ? 'flex' : 'none';
+            }
+        }
+        
+        // Go to next step
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                    
+                    // If moving to step 5, populate review summary
+                    if (currentStep === 5) {
+                        populateReviewSummary();
+                    }
+                }
+            }
+        }
+        
+        // Go to previous step
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+        
+        // Validate current step
+        function validateCurrentStep() {
+            const currentStepElement = document.getElementById(`step${currentStep}`);
+            if (!currentStepElement) return true;
+            
+            // Get all required inputs in current step
+            const requiredInputs = currentStepElement.querySelectorAll('[required]');
+            let isValid = true;
+            let firstInvalidField = null;
+            
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.classList.add('border-red-500');
+                    if (!firstInvalidField) firstInvalidField = input;
+                } else {
+                    input.classList.remove('border-red-500');
+                }
+            });
+            
+            // Step 1 specific validation
+            if (currentStep === 1) {
+                const studentId = document.getElementById('studentId');
+                const email = document.getElementById('email');
+                const firstName = document.getElementById('firstName');
+                const lastName = document.getElementById('lastName');
+                
+                // Validate Student ID format (Letter followed by digits)
+                if (studentId && studentId.value) {
+                    const studentIdPattern = /^[A-Za-z]\d+$/;
+                    if (!studentIdPattern.test(studentId.value.trim())) {
+                        isValid = false;
+                        studentId.classList.add('border-red-500');
+                        if (!firstInvalidField) firstInvalidField = studentId;
+                        showNotification('Student ID must start with a letter followed by numbers (e.g., K12345678, A123456)', 'error');
+                    }
+                }
+                
+                // Validate email format
+                if (email && email.value) {
+                    if (!email.value.endsWith('@umak.edu.ph')) {
+                        isValid = false;
+                        email.classList.add('border-red-500');
+                        if (!firstInvalidField) firstInvalidField = email;
+                        showNotification('Please use your UMak email address (@umak.edu.ph)', 'error');
+                    }
+                    
+                    // Check if registered account is detected (from create_order.js)
+                    if (typeof isRegisteredAccount !== 'undefined' && isRegisteredAccount) {
+                        isValid = false;
+                        if (!firstInvalidField) firstInvalidField = email;
+                        showNotification('This email has a registered account. Please login to place your order.', 'error');
+                    }
+                    
+                    // Check if email validation passed (no red border from async check)
+                    if (email.classList.contains('border-red-500')) {
+                        isValid = false;
+                        if (!firstInvalidField) firstInvalidField = email;
+                    }
+                }
+                
+                // Validate name fields
+                if (firstName && firstName.value && !/^[a-zA-Z\s]+$/.test(firstName.value.trim())) {
+                    isValid = false;
+                    firstName.classList.add('border-red-500');
+                    if (!firstInvalidField) firstInvalidField = firstName;
+                    showNotification('First name should only contain letters', 'error');
+                }
+                
+                if (lastName && lastName.value && !/^[a-zA-Z\s]+$/.test(lastName.value.trim())) {
+                    isValid = false;
+                    lastName.classList.add('border-red-500');
+                    if (!firstInvalidField) firstInvalidField = lastName;
+                    showNotification('Last name should only contain letters', 'error');
+                }
+            }
+            
+            // Step 2 specific validation
+            if (currentStep === 2) {
+                const college = document.getElementById('college');
+                const program = document.getElementById('program');
+                const year = document.getElementById('year');
+                
+                if (college && college.selectedIndex === 0) {
+                    isValid = false;
+                    college.classList.add('border-red-500');
+                    if (!firstInvalidField) firstInvalidField = college;
+                    showNotification('Please select your College/School/Institute', 'error');
+                }
+                
+                if (program && !program.value.trim()) {
+                    isValid = false;
+                    program.classList.add('border-red-500');
+                    if (!firstInvalidField) firstInvalidField = program;
+                    showNotification('Please enter your Program', 'error');
+                }
+                
+                if (year && year.selectedIndex === 0) {
+                    isValid = false;
+                    year.classList.add('border-red-500');
+                    if (!firstInvalidField) firstInvalidField = year;
+                    showNotification('Please select your Year Level', 'error');
+                }
+            }
+            
+            // Step 3 validation - Service type
+            if (currentStep === 3 && !currentServiceType) {
+                showNotification('Please select a service type (Items or Printing)', 'error');
+                return false;
+            }
+            
+            // Step 4 validation - Service-specific
+            if (currentStep === 4) {
+                if (currentServiceType === 'printing') {
+                    const printFile = document.getElementById('printFile');
+                    const pageCount = document.getElementById('pageCount');
+                    
+                    if (!printFile || !printFile.files || printFile.files.length === 0) {
+                        isValid = false;
+                        showNotification('Please select a file to print', 'error');
+                    }
+                    
+                    if (!pageCount || !pageCount.value || pageCount.value <= 0) {
+                        isValid = false;
+                        pageCount?.classList.add('border-red-500');
+                        showNotification('Please enter the number of pages', 'error');
+                    }
+                } else if (currentServiceType === 'items') {
+                    const purchasing = document.getElementById('purchasing');
+                    if (!purchasing || purchasing.selectedIndex === 0) {
+                        isValid = false;
+                        showNotification('Please select at least one item', 'error');
+                    }
+                }
+            }
+            
+            if (!isValid && firstInvalidField) {
+                firstInvalidField.focus();
+                showNotification('Please fill in all required fields', 'error');
+            }
+            
+            return isValid;
+        }
+        
+        // Populate review summary on step 5
+        function populateReviewSummary() {
+            const reviewSummary = document.getElementById('reviewSummary');
+            if (!reviewSummary) return;
+            
+            let summaryHTML = '';
+            
+            // Student Information
+            const studentId = document.getElementById('studentId')?.value || 'N/A';
+            const firstName = document.getElementById('firstName')?.value || '';
+            const lastName = document.getElementById('lastName')?.value || '';
+            const middleInitial = document.getElementById('middleInitial')?.value || '';
+            const email = document.getElementById('email')?.value || 'N/A';
+            const fullName = `${firstName} ${middleInitial ? middleInitial + '. ' : ''}${lastName}`.trim();
+            
+            summaryHTML += `
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <h5 class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                        <i class="bi bi-person-fill"></i> Student Information
+                    </h5>
+                    <div class="space-y-1 text-sm">
+                        <p><span class="font-semibold">Student ID:</span> ${studentId}</p>
+                        <p><span class="font-semibold">Name:</span> ${fullName || 'N/A'}</p>
+                        <p><span class="font-semibold">Email:</span> ${email}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Academic Information
+            const collegeEl = document.getElementById('college');
+            const programEl = document.getElementById('program');
+            const yearEl = document.getElementById('year');
+            const sectionEl = document.getElementById('section');
+            
+            const collegeName = collegeEl && collegeEl.selectedIndex > 0 ? collegeEl.options[collegeEl.selectedIndex].text : 'Not selected';
+            const programName = programEl?.value || 'Not selected'; // program is an input field, not select
+            const yearLevel = yearEl && yearEl.selectedIndex > 0 ? yearEl.options[yearEl.selectedIndex].text : 'Not selected';
+            const section = sectionEl?.value || 'None';
+            
+            summaryHTML += `
+                <div class="bg-green-50 rounded-lg p-4">
+                    <h5 class="font-bold text-green-900 mb-2 flex items-center gap-2">
+                        <i class="bi bi-mortarboard-fill"></i> Academic Information
+                    </h5>
+                    <div class="space-y-1 text-sm">
+                        <p><span class="font-semibold">College:</span> ${collegeName}</p>
+                        <p><span class="font-semibold">Program:</span> ${programName}</p>
+                        <p><span class="font-semibold">Year Level:</span> ${yearLevel}</p>
+                        <p><span class="font-semibold">Section:</span> ${section}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Service Type and Details
+            if (currentServiceType === 'items') {
+                // Get all item selects and build items list
+                const itemsHtml = [];
+                const itemSelects = ['purchasing', 'item2', 'item3', 'item4', 'item5'];
+                
+                itemSelects.forEach((selectId, index) => {
+                    const select = document.getElementById(selectId);
+                    if (select && select.selectedIndex > 0) {
+                        let itemName = select.options[select.selectedIndex].text;
+                        // Remove stock information from display (e.g., "ID Lace - Low Stock (14 left)" -> "ID Lace")
+                        itemName = itemName.split(' - ')[0].trim();
+                        itemsHtml.push(`<p class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-orange-600"></i> ${itemName}</p>`);
+                    }
+                });
+                
+                const quantityInput = document.getElementById('quantity');
+                const quantity = quantityInput?.value || '1';
+                
+                summaryHTML += `
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <h5 class="font-bold text-orange-900 mb-2 flex items-center gap-2">
+                            <i class="bi bi-bag-fill"></i> Items Order
+                        </h5>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="font-semibold">Quantity:</span> ${quantity}</p>
+                            <div class="mt-2">
+                                <p class="font-semibold mb-1">Selected Items:</p>
+                                ${itemsHtml.length > 0 ? itemsHtml.join('') : '<p class="text-gray-500">No items selected</p>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentServiceType === 'printing') {
+                const fileInput = document.getElementById('printFile');
+                const colorType = document.querySelector('input[name="color_type"]:checked');
+                const paperSize = document.getElementById('paperSize');
+                const pageCount = document.getElementById('pageCount');
+                const copies = document.getElementById('copies');
+                const doubleSided = document.getElementById('doubleSided');
+                const instructions = document.getElementById('printInstructions');
+                const estimatedPrice = document.getElementById('estimatedPrice')?.textContent || '₱0.00';
+                
+                const fileName = fileInput?.files[0]?.name || 'No file selected';
+                const colorText = colorType?.value === 'colored' ? 'Colored' : 'Black & White';
+                const paperSizeText = paperSize && paperSize.selectedIndex > 0 ? paperSize.options[paperSize.selectedIndex].text : 'Not selected';
+                const pages = pageCount?.value || 'Not specified';
+                const numCopies = copies?.value || '1';
+                const doubleSidedText = doubleSided?.checked ? 'Yes' : 'No';
+                const specialInstructions = instructions?.value || 'None';
+                
+                summaryHTML += `
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <h5 class="font-bold text-purple-900 mb-2 flex items-center gap-2">
+                            <i class="bi bi-printer-fill"></i> Printing Order
+                        </h5>
+                        <div class="space-y-1 text-sm">
+                            <p><span class="font-semibold">File:</span> ${fileName}</p>
+                            <p><span class="font-semibold">Pages:</span> ${pages}</p>
+                            <p><span class="font-semibold">Color Type:</span> ${colorText}</p>
+                            <p><span class="font-semibold">Paper Size:</span> ${paperSizeText}</p>
+                            <p><span class="font-semibold">Copies:</span> ${numCopies}</p>
+                            <p><span class="font-semibold">Double-Sided:</span> ${doubleSidedText}</p>
+                            <p><span class="font-semibold">Special Instructions:</span> ${specialInstructions}</p>
+                            <div class="mt-3 pt-3 border-t border-purple-200">
+                                <p class="text-lg"><span class="font-semibold">Estimated Price:</span> <span class="text-purple-700 font-bold text-xl">${estimatedPrice}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            reviewSummary.innerHTML = summaryHTML;
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default service type
+            if (typeof selectServiceType === 'function') {
+                selectServiceType('items');
+            }
+            
+            // Show first step
+            showStep(1);
+            
+            // Add real-time validation for Student ID
+            const studentIdInput = document.getElementById('studentId');
+            if (studentIdInput) {
+                studentIdInput.addEventListener('input', function(e) {
+                    const value = e.target.value.toUpperCase();
+                    e.target.value = value;
+                    
+                    if (value.length > 0) {
+                        const pattern = /^[A-Z]\d+$/;
+                        if (pattern.test(value)) {
+                            e.target.classList.remove('border-red-500');
+                            e.target.classList.add('border-green-500');
+                        } else if (value.length >= 3) {
+                            // Only show red if enough characters are entered
+                            if (!/^[A-Z]/.test(value.charAt(0)) || !/^\d+$/.test(value.slice(1))) {
+                                e.target.classList.add('border-red-500');
+                                e.target.classList.remove('border-green-500');
+                            }
+                        } else {
+                            e.target.classList.remove('border-red-500', 'border-green-500');
+                        }
+                    }
+                });
+            }
+            
+            // Add name validation
+            ['firstName', 'lastName'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', function(e) {
+                        const value = e.target.value;
+                        if (value.length > 0) {
+                            if (/^[a-zA-Z\s]+$/.test(value)) {
+                                e.target.classList.remove('border-red-500');
+                                e.target.classList.add('border-green-500');
+                            } else {
+                                e.target.classList.add('border-red-500');
+                                e.target.classList.remove('border-green-500');
+                            }
+                        } else {
+                            e.target.classList.remove('border-red-500', 'border-green-500');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
 </html>

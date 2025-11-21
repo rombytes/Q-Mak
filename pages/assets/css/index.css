@@ -199,6 +199,21 @@ body {
     animation: bounce 2s infinite;
 }
 
+/* Floating order button - lower opacity */
+.floating-order-btn {
+    opacity: 0.85;
+    box-shadow: 
+        0 10px 30px rgba(30, 58, 138, 0.5),
+        0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.floating-order-btn:hover {
+    opacity: 0.95;
+    box-shadow: 
+        0 15px 40px rgba(30, 58, 138, 0.6),
+        0 25px 60px rgba(0, 0, 0, 0.4);
+}
+
 /* Fade in up animation for sections */
 @keyframes fadeInUp {
     from {
@@ -213,6 +228,15 @@ body {
 
 .fade-in-up {
     animation: fadeInUp 0.6s ease-out;
+}
+
+/* Carousel arrows - lower opacity */
+.carousel-arrow {
+    opacity: 0.85;
+}
+
+.carousel-arrow:hover {
+    opacity: 0.95;
 }
 
 /* Skeleton loader for status cards */

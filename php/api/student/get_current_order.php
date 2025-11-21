@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 try {
     require_once __DIR__ . '/../../config/database.php';
     require_once __DIR__ . '/../../config/session_config.php';
+    require_once __DIR__ . '/../../utils/queue_functions.php';
 } catch (Exception $e) {
     error_log("Failed to load config files: " . $e->getMessage());
     http_response_code(500);
@@ -88,20 +89,16 @@ try {
     $orderData = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($orderData) {
-        // Get queue position if status is pending
-        if ($orderData['order_status'] === 'pending') {
-            $queueStmt = $db->prepare("
-                SELECT COUNT(*) + 1 as queue_position
-                FROM orders
-                WHERE order_status = 'pending'
-                  AND created_at < ?
-                  AND DATE(created_at) = CURDATE()
-            ");
-            $queueStmt->execute([$orderData['created_at']]);
-            $queueData = $queueStmt->fetch(PDO::FETCH_ASSOC);
-            $orderData['queue_position'] = $queueData['queue_position'];
+        // Get accurate queue position based on queue_number if status is pending or processing
+        if (in_array($orderData['order_status'], ['pending', 'processing']) && !empty($orderData['queue_number'])) {
+            $positionData = getOrderQueuePosition($db, $orderData['queue_number'], $orderData['queue_date']);
+            $orderData['queue_position'] = $positionData['queue_position'];
+            $orderData['orders_ahead'] = $positionData['orders_ahead'];
+            $orderData['estimated_minutes'] = $positionData['estimated_minutes'];
         } else {
             $orderData['queue_position'] = 0;
+            $orderData['orders_ahead'] = 0;
+            $orderData['estimated_minutes'] = 0;
         }
         
         echo json_encode([

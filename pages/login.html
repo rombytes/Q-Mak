@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - UMak COOP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="../js/notifications.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('../images/UMak-Facade-Admin-2024.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        
+        .bg-overlay {
+            background: rgba(30, 58, 138, 0.92);
+            backdrop-filter: blur(8px);
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-focus:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(30, 58, 138, 0.3);
+        }
+        
+        .btn-secondary {
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <!-- Background Overlay -->
+    <div class="bg-overlay fixed inset-0 z-0"></div>
+    
+    <!-- Login Card -->
+    <div class="login-card rounded-2xl shadow-2xl p-10 max-w-md w-full relative z-10">
+        <!-- Logo Section -->
+        <div class="text-center mb-8">
+            <img src="../images/UMAK COOP.png" alt="UMak COOP Logo" class="h-20 mx-auto mb-4" onerror="this.style.display='none'">
+            <h3 class="text-3xl font-bold text-blue-900 mb-2">Login</h3>
+            <p class="text-gray-600 text-sm">University of Makati Cooperative</p>
+        </div>
+        
+        <!-- Divider -->
+        <div class="border-t-2 border-orange-500 w-20 mx-auto mb-8"></div>
+        
+        <!-- Login Form -->
+        <form id="loginForm" class="space-y-6">
+            <!-- Email Field -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    Email Address
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 input-focus transition-all" 
+                    placeholder="yourname@umak.edu.ph"
+                    required 
+                />
+            </div>
+            
+            <!-- Password Field -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    Password
+                </label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 input-focus transition-all" 
+                        placeholder="Enter your password"
+                        required 
+                    />
+                    <button 
+                        type="button" 
+                        onclick="togglePassword()" 
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                        <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-sm text-red-700 font-medium" id="errorText"></p>
+                </div>
+            </div>
+            
+            <!-- Google reCAPTCHA -->
+            <div id="recaptchaContainer" class="hidden justify-center mb-4">
+                <div id="recaptchaWidget"></div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button 
+                type="submit" 
+                id="loginBtn"
+                class="w-full btn-primary text-white py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center gap-2"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                </svg>
+                <span id="submitText">Log In</span>
+            </button>
+            
+            <!-- Forgot Password Link -->
+            <div class="text-center mt-4">
+                <button type="button" onclick="window.location.href='student/student_login.html#forgot'" class="text-blue-900 hover:text-blue-700 text-sm font-semibold underline">
+                    Forgot Password?
+                </button>
+            </div>
+        </form>
+
+        <!-- Register / Back Buttons -->
+        <div class="mt-6 space-y-3">
+            <a 
+                href="student/student_register.html"
+                class="w-full btn-secondary border-2 border-gray-300 text-gray-700 hover:border-blue-900 hover:text-blue-900 py-3 rounded-lg font-semibold flex items-center justify-center gap-2"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                </svg>
+                Create Student Account
+            </a>
+            
+            <a 
+                href="index.html"
+                class="w-full btn-secondary border-2 border-gray-300 text-gray-700 hover:border-blue-900 hover:text-blue-900 py-3 rounded-lg font-semibold flex items-center justify-center gap-2"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Home
+            </a>
+        </div>
+        
+        <!-- Footer Info -->
+        <div class="mt-8 text-center text-xs text-gray-500">
+            <p>Secure Access</p>
+            <p class="mt-1">© 2025 University of Makati COOP</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '../php/api';
+        let captchaRequired = false;
+        let recaptchaWidgetId = null;
+        let recaptchaSiteKey = null;
+
+        // Load CAPTCHA configuration on page load
+        async function loadCaptchaConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/get_captcha_config.php`);
+                const result = await response.json();
+                if (result.success && result.captcha) {
+                    recaptchaSiteKey = result.captcha.site_key;
+                    console.log('CAPTCHA config loaded, site key:', recaptchaSiteKey);
+                }
+            } catch (error) {
+                console.error('Failed to load CAPTCHA config:', error);
+                // Fallback to hardcoded key
+                recaptchaSiteKey = '6LfhpwMsAAAAAMwJ0NfsBcudpHvk95VurbzQ5pQC';
+            }
+        }
+
+        // Load config on page load
+        loadCaptchaConfig();
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+            } else {
+                passwordField.type = 'password';
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Hide error message
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+
+        // Show reCAPTCHA widget
+        function showCaptcha() {
+            console.log('Showing CAPTCHA with site key:', recaptchaSiteKey);
+            const container = document.getElementById('recaptchaContainer');
+            container.classList.remove('hidden');
+            container.classList.add('flex');
+            captchaRequired = true;
+            
+            // Render reCAPTCHA if not already rendered
+            if (recaptchaWidgetId === null) {
+                if (typeof grecaptcha !== 'undefined' && grecaptcha.render) {
+                    try {
+                        const widget = document.getElementById('recaptchaWidget');
+                        // Check if widget already has content (auto-rendered)
+                        if (widget.innerHTML.trim() === '') {
+                            const siteKey = recaptchaSiteKey || '6LfhpwMsAAAAAMwJ0NfsBcudpHvk95VurbzQ5pQC';
+                            recaptchaWidgetId = grecaptcha.render('recaptchaWidget', {
+                                'sitekey': siteKey
+                            });
+                            console.log('reCAPTCHA rendered successfully with ID:', recaptchaWidgetId);
+                        } else {
+                            // Widget already auto-rendered, get its ID
+                            recaptchaWidgetId = 0; // First widget is always ID 0
+                            console.log('reCAPTCHA was auto-rendered, using ID:', recaptchaWidgetId);
+                        }
+                    } catch (error) {
+                        console.error('Error rendering reCAPTCHA:', error);
+                        // If error, assume it was auto-rendered
+                        recaptchaWidgetId = 0;
+                    }
+                } else {
+                    console.warn('grecaptcha not loaded yet');
+                }
+            }
+        }
+
+        // Initialize reCAPTCHA (legacy function kept for compatibility)
+        function initRecaptcha(siteKey) {
+            recaptchaSiteKey = siteKey;
+            showCaptcha();
+        }
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const submitText = document.getElementById('submitText');
+            const originalText = submitText.textContent;
+            
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            submitText.textContent = 'Logging in...';
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            const formData = {
+                email: email,
+                password: password
+            };
+            
+            // Add reCAPTCHA response if available
+            if (recaptchaWidgetId !== null && typeof grecaptcha !== 'undefined') {
+                const recaptchaResponse = grecaptcha.getResponse(recaptchaWidgetId);
+                if (recaptchaResponse) {
+                    formData['g-recaptcha-response'] = recaptchaResponse;
+                }
+            }
+            
+            try {
+                const response = await fetch('../php/api/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    submitText.textContent = 'Success! Redirecting...';
+                    
+                    // Store session data based on user type
+                    if (data.user_type === 'student') {
+                        sessionStorage.setItem('studentLoggedIn', 'true');
+                        sessionStorage.setItem('studentEmail', data.user.email);
+                        sessionStorage.setItem('studentName', data.user.first_name + ' ' + data.user.last_name);
+                    } else if (data.user_type === 'admin') {
+                        sessionStorage.setItem('adminLoggedIn', 'true');
+                        sessionStorage.setItem('adminEmail', data.user.email);
+                        sessionStorage.setItem('adminName', data.user.name);
+                        sessionStorage.setItem('isSuperAdmin', data.user.is_super_admin || false);
+                        // Store complete admin data for dashboard features
+                        sessionStorage.setItem('adminData', JSON.stringify({
+                            admin_id: data.user.id,
+                            email: data.user.email,
+                            name: data.user.name,
+                            is_super_admin: data.user.is_super_admin ? 1 : 0
+                        }));
+                    }
+                    
+                    // Show success notification
+                    if (typeof showNotification === 'function') {
+                        showNotification(`Welcome back! Redirecting to your dashboard...`, 'success');
+                    }
+                    
+                    // Redirect based on user type
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000);
+                } else {
+                    // Check if CAPTCHA is required
+                    if (data.requires_captcha && data.captcha) {
+                        if (data.captcha.type === 'recaptcha' || data.captcha.type === 'recaptcha_v3') {
+                            recaptchaSiteKey = data.captcha.site_key;
+                            showCaptcha();
+                        }
+                    }
+                    
+                    showError(data.message || 'Login failed. Please try again.');
+                    
+                    // Reset reCAPTCHA if it exists
+                    if (recaptchaWidgetId !== null && typeof grecaptcha !== 'undefined') {
+                        grecaptcha.reset(recaptchaWidgetId);
+                    }
+                    
+                    // Re-enable button
+                    loginBtn.disabled = false;
+                    submitText.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('An error occurred. Please try again.');
+                
+                // Re-enable button
+                loginBtn.disabled = false;
+                submitText.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

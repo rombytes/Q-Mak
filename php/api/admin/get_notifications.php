@@ -9,7 +9,7 @@ header('Access-Control-Allow-Origin: *');
 
 require_once __DIR__ . '/../../config/database.php';
 
-session_start();
+require_once __DIR__ . '/../../config/session_config.php';
 
 // Check admin authentication
 if (!isset($_SESSION['admin_id'])) {

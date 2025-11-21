@@ -84,6 +84,7 @@ function showTab(tabName) {
     // Fetch data for the tab if it's one of the new ones
     if (tabName === 'queue-management') {
         fetchOrders();
+        updateAutoRescheduleTimeDisplay();
     } else if (tabName === 'queue-history') {
         fetchHistory();
     } else if (tabName === 'analytics') {
@@ -138,12 +139,14 @@ setTimeout(() => {
     checkPHPSession();
 }, 1000);
 
+
+
 // Fetch orders from API
 async function fetchOrders() {
     try {
         const response = await fetch(`${API_BASE}/admin/admin_orders.php`, {
             method: 'GET',
-            credentials: 'include' // Important for session cookies
+            credentials: 'include'
         });
         
         const result = await response.json();
@@ -164,6 +167,8 @@ async function fetchOrders() {
         updateConnectionStatus(false);
     }
 }
+
+
 
 // Fetch students from API
 async function fetchStudents() {
@@ -533,8 +538,20 @@ async function loadStudentOrderBreakdown(studentId) {
     const container = document.getElementById('studentOrderBreakdown');
     container.innerHTML = '<p class="text-center text-gray-500">Loading...</p>';
     
-    // Get all orders for this student
-    const studentOrders = ordersData.filter(o => o.student_id === studentId);
+    try {
+        // Fetch all orders for this specific student
+        const response = await fetch(`${API_BASE}/admin/admin_orders.php?filter=history&student_id=${studentId}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        const result = await response.json();
+        
+        if (!result.success || !result.data.orders) {
+            container.innerHTML = '<div class="text-center py-8 text-gray-500">Unable to load order breakdown</div>';
+            return;
+        }
+        
+        const studentOrders = result.data.orders;
     
     // Calculate breakdown by status
     const breakdown = {
@@ -674,6 +691,10 @@ async function loadStudentOrderBreakdown(studentId) {
     if (breakdown.total === 0) {
         container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-inbox text-5xl mb-3 text-gray-300"></i><p class="text-lg">No orders found for this student</p></div>';
     }
+    } catch (error) {
+        console.error('Error loading student order breakdown:', error);
+        container.innerHTML = '<div class="text-center py-8 text-red-500">Error loading order breakdown</div>';
+    }
 }
 
 // Load student order history
@@ -682,7 +703,8 @@ async function loadStudentOrderHistory(studentId) {
     container.innerHTML = '<p class="text-center text-gray-500">Loading...</p>';
     
     try {
-        const response = await fetch(`${API_BASE}/admin/admin_orders.php?filter=history&student_id=${studentId}`, {
+        // Fetch orders specifically for this student only
+        const response = await fetch(`${API_BASE}/admin/admin_orders.php?filter=history&student_id=${encodeURIComponent(studentId)}`, {
             method: 'GET',
             credentials: 'include'
         });
@@ -790,7 +812,21 @@ function displayHistoryTable(orders) {
         const itemCount = items.length;
         const uniqueItems = [...new Set(items)];
         const itemText = uniqueItems.map(item => capitalizeWords(item)).join(', ');
-        const itemDisplay = itemCount > 1 ? `<strong>${itemCount} items:</strong> ${itemText}` : capitalizeWords(order.item_ordered);
+        
+        // Check if this is a printing service order
+        const isPrintingOrder = order.order_type_service === 'printing' || order.item_name === 'Printing Services';
+        
+        const itemDisplay = isPrintingOrder
+            ? `<div class="flex items-center gap-2">
+                <span>${capitalizeWords(order.item_name || 'Printing Services')}</span>
+                <button onclick="viewOrderDetails(${order.order_id})" 
+                        class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg text-xs font-semibold transition-all" 
+                        title="View printing files">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Files</span>
+                </button>
+               </div>`
+            : (itemCount > 1 ? `<strong>${itemCount} items:</strong> ${itemText}` : capitalizeWords(order.item_ordered));
 
         row.innerHTML = `
             <td class="px-6 py-4">${order.queue_number}</td>
@@ -1192,9 +1228,23 @@ function displayQueueTable(filteredOrders = null) {
         const itemCount = items.length;
         const uniqueItems = [...new Set(items)];
         const itemText = uniqueItems.map(item => capitalizeWords(item)).join(', ');
-        const itemDisplay = itemCount > 1 
-            ? `<span class="font-semibold text-blue-900">${itemCount} items:</span> <span class="text-gray-700">${itemText}</span>` 
-            : `<span class="text-gray-700">${capitalizeWords(order.item_ordered)}</span>`;
+        
+        // Check if this is a printing service order
+        const isPrintingOrder = order.order_type_service === 'printing' || order.item_name === 'Printing Services';
+        
+        const itemDisplay = isPrintingOrder
+            ? `<div class="flex items-center gap-2">
+                <span class="text-gray-700">${capitalizeWords(order.item_name || 'Printing Services')}</span>
+                <button onclick="event.stopPropagation(); viewOrderDetails(${order.order_id})" 
+                        class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg text-xs font-semibold transition-all shadow-sm hover:shadow" 
+                        title="View printing files">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Files</span>
+                </button>
+               </div>`
+            : (itemCount > 1 
+                ? `<span class="font-semibold text-blue-900">${itemCount} items:</span> <span class="text-gray-700">${itemText}</span>` 
+                : `<span class="text-gray-700">${capitalizeWords(order.item_ordered)}</span>`);
         
         row.innerHTML = `
             <td class="px-6 py-4">
@@ -1223,14 +1273,10 @@ function displayQueueTable(filteredOrders = null) {
                 </span>
             </td>
             <td class="px-6 py-4">
-                <select onchange="updateOrderStatus(${order.order_id}, this.value)" 
-                        class="border-2 border-gray-200 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 bg-white transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md">
-                    <option value="pending" ${order.order_status === 'pending' ? 'selected' : ''}>Pending</option>
-                    <option value="processing" ${order.order_status === 'processing' ? 'selected' : ''}>Processing</option>
-                    <option value="ready" ${order.order_status === 'ready' ? 'selected' : ''}>Ready for Pick Up</option>
-                    <option value="completed" ${order.order_status === 'completed' ? 'selected' : ''}>Completed</option>
-                    <option value="cancelled" ${order.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                </select>
+                <button onclick="viewOrderDetails(${order.order_id})" 
+                        class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 text-sm">
+                    View
+                </button>
             </td>
         `;
         tbody.appendChild(row);
@@ -1265,6 +1311,255 @@ function getStatusColor(status) {
         'cancelled': 'bg-red-600'
     };
     return colors[status] || 'bg-gray-500';
+}
+
+// View order details in modal
+async function viewOrderDetails(orderId) {
+    const order = ordersData.find(o => o.order_id === orderId);
+    if (!order) {
+        alert('Order not found');
+        return;
+    }
+    
+    // Check if this is a printing order
+    let printingJob = null;
+    try {
+        const printResponse = await fetch(`${API_BASE}/admin/printing_jobs.php?order_id=${orderId}`, {
+            credentials: 'include'
+        });
+        const printResult = await printResponse.json();
+        if (printResult.success && printResult.data.is_printing) {
+            printingJob = printResult.data.job;
+        }
+    } catch (error) {
+        console.error('Error fetching printing job:', error);
+    }
+    
+    // Find student info
+    const student = studentsData.find(s => s.student_id === order.student_id);
+    
+    const createdTime = new Date(order.created_at).toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    const items = order.item_ordered ? order.item_ordered.split(',').map(i => i.trim()) : [];
+    const itemList = items.map(item => `<li class="text-gray-700">• ${capitalizeWords(item)}</li>`).join('');
+    
+    const statusColor = getStatusColor(order.order_status);
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn" onclick="if(event.target === this) this.remove()">
+            <div class="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col animate-slideUp" style="animation: slideUp 0.3s ease-out;">
+                <!-- Header - Fixed -->
+                <div class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 text-white p-6 rounded-t-3xl flex-shrink-0">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold">Order Details</h3>
+                                <p class="text-blue-200 text-sm mt-0.5 flex items-center gap-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-white/20 font-semibold text-white">
+                                        ${order.queue_number}
+                                    </span>
+                                    <span class="text-blue-300">•</span>
+                                    <span>${createdTime}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-white hover:bg-white/20 p-2.5 rounded-xl transition-all duration-200 hover:scale-110">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Content - Scrollable with Custom Scrollbar -->
+                <div class="overflow-y-auto flex-1 custom-scrollbar" style="scrollbar-width: thin; scrollbar-color: #3b82f6 #e5e7eb;">
+                    <div class="p-6 space-y-5">
+                    <!-- Order Information -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-6 border-2 border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-xl text-blue-900 mb-5 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                            </div>
+                            <span>Order Information</span>
+                        </h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Queue Number</span>
+                                <span class="font-bold text-blue-900 text-lg">${order.queue_number}</span>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Reference Number</span>
+                                <span class="font-semibold text-purple-600">${order.reference_number || 'N/A'}</span>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Time Placed</span>
+                                <span class="font-medium text-gray-700">${createdTime}</span>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Wait Time</span>
+                                <span class="font-medium text-gray-700">${order.estimated_wait_time} minutes</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-sm text-gray-600 block mb-2">Current Status</span>
+                                <span class="${statusColor} text-white px-4 py-2 rounded-lg text-sm font-bold uppercase inline-block">
+                                    ${order.order_status}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Information -->
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-100/50 rounded-2xl p-6 border-2 border-green-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-xl text-green-900 mb-5 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center shadow-md">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <span>Student Information</span>
+                        </h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Student ID</span>
+                                <span class="font-bold text-gray-900">${order.student_id}</span>
+                            </div>
+                            ${student ? `
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Name</span>
+                                <span class="font-medium text-gray-700">${student.first_name} ${student.last_name}</span>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Email</span>
+                                <span class="font-medium text-gray-700">${student.email}</span>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-600 block mb-1">Program</span>
+                                <span class="font-medium text-gray-700">${student.program}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Items Ordered / Printing Job -->
+                    ${printingJob ? `
+                    <div class="bg-gradient-to-br from-indigo-50 to-purple-100/50 rounded-2xl p-6 border-2 border-indigo-300 shadow-md hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between mb-5">
+                            <h4 class="font-bold text-xl text-indigo-900 flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                                    <i class="fas fa-print text-white"></i>
+                                </div>
+                                <span>Printing Service</span>
+                            </h4>
+                            <span class="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-full font-bold uppercase">PRINTING</span>
+                        </div>
+                        
+                        <div class="bg-white/70 rounded-xl p-4 space-y-3 mb-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span class="text-xs text-gray-600 uppercase font-bold">File Name</span>
+                                    <p class="font-semibold text-gray-900 mt-1 break-all">${printingJob.file_name}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-600 uppercase font-bold">File Size</span>
+                                    <p class="font-semibold text-gray-900 mt-1">${(printingJob.file_size / 1024).toFixed(2)} KB</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-600 uppercase font-bold">Pages</span>
+                                    <p class="font-semibold text-indigo-700 mt-1 text-lg">${printingJob.page_count || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-600 uppercase font-bold">Copies</span>
+                                    <p class="font-semibold text-indigo-700 mt-1 text-lg">${printingJob.copies}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-600 uppercase font-bold">Color Mode</span>
+                                    <p class="font-semibold ${printingJob.color_mode === 'Colored' ? 'text-pink-600' : 'text-gray-700'} mt-1">${printingJob.color_mode}</p>
+                                </div>
+                                <div>
+                                    <span class="text-xs text-gray-600 uppercase font-bold">Paper Size</span>
+                                    <p class="font-semibold text-gray-900 mt-1">${printingJob.paper_size}</p>
+                                </div>
+                            </div>
+                            
+                            ${printingJob.double_sided ? '<p class="text-sm text-gray-700 mt-2"><i class="fas fa-check-circle text-green-600 mr-1"></i>Double-sided</p>' : ''}
+                            ${printingJob.collate ? '<p class="text-sm text-gray-700"><i class="fas fa-check-circle text-green-600 mr-1"></i>Collated</p>' : ''}
+                            ${printingJob.instructions ? `<div class="mt-3 pt-3 border-t border-indigo-200"><span class="text-xs text-gray-600 uppercase font-bold">Instructions:</span><p class="text-sm text-gray-700 mt-1">${printingJob.instructions}</p></div>` : ''}
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <a href="../../${printingJob.file_path}" download target="_blank" class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-4 py-3 rounded-xl font-bold text-center shadow-md hover:shadow-lg transition-all">
+                                <i class="fas fa-download mr-2"></i>Download File
+                            </a>
+                        </div>
+                        
+                        ${printingJob.estimated_price ? `
+                        <div class="mt-4 pt-4 border-t-2 border-indigo-200 flex items-center justify-between bg-white/50 rounded-lg px-4 py-3">
+                            <span class="text-sm font-semibold text-gray-700">Estimated Cost:</span>
+                            <span class="text-2xl font-bold text-indigo-900">₱${parseFloat(printingJob.estimated_price).toFixed(2)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : `
+                    <div class="bg-gradient-to-br from-orange-50 to-amber-100/50 rounded-2xl p-6 border-2 border-orange-200 shadow-sm hover:shadow-md transition-shadow">
+                        <h4 class="font-bold text-xl text-orange-900 mb-5 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-md">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                </svg>
+                            </div>
+                            <span>Items Ordered</span>
+                        </h4>
+                        <ul class="space-y-2.5 mb-4">
+                            ${itemList}
+                        </ul>
+                        <div class="mt-4 pt-4 border-t-2 border-orange-200 flex items-center justify-between bg-white/50 rounded-lg px-4 py-3">
+                            <span class="text-sm font-semibold text-gray-700">Total Items:</span>
+                            <span class="text-2xl font-bold text-orange-900">${items.length}</span>
+                        </div>
+                    </div>
+                    `}
+                    
+                    </div>
+                </div>
+                
+                <!-- Footer - Sticky Action Buttons -->
+                <div class="bg-gray-50 border-t-2 border-gray-200 p-5 rounded-b-3xl flex-shrink-0 sticky bottom-0">
+                    <div class="flex gap-3">
+                        <select onchange="if(this.value) { updateOrderStatus(${order.order_id}, this.value); this.closest('.fixed').remove(); }" 
+                                class="flex-1 border-2 border-gray-300 rounded-xl px-5 py-3.5 text-sm font-bold bg-white hover:border-blue-600 focus:border-blue-600 focus:ring-4 focus:ring-blue-200 transition-all shadow-sm hover:shadow-md cursor-pointer">
+                            <option value="">Change Status...</option>
+                            <option value="pending" ${order.order_status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${order.order_status === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="ready" ${order.order_status === 'ready' ? 'selected' : ''}>Ready for Pick Up</option>
+                            <option value="completed" ${order.order_status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="cancelled" ${order.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
 async function updateOrderStatus(orderId, newStatus) {
@@ -1398,6 +1693,7 @@ function updateCurrentQueue() {
     
     // Update order information
     document.getElementById('currentQueueNumber').textContent = currentQueueOrder.queue_number;
+    document.getElementById('currentReferenceNumber').textContent = currentQueueOrder.reference_number || 'N/A';
     document.getElementById('currentItemOrdered').textContent = currentQueueOrder.item_ordered;
     const createdTime = new Date(currentQueueOrder.created_at).toLocaleString('en-US', { 
         hour: '2-digit', 
@@ -2164,11 +2460,13 @@ async function fetchInventoryStatusAdmin() {
 async function initializeDashboard() {
     try {
         const adminData = JSON.parse(sessionStorage.getItem('adminData'));
-        if (adminData && adminData.full_name) {
+        if (adminData) {
             // Set name in top bar (first name only)
-            document.getElementById('adminName').textContent = adminData.full_name.split(' ')[0];
+            const fullName = adminData.full_name || adminData.username || 'Admin';
+            const firstName = fullName.split(' ')[0];
+            document.getElementById('adminName').textContent = firstName;
             // Set full name in sidebar
-            document.getElementById('sidebarAdminName').textContent = adminData.full_name;
+            document.getElementById('sidebarAdminName').textContent = fullName;
             // Set email in sidebar
             if (adminData.email) {
                 document.getElementById('sidebarAdminEmail').textContent = adminData.email;
@@ -4796,6 +5094,8 @@ async function saveWorkingHours() {
         if (data.success) {
             showMessageInElement('hoursUpdateMessage', 'Operating hours updated successfully!', 'success');
             showNotification('Operating hours updated!', 'success');
+            // Update auto-reschedule time display since working hours changed
+            updateAutoRescheduleTimeDisplay();
         } else {
             showMessageInElement('hoursUpdateMessage', data.message || 'Failed to update hours', 'error');
         }
@@ -5147,6 +5447,244 @@ async function saveSettings(settings, successMessage) {
 
 // ============================================
 // END NEW SETTINGS MANAGEMENT
+// ============================================
+
+// ============================================
+// MANUAL RESCHEDULE FUNCTIONALITY
+// ============================================
+
+// Manual reschedule orders function
+async function manualRescheduleOrders() {
+    // Show confirmation dialog
+    const confirmed = confirm(
+        'Manual Reschedule Confirmation\n\n' +
+        'This will move all pending orders from today to the next business day.\n\n' +
+        'Are you sure you want to proceed?'
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    // Show loading state
+    const button = document.querySelector('button[onclick="manualRescheduleOrders()"]');
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Processing...
+    `;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/manual_reschedule.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Show success notification
+            showNotification(result.message, 'success');
+
+            // Show detailed results in a modal or alert
+            let detailMessage = `Reschedule Complete!\n\n`;
+            detailMessage += `• Orders moved: ${result.moved_count}\n`;
+            detailMessage += `• Next business day: ${result.next_business_day}\n`;
+
+            if (result.error_count > 0) {
+                detailMessage += `• Errors: ${result.error_count}\n`;
+                if (result.errors && result.errors.length > 0) {
+                    detailMessage += `\nErrors:\n${result.errors.join('\n')}`;
+                }
+            }
+
+            alert(detailMessage);
+
+            // Refresh the orders display
+            await fetchOrders();
+
+        } else {
+            showNotification(result.message || 'Failed to reschedule orders', 'error');
+        }
+
+    } catch (error) {
+        console.error('Manual reschedule error:', error);
+        showNotification('Error occurred during reschedule. Please try again.', 'error');
+    } finally {
+        // Restore button state
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
+// Update auto-reschedule time display based on CRON status
+async function updateAutoRescheduleTimeDisplay() {
+    try {
+        const response = await fetch(`${API_BASE}/admin/get_cron_status.php`);
+        const result = await response.json();
+
+        if (result.success) {
+            const autoRescheduleTimeElement = document.getElementById('autoRescheduleTime');
+            if (autoRescheduleTimeElement) {
+                if (result.cron_schedule_time) {
+                    // Use the actual CRON schedule time
+                    const [hours, minutes] = result.cron_schedule_time.split(':');
+                    const displayTime = new Date();
+                    displayTime.setHours(parseInt(hours), parseInt(minutes));
+                    const timeString = displayTime.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    autoRescheduleTimeElement.textContent = timeString;
+                } else {
+                    // Fallback calculation
+                    const closingTime = result.closing_time || '17:00';
+                    const [hours, minutes] = closingTime.split(':');
+                    
+                    let rescheduleHours = parseInt(hours);
+                    let rescheduleMinutes = parseInt(minutes) + 5;
+                    
+                    if (rescheduleMinutes >= 60) {
+                        rescheduleHours += 1;
+                        rescheduleMinutes -= 60;
+                    }
+                    
+                    const displayTime = new Date();
+                    displayTime.setHours(rescheduleHours, rescheduleMinutes);
+                    const timeString = displayTime.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    autoRescheduleTimeElement.textContent = timeString;
+                }
+                
+                // Update button state based on auto-move setting
+                const manualRescheduleBtn = document.querySelector('button[onclick="manualRescheduleOrders()"]');
+                if (manualRescheduleBtn) {
+                    if (!result.auto_move_enabled) {
+                        manualRescheduleBtn.disabled = true;
+                        manualRescheduleBtn.title = 'Auto-move feature is disabled. Enable it in settings first.';
+                        manualRescheduleBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        manualRescheduleBtn.disabled = false;
+                        manualRescheduleBtn.title = 'Manually reschedule pending orders to next business day';
+                        manualRescheduleBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error updating auto-reschedule time:', error);
+    }
+}
+
+// ============================================
+// END MANUAL RESCHEDULE FUNCTIONALITY
+// ============================================
+
+// ============================================
+// PASSWORD CHANGE FUNCTIONALITY
+// ============================================
+
+// Handle password update form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordForm = document.getElementById('passwordUpdateForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', handlePasswordUpdate);
+    }
+});
+
+async function handlePasswordUpdate(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const messageElement = document.getElementById('passwordUpdateMessage');
+    
+    // Clear previous messages
+    messageElement.textContent = '';
+    messageElement.className = 'mt-4 text-sm font-medium';
+    
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showPasswordMessage('All fields are required', 'error');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showPasswordMessage('New passwords do not match', 'error');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showPasswordMessage('New password must be at least 6 characters long', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Updating...';
+    
+    try {
+        const response = await fetch(`${API_BASE}/admin/change_password.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showPasswordMessage('Password updated successfully!', 'success');
+            // Clear the form
+            document.getElementById('passwordUpdateForm').reset();
+            showNotification('Password updated successfully!', 'success');
+        } else {
+            showPasswordMessage(result.message || 'Failed to update password', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Password update error:', error);
+        showPasswordMessage('Error occurred while updating password. Please try again.', 'error');
+    } finally {
+        // Restore button state
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    }
+}
+
+function showPasswordMessage(message, type) {
+    const messageElement = document.getElementById('passwordUpdateMessage');
+    messageElement.textContent = message;
+    messageElement.className = `mt-4 text-sm font-medium ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+        messageElement.textContent = '';
+    }, 5000);
+}
+
+// ============================================
+// END PASSWORD CHANGE FUNCTIONALITY
 // ============================================
 
 // Start the dashboard

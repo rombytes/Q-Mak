@@ -78,7 +78,7 @@ class EmailService {
     /**
      * Core email sending function
      */
-    private static function sendEmail($to, $subject, $htmlBody) {
+    public static function sendEmail($to, $subject, $htmlBody) {
         error_log("EmailService::sendEmail - Starting for: $to");
         error_log("EmailService::sendEmail - Subject: $subject");
         
@@ -280,6 +280,23 @@ class EmailService {
                 </div>";
         }
 
+        // Show different banner for pre-orders
+        $orderTypeLabel = $data['order_type'] ?? 'immediate';
+        $statusBanner = '';
+        if ($orderTypeLabel === 'pre-order') {
+            $scheduledDate = date('l, F j, Y', strtotime($data['queue_date']));
+            $statusBanner = "
+                    <div style='background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 18px; margin-bottom: 25px; text-align: center;'>
+                        <p style='color: #b45309; font-weight: 600; font-size: 16px; margin: 0;'>⏰ Pre-Order Scheduled</p>
+                        <p style='color: #78350f; font-size: 14px; margin: 8px 0 0;'>Your order has been scheduled for <strong>{$scheduledDate}</strong></p>
+                    </div>";
+        } else {
+            $statusBanner = "
+                    <div class='success-banner'>
+                        <p>Your order has been successfully placed and confirmed</p>
+                    </div>";
+        }
+        
         return "
         <!DOCTYPE html>
         <html>
@@ -318,9 +335,7 @@ class EmailService {
                     <h1>Order Confirmed</h1>
                 </div>
                 <div class='content'>
-                    <div class='success-banner'>
-                        <p>Your order has been successfully placed and confirmed</p>
-                    </div>
+                    {$statusBanner}
 
                     <p>Hello {$data['student_name']},</p>
                     <p>Your order with the UMak Cooperative has been successfully processed. Please find your order details below:</p>

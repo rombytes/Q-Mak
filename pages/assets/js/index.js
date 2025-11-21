@@ -361,6 +361,7 @@ function goToSlide(index) {
 
 // Initialize carousel with auto-advance and event listeners
 let carouselInterval;
+let isCarouselTransitioning = false;
 
 function initializeCarousel() {
     const carouselWrapper = document.getElementById('carouselWrapper');
@@ -373,7 +374,11 @@ function initializeCarousel() {
     updateCarousel();
     
     // Auto-advance carousel every 8 seconds
-    carouselInterval = setInterval(nextSlide, 8000);
+    carouselInterval = setInterval(() => {
+        if (!isCarouselTransitioning) {
+            nextSlide();
+        }
+    }, 8000);
     
     // Pause auto-advance when hovering over carousel
     carouselWrapper.addEventListener('mouseenter', function() {
@@ -381,7 +386,20 @@ function initializeCarousel() {
     });
     
     carouselWrapper.addEventListener('mouseleave', function() {
-        carouselInterval = setInterval(nextSlide, 8000);
+        carouselInterval = setInterval(() => {
+            if (!isCarouselTransitioning) {
+                nextSlide();
+            }
+        }, 8000);
+    });
+    
+    // Add transition end listener to prevent overlapping transitions
+    carouselWrapper.addEventListener('transitionstart', function() {
+        isCarouselTransitioning = true;
+    });
+    
+    carouselWrapper.addEventListener('transitionend', function() {
+        isCarouselTransitioning = false;
     });
 }
 

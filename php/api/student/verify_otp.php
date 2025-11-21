@@ -179,8 +179,18 @@ try {
         // Get order data from session or input
         $orderData = $input['order_data'] ?? null;
         
-        if (!$orderData || empty($orderData['purchasing'])) {
+        if (!$orderData) {
             throw new Exception("Order data not provided");
+        }
+        
+        // Determine service type
+        $serviceType = $orderData['order_type_service'] ?? 'items';
+        
+        // Validate based on service type
+        if ($serviceType === 'items' && empty($orderData['purchasing'])) {
+            throw new Exception("Item information is required for items orders");
+        } else if ($serviceType === 'printing' && (empty($orderData['page_count']) || empty($orderData['color_mode']))) {
+            throw new Exception("Printing details are required for printing orders");
         }
         
         // Check if COOP is open
@@ -220,8 +230,16 @@ try {
         // Generate unique reference number
         $referenceNum = generateReferenceNumber($db);
         
-        // Calculate dynamic wait time based on queue and items
-        $waitTimeData = calculateWaitTime($db, $orderData['purchasing']);
+        // Determine service type
+        $serviceType = $orderData['order_type_service'] ?? 'items';
+        
+        // Calculate dynamic wait time based on queue and items/service
+        if ($serviceType === 'items') {
+            $waitTimeData = calculateWaitTime($db, $orderData['purchasing']);
+        } else {
+            // For printing, use a default or calculate based on page count
+            $waitTimeData = ['estimated_minutes' => 15, 'queue_position' => 1];
+        }
         $waitTime = $waitTimeData['estimated_minutes'];
         
         // QR expiry
@@ -232,10 +250,19 @@ try {
         $ordersColsMap = [];
         foreach ($ordersCols as $c) { $ordersColsMap[$c['Field']] = true; }
         
-        // Base columns
-        $cols = ['queue_number','student_id','item_name'];
-        $values = [$queueNum, $student['student_id'], $orderData['purchasing']];
-        $placeholders = ['?','?','?'];
+        // Base columns - different for items vs printing
+        if ($serviceType === 'items') {
+            $cols = ['queue_number','student_id','item_name'];
+            $values = [$queueNum, $student['student_id'], $orderData['purchasing']];
+            $placeholders = ['?','?','?'];
+        } else {
+            // For printing, set consistent item_name for analytics
+            $cols = ['queue_number','student_id','item_name'];
+            $values = [$queueNum, $student['student_id'], 'Printing Services'];
+            $placeholders = ['?','?','?'];
+            // File details stored separately in item_ordered and printing_jobs table
+            $itemDescription = $orderData['file_name'] . ' - ' . $orderData['page_count'] . ' pages';
+        }
         
         // Add new queue system columns
         if (isset($ordersColsMap['reference_number'])) { 
@@ -253,6 +280,11 @@ try {
             $values[] = $orderType; 
             $placeholders[] = '?'; 
         }
+        if (isset($ordersColsMap['order_type_service'])) { 
+            $cols[] = 'order_type_service'; 
+            $values[] = $serviceType; 
+            $placeholders[] = '?'; 
+        }
         if (isset($ordersColsMap['scheduled_date'])) { 
             $cols[] = 'scheduled_date'; 
             $values[] = $orderType === 'pre-order' ? $queueDate : null; 
@@ -267,7 +299,9 @@ try {
         // Existing columns
         if (isset($ordersColsMap['item_ordered'])) { 
             $cols[] = 'item_ordered'; 
-            $values[] = $orderData['purchasing']; 
+            // Use appropriate value based on service type
+            $itemOrderedValue = $serviceType === 'items' ? $orderData['purchasing'] : $itemDescription;
+            $values[] = $itemOrderedValue; 
             $placeholders[] = '?'; 
         }
         if (isset($ordersColsMap['estimated_wait_time'])) { 
@@ -292,6 +326,33 @@ try {
         
         $orderId = $db->lastInsertId();
         
+        // If printing service, insert into printing_jobs table
+        if ($serviceType === 'printing') {
+            $printStmt = $db->prepare("
+                INSERT INTO printing_jobs (
+                    order_id, file_path, file_name, page_count,
+                    color_mode, paper_size, copies, double_sided,
+                    instructions, estimated_price
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            
+            // File path - using the stored file_name from orderData
+            $filePath = 'uploads/printing/' . ($orderData['stored_file_name'] ?? $orderData['file_name']);
+            
+            $printStmt->execute([
+                $orderId,
+                $filePath,
+                $orderData['file_name'],
+                $orderData['page_count'],
+                $orderData['color_mode'],
+                $orderData['paper_size'],
+                $orderData['copies'],
+                $orderData['double_sided'],
+                $orderData['instructions'] ?? '',
+                $orderData['estimated_price']
+            ]);
+        }
+        
         // Generate QR code for frontend display
         $qrData = json_encode([
             'queue_number' => $queueNum,
@@ -311,13 +372,25 @@ try {
             'reference_number' => $referenceNum,
             'student_name' => $student['first_name'] . ' ' . $student['last_name'],
             'student_id' => $student['student_id'],
-            'item_ordered' => $orderData['purchasing'],
+            'item_ordered' => $serviceType === 'items' ? $orderData['purchasing'] : $itemDescription,
             'order_date' => date('F j, Y g:i A'),
             'wait_time' => $waitTime,
-            'queue_position' => $waitTimeData['queue_position'],
+            'queue_position' => $waitTimeData['queue_position'] ?? 1,
             'order_type' => $orderType,
-            'queue_date' => $queueDate
+            'queue_date' => $queueDate,
+            'service_type' => $serviceType
         ];
+        
+        // Add printing-specific details to receipt if applicable
+        if ($serviceType === 'printing') {
+            $receiptData['printing_details'] = [
+                'page_count' => $orderData['page_count'],
+                'color_mode' => $orderData['color_mode'],
+                'paper_size' => $orderData['paper_size'],
+                'copies' => $orderData['copies'],
+                'estimated_price' => $orderData['estimated_price']
+            ];
+        }
         
         $db->commit();
         

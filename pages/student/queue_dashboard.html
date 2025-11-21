@@ -5,68 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Queue Dashboard - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="../assets/css/root.css">
+    <link rel="stylesheet" href="../assets/css/utilities.css">
     <link rel="stylesheet" href="assets/css/queue_dashboard.css">
 </head>
-<body class="min-h-screen bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-3">
+<body class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20">
+    <!-- Enhanced Navigation -->
+    <nav class="bg-primary-900 backdrop-blur-lg shadow-xl sticky top-0 z-50 border-b border-primary-800">
+        <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <h1 class="text-2xl font-bold text-blue-600">
-                        <i class="fas fa-chart-line"></i> Queue Dashboard
-                    </h1>
-                </div>
                 <div class="flex items-center gap-4">
-                    <button onclick="refreshAll()" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200 transition">
-                        <i class="fas fa-sync-alt"></i> Refresh
+                    <div class="w-10 h-10 bg-gradient-to-br from-warning-500 to-warning-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="bi bi-speedometer2 text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">
+                            Queue Dashboard
+                        </h1>
+                        <p class="text-sm text-gray-300">Real-time queue monitoring</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="refreshAll()" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
                     </button>
-                    <button onclick="goHome()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
-                        <i class="fas fa-home"></i> Home
+                    <button onclick="goHome()" class="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+                        <i class="bi bi-house-fill"></i> Home
                     </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-6">
-        <!-- COOP Status Banner -->
-        <div id="statusBanner" class="mb-6 slide-up">
+    <div class="container mx-auto px-6 py-8">
+        <!-- Enhanced COOP Status Banner -->
+        <div id="statusBanner" class="mb-8 slide-up">
             <!-- Dynamic status will be inserted here -->
         </div>
 
-        <!-- Main Grid -->
-        <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Enhanced Main Grid -->
+        <div class="grid lg:grid-cols-3 gap-8">
             <!-- Left Column: Current Queue & Stats -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Today's Queue Overview -->
-                <div class="glass-effect rounded-2xl p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold flex items-center gap-2">
-                            <i class="fas fa-list-ol text-blue-600"></i>
-                            Today's Queue
-                            <span id="currentDate" class="text-sm text-gray-500"></span>
-                        </h2>
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                                <i class="fas fa-check"></i> <span id="completedCount">0</span> Completed
-                            </span>
-                            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full">
-                                <i class="fas fa-clock"></i> <span id="pendingCount">0</span> Pending
-                            </span>
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Enhanced Today's Queue Overview -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl p-8 border border-white/50 bg-gradient-to-br from-white/90 to-blue-50/30">
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold bg-gradient-to-r from-primary-900 to-primary-700 bg-clip-text text-transparent flex items-center gap-3">
+                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                    <i class="bi bi-list-ol text-white text-sm"></i>
+                                </div>
+                                Today's Queue
+                            </h2>
+                            <p class="text-gray-600 mt-1" id="currentDate">Loading date...</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="bg-gradient-to-r from-success-100 to-success-200 text-success-800 px-4 py-2 rounded-xl border border-success-300 shadow-sm">
+                                <i class="bi bi-check-circle-fill mr-2"></i><span id="completedCount">0</span> Completed
+                            </div>
+                            <div class="bg-gradient-to-r from-warning-100 to-warning-200 text-warning-800 px-4 py-2 rounded-xl border border-warning-300 shadow-sm">
+                                <i class="bi bi-clock-fill mr-2"></i><span id="pendingCount">0</span> Pending
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Current Queue Display -->
-                    <div id="currentQueueDisplay" class="bg-blue-50 rounded-xl p-6 mb-4">
+                    <!-- Enhanced Current Queue Display -->
+                    <div id="currentQueueDisplay" class="bg-gradient-to-br from-primary-50 via-blue-50 to-accent-50 rounded-2xl p-8 mb-6 border border-primary-200/50 shadow-lg">
                         <div class="text-center">
-                            <p class="text-gray-600 mb-2">Now Serving</p>
-                            <div id="currentServing" class="text-5xl font-bold text-blue-600">
+                            <div class="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full mb-4 shadow-md border border-gray-200">
+                                <div class="w-3 h-3 bg-success-500 rounded-full animate-pulse"></div>
+                                <p class="text-gray-800 font-semibold">Now Serving</p>
+                            </div>
+                            <div id="currentServing" class="text-6xl font-bold bg-gradient-to-r from-primary-600 via-primary-700 to-accent-600 bg-clip-text text-transparent mb-2">
                                 <!-- Current queue number -->
                             </div>
+                            <p class="text-gray-600 text-sm">Queue Number</p>
                         </div>
                     </div>
                     
@@ -76,69 +93,108 @@
                     </div>
                 </div>
 
-                <!-- Wait Time Analysis -->
-                <div class="glass-effect rounded-2xl p-6">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-                        <i class="fas fa-chart-bar text-purple-600"></i>
-                        Wait Time Analysis
-                    </h3>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="bg-blue-50 rounded-lg p-4 text-center">
-                            <div id="avgWaitTime" class="text-2xl font-bold text-blue-600">--</div>
-                            <p class="text-sm text-gray-600 mt-1">Avg Wait Time</p>
+                <!-- Enhanced Wait Time Analysis -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl p-8 border border-white/50 bg-gradient-to-br from-white/90 to-purple-50/30">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="bi bi-graph-up text-white text-xl"></i>
                         </div>
-                        <div class="bg-green-50 rounded-lg p-4 text-center">
-                            <div id="avgProcessTime" class="text-2xl font-bold text-green-600">--</div>
-                            <p class="text-sm text-gray-600 mt-1">Avg Process Time</p>
+                        <div>
+                            <h3 class="text-xl font-bold bg-gradient-to-r from-purple-900 to-purple-700 bg-clip-text text-transparent">
+                                Wait Time Analysis
+                            </h3>
+                            <p class="text-gray-600 text-sm">Real-time performance metrics</p>
                         </div>
-                        <div class="bg-purple-50 rounded-lg p-4 text-center">
-                            <div id="queueVelocity" class="text-2xl font-bold text-purple-600">--</div>
-                            <p class="text-sm text-gray-600 mt-1">Orders/Hour</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 text-center border border-blue-200/50 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                                <i class="bi bi-clock text-white text-lg"></i>
+                            </div>
+                            <div id="avgWaitTime" class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">--</div>
+                            <p class="text-sm text-gray-700 mt-2 font-semibold">Avg Wait Time</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 text-center border border-green-200/50 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                                <i class="bi bi-lightning text-white text-lg"></i>
+                            </div>
+                            <div id="avgProcessTime" class="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">--</div>
+                            <p class="text-sm text-gray-700 mt-2 font-semibold">Avg Process Time</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 text-center border border-purple-200/50 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                                <i class="bi bi-speedometer text-white text-lg"></i>
+                            </div>
+                            <div id="queueVelocity" class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">--</div>
+                            <p class="text-sm text-gray-700 mt-2 font-semibold">Orders/Hour</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Schedule & Info -->
-            <div class="space-y-6">
-                <!-- Operating Hours -->
-                <div class="glass-effect rounded-2xl p-6">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-                        <i class="fas fa-calendar-week text-indigo-600"></i>
-                        Operating Schedule
-                    </h3>
-                    <div id="scheduleDisplay" class="space-y-2">
+            <!-- Enhanced Right Column: Schedule & Info -->
+            <div class="space-y-8">
+                <!-- Enhanced Operating Hours -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl p-8 border border-white/50 bg-gradient-to-br from-white/90 to-indigo-50/30">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="bi bi-calendar-week text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold bg-gradient-to-r from-indigo-900 to-indigo-700 bg-clip-text text-transparent">
+                                Operating Schedule
+                            </h3>
+                            <p class="text-gray-600 text-sm">Weekly operating hours</p>
+                        </div>
+                    </div>
+                    <div id="scheduleDisplay" class="space-y-3">
                         <!-- Schedule will be inserted here -->
                     </div>
                 </div>
 
-                <!-- Pre-Order Info -->
-                <div class="glass-effect rounded-2xl p-6 bg-purple-50">
-                    <h3 class="text-lg font-bold mb-3 text-purple-800">
-                        <i class="fas fa-moon"></i> After-Hours Orders
-                    </h3>
-                    <p class="text-sm text-gray-700 mb-3">
+                <!-- Enhanced Pre-Order Info -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl p-8 border border-white/50 bg-gradient-to-br from-purple-50/80 to-purple-100/50">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="bi bi-moon-stars text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold bg-gradient-to-r from-purple-900 to-purple-700 bg-clip-text text-transparent">
+                                After-Hours Orders
+                            </h3>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-4 leading-relaxed">
                         Orders placed outside operating hours will be scheduled as pre-orders for the next business day.
                     </p>
-                    <div class="bg-white rounded-lg p-3 border border-purple-200">
-                        <p class="text-xs text-gray-600 mb-1">Next Business Day:</p>
-                        <p id="nextBusinessDay" class="font-semibold text-purple-700">Loading...</p>
+                    <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-4 border border-purple-200/50 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-3 h-3 bg-success-500 rounded-full animate-pulse"></div>
+                            <p class="text-sm text-gray-600 font-medium">Next Business Day:</p>
+                        </div>
+                        <p id="nextBusinessDay" class="font-bold text-purple-700 text-lg">Loading...</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Place Order Button -->
-        <div class="fixed bottom-6 right-6">
-            <button onclick="placeOrder()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-105 flex items-center gap-3 font-bold">
-                <i class="fas fa-plus-circle text-xl"></i>
+        <!-- Enhanced Place Order Button -->
+        <div class="fixed bottom-8 right-8">
+            <button onclick="placeOrder()" class="bg-gradient-to-r from-warning-500 to-warning-600 hover:from-warning-600 hover:to-warning-700 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-warning-500/50 transition-all duration-300 hover:scale-110 flex items-center gap-3 font-bold group">
+                <div class="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform duration-300">
+                    <i class="bi bi-plus-lg text-white text-lg"></i>
+                </div>
                 Place New Order
             </button>
         </div>
     </div>
 
-    <!-- Inline JavaScript removed - now in assets/js/queue_dashboard.js -->
+    <!-- Enhanced UI Features -->
+    <script src="../assets/js/ui-utilities.js?v=1"></script>
+    <script src="../assets/js/gesture-system.js?v=1"></script>
+    <script src="../assets/js/keyboard-shortcuts.js?v=1"></script>
+    <script src="../assets/js/command-palette.js?v=1"></script>
     
-    <!-- External JavaScript -->
+    <!-- Main Dashboard Script -->
     <script src="assets/js/queue_dashboard.js"></script>
 </html>

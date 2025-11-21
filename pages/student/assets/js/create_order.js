@@ -8,6 +8,9 @@ const API_BASE = '/Q-Mak/php/api';
 let selectedQuantity = 1;
 let inventoryStock = {};
 
+// currentServiceType is now defined globally in the HTML head
+// selectServiceType function is also defined in the HTML head for inline onclick handlers
+
 // ============================================================================
 // CUTOFF WARNING SYSTEM
 // ============================================================================
@@ -74,28 +77,59 @@ setInterval(checkCutoffWarning, 60 * 1000);
 
 let emailCheckTimeout = null;
 let isRegisteredAccount = false;
-const emailInput = document.getElementById('email');
-const emailFeedback = document.getElementById('emailFeedback');
+let emailInput = null;
+let emailFeedback = null;
 
-// Add event listener to email input
-emailInput.addEventListener('blur', checkEmailExists);
-emailInput.addEventListener('input', function() {
-    clearTimeout(emailCheckTimeout);
-    emailFeedback.classList.add('hidden');
-    emailInput.classList.remove('border-red-500', 'border-green-500');
-    isRegisteredAccount = false;
+// Initialize email validation after DOM loads
+function initializeEmailValidation() {
+    emailInput = document.getElementById('email');
+    emailFeedback = document.getElementById('emailFeedback');
     
-    emailCheckTimeout = setTimeout(() => {
-        if (emailInput.value && emailInput.validity.valid) {
-            checkEmailExists();
-        }
-    }, 1000);
-});
+    if (!emailInput || !emailFeedback) {
+        console.warn('Email input or feedback element not found');
+        return;
+    }
+    
+    // Add event listener to email input
+    emailInput.addEventListener('blur', checkEmailExists);
+    emailInput.addEventListener('input', function() {
+        clearTimeout(emailCheckTimeout);
+        emailFeedback.classList.add('hidden');
+        emailInput.classList.remove('border-red-500', 'border-green-500');
+        isRegisteredAccount = false;
+        
+        emailCheckTimeout = setTimeout(() => {
+            if (emailInput.value && emailInput.validity.valid) {
+                checkEmailExists();
+            }
+        }, 1000);
+    });
+}
 
 async function checkEmailExists() {
     const email = emailInput.value.trim();
     
     if (!email || !emailInput.validity.valid) {
+        return;
+    }
+    
+    // Validate UMak email format
+    if (!email.endsWith('@umak.edu.ph')) {
+        emailFeedback.innerHTML = `
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-exclamation-triangle-fill text-red-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">Please use your UMak email address (@umak.edu.ph)</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        emailFeedback.classList.remove('hidden');
+        emailInput.classList.add('border-red-500');
+        emailInput.classList.remove('border-green-500');
         return;
     }
     
@@ -106,10 +140,13 @@ async function checkEmailExists() {
         if (data.success && data.exists && data.has_account) {
             isRegisteredAccount = true;
             
-            const submitBtn = document.getElementById('submitOrderBtn');
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            submitBtn.classList.remove('hover:bg-blue-800', 'hover:shadow-lg', 'hover:scale-105');
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitBtn.classList.remove('hover:bg-blue-800', 'hover:shadow-lg', 'hover:scale-105');
+            }
             
             emailFeedback.innerHTML = `
                 <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-sm animate-fadeIn">
@@ -123,11 +160,11 @@ async function checkEmailExists() {
                             <h3 class="text-sm font-semibold text-red-800">Registered Account Detected</h3>
                             <p class="mt-1 text-sm text-red-700">This email has a registered account. Please login to place your order.</p>
                             <div class="mt-3 flex gap-3">
-                                <button onclick="window.location.href='student_login.html'" 
+                                <button onclick="window.location.href='../login.html'" 
                                         class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all shadow-sm">
                                     Go to Login
                                 </button>
-                                <button onclick="emailInput.value=''; emailFeedback.classList.add('hidden'); isRegisteredAccount=false; document.getElementById('submitOrderBtn').disabled=false; document.getElementById('submitOrderBtn').classList.remove('opacity-50','cursor-not-allowed'); document.getElementById('submitOrderBtn').classList.add('hover:bg-blue-800','hover:shadow-lg','hover:scale-105'); emailInput.classList.remove('border-red-500'); emailInput.focus();" 
+                                <button onclick="emailInput.value=''; emailFeedback.classList.add('hidden'); isRegisteredAccount=false; const btn=document.getElementById('submitBtn'); if(btn){btn.disabled=false; btn.classList.remove('opacity-50','cursor-not-allowed'); btn.classList.add('hover:bg-blue-800','hover:shadow-lg','hover:scale-105');} emailInput.classList.remove('border-red-500'); emailInput.focus();" 
                                         class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-all">
                                     Use Different Email
                                 </button>
@@ -141,10 +178,13 @@ async function checkEmailExists() {
         } else if (data.success && !data.exists) {
             isRegisteredAccount = false;
             
-            const submitBtn = document.getElementById('submitOrderBtn');
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            submitBtn.classList.add('hover:bg-blue-800', 'hover:shadow-lg', 'hover:scale-105');
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                submitBtn.classList.add('hover:bg-blue-800', 'hover:shadow-lg', 'hover:scale-105');
+            }
             
             emailFeedback.classList.add('hidden');
             emailInput.classList.add('border-green-500');
@@ -240,6 +280,7 @@ function selectQuantity(qty) {
 document.addEventListener('DOMContentLoaded', function() {
     selectQuantity(1);
     loadInventoryItems();
+    initializeEmailValidation();
 });
 
 async function loadInventoryItems() {
@@ -259,6 +300,29 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
     
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const email = document.getElementById('email').value.trim();
+    
+    // Service type specific validation
+    if (currentServiceType === 'printing') {
+        const printFile = document.getElementById('printFile').files[0];
+        const pageCount = parseInt(document.getElementById('pageCount').value);
+        
+        if (!printFile) {
+            showAlert('Please select a file to print', 'error');
+            return;
+        }
+        
+        if (!pageCount || pageCount <= 0) {
+            showAlert('Please enter the number of pages', 'error');
+            return;
+        }
+        
+        // Validate file
+        const validation = validatePrintFile(printFile);
+        if (!validation.valid) {
+            showAlert(validation.message, 'error');
+            return;
+        }
+    }
     
     if (email) {
         submitBtn.disabled = true;
@@ -285,49 +349,120 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
     
-    const items = [];
-    items.push(document.getElementById('purchasing').value);
-    for (let i = 2; i <= selectedQuantity; i++) {
-        const itemValue = document.getElementById(`item${i}`).value;
-        if (itemValue) {
-            items.push(itemValue);
-        }
-    }
-    const itemsOrdered = items.join(', ');
+    // Prepare form data based on service type
+    const studentIdField = document.getElementById('studentId');
+    console.log('Student ID field:', studentIdField, 'Value:', studentIdField?.value);
     
-    const formData = {
-        studentId: document.getElementById('studentId').value,
-        fname: document.getElementById('fname').value,
-        lname: document.getElementById('lname').value,
-        minitial: document.getElementById('minitial').value,
-        email: document.getElementById('email').value,
-        college: document.getElementById('college').value,
-        program: document.getElementById('program').value,
-        year: document.getElementById('year').value,
-        section: document.getElementById('section').value,
-        purchasing: itemsOrdered
+    const baseFormData = {
+        studentId: studentIdField?.value?.trim() || '',
+        fname: document.getElementById('firstName')?.value?.trim() || '',
+        lname: document.getElementById('lastName')?.value?.trim() || '',
+        minitial: document.getElementById('middleInitial')?.value?.trim() || '',
+        email: document.getElementById('email')?.value?.trim() || '',
+        college: document.getElementById('college')?.value || '',
+        program: document.getElementById('program')?.value?.trim() || '',
+        year: document.getElementById('year')?.value || '',
+        section: document.getElementById('section')?.value?.trim() || '',
+        order_type_service: currentServiceType
     };
     
-    try {
-        const response = await fetch(`${API_BASE}/student/create_order.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
+    console.log('Base form data being sent:', baseFormData);
+    
+    let formData;
+    
+    if (currentServiceType === 'items') {
+        // Items order
+        const items = [];
+        items.push(document.getElementById('purchasing').value);
+        for (let i = 2; i <= selectedQuantity; i++) {
+            const itemValue = document.getElementById(`item${i}`).value;
+            if (itemValue) {
+                items.push(itemValue);
+            }
+        }
+        const itemsOrdered = items.join(', ');
+        
+        formData = {
+            ...baseFormData,
+            purchasing: itemsOrdered
+        };
+    } else {
+        // Printing order - use FormData for file upload
+        formData = new FormData();
+        
+        // Add base fields
+        Object.keys(baseFormData).forEach(key => {
+            formData.append(key, baseFormData[key]);
         });
+        
+        // Add printing-specific fields
+        formData.append('print_file', document.getElementById('printFile').files[0]);
+        formData.append('page_count', document.getElementById('pageCount').value);
+        formData.append('color_mode', document.getElementById('colorMode').value);
+        formData.append('paper_size', document.getElementById('paperSize').value);
+        formData.append('copies', document.getElementById('copies').value);
+        formData.append('double_sided', document.getElementById('doubleSided').checked ? '1' : '0');
+        formData.append('instructions', document.getElementById('printInstructions').value);
+        formData.append('estimated_price', updatePrintingPriceDisplay());
+    }
+    
+    try {
+        // Different request setup for items vs printing
+        const requestOptions = {
+            method: 'POST'
+        };
+        
+        if (currentServiceType === 'items') {
+            requestOptions.headers = { 'Content-Type': 'application/json' };
+            requestOptions.body = JSON.stringify(formData);
+            console.log('Sending items order:', formData);
+        } else {
+            // FormData handles its own content-type for file uploads
+            requestOptions.body = formData;
+            console.log('Sending printing order with FormData');
+            // Log FormData contents
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+        }
+        
+        const response = await fetch(`${API_BASE}/student/create_order.php`, requestOptions);
         
         const result = await response.json();
         
         if (result.success) {
-            sessionStorage.setItem('orderFormData', JSON.stringify(formData));
+            // Store order data for OTP verification (excluding file for printing)
+            let orderData;
+            if (currentServiceType === 'items') {
+                orderData = formData;
+            } else {
+                // For printing, store all data except the file object
+                orderData = {
+                    ...baseFormData,
+                    page_count: document.getElementById('pageCount').value,
+                    color_mode: document.getElementById('colorMode').value,
+                    paper_size: document.getElementById('paperSize').value,
+                    copies: document.getElementById('copies').value,
+                    double_sided: document.getElementById('doubleSided').checked ? '1' : '0',
+                    instructions: document.getElementById('printInstructions').value || '',
+                    estimated_price: updatePrintingPriceDisplay(),
+                    file_name: document.getElementById('printFile').files[0]?.name || '',
+                    // Include the stored filename from server response
+                    stored_file_name: result.data.stored_file_name || ''
+                };
+            }
+            sessionStorage.setItem('orderFormData', JSON.stringify(orderData));
             sessionStorage.setItem('currentOtp', result.data.otp_code);
             sessionStorage.setItem('otpMode', 'order');
-            sessionStorage.setItem('userEmail', formData.email);
+            sessionStorage.setItem('userEmail', baseFormData.email);
+            sessionStorage.setItem('orderServiceType', currentServiceType);
             
             if (window.notificationManager) {
-                window.notificationManager.otpSent(formData.email);
+                window.notificationManager.otpSent(baseFormData.email);
             }
             
-            await showAlert('OTP has been sent to your email: ' + formData.email, 'success');
+            const serviceTypeLabel = currentServiceType === 'items' ? 'Items Order' : 'Printing Service';
+            await showAlert(`${serviceTypeLabel} - OTP has been sent to your email: ` + baseFormData.email, 'success');
             console.log('Development OTP:', result.data.otp_code);
             
             setTimeout(() => {

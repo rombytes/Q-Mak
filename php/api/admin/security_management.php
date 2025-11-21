@@ -18,7 +18,7 @@ require_once __DIR__ . '/../../utils/brute_force_protection.php';
 
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    require_once __DIR__ . '/../../config/session_config.php';
 }
 
 // Check if admin is logged in

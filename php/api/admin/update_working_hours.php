@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../utils/cron_manager.php';
 
 // Admin authentication check would go here
 // For now, we'll skip it for testing
@@ -61,7 +62,15 @@ try {
                 ]);
             }
             
-            $message = "Weekly schedule updated successfully";
+            // Update CRON job since working hours changed
+            $cronManager = new CronManager($db);
+            $cronResult = $cronManager->updateAutoRescheduleCron();
+            
+            if ($cronResult['success']) {
+                $message = "Weekly schedule and CRON job updated successfully. Auto-reschedule time: " . $cronResult['schedule_time'];
+            } else {
+                $message = "Weekly schedule updated, but CRON job update failed: " . $cronResult['message'];
+            }
             break;
             
         case 'add_special':
@@ -136,6 +145,8 @@ try {
                 throw new Exception("Settings data is required");
             }
             
+            $cronUpdateNeeded = false;
+            
             foreach ($input['settings'] as $key => $value) {
                 $stmt = $db->prepare("
                     UPDATE settings 
@@ -143,9 +154,26 @@ try {
                     WHERE setting_key = ?
                 ");
                 $stmt->execute([$value, $key]);
+                
+                // Check if closing time was updated
+                if ($key === 'default_closing_time') {
+                    $cronUpdateNeeded = true;
+                }
             }
             
-            $message = "Settings updated successfully";
+            // Update CRON job if closing time changed
+            if ($cronUpdateNeeded) {
+                $cronManager = new CronManager($db);
+                $cronResult = $cronManager->updateAutoRescheduleCron();
+                
+                if ($cronResult['success']) {
+                    $message = "Settings and CRON job updated successfully. Auto-reschedule time: " . $cronResult['schedule_time'];
+                } else {
+                    $message = "Settings updated, but CRON job update failed: " . $cronResult['message'];
+                }
+            } else {
+                $message = "Settings updated successfully";
+            }
             break;
             
         default:

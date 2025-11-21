@@ -241,22 +241,23 @@ function showToast(type, title, message, duration = 5000) {
     const toastContainer = document.getElementById('toastContainer');
     
     const typeColors = {
-        success: { bg: 'bg-success-500', icon: 'bi-check-circle-fill' },
-        error: { bg: 'bg-danger-500', icon: 'bi-x-circle-fill' },
-        warning: { bg: 'bg-warning-500', icon: 'bi-exclamation-triangle-fill' },
-        info: { bg: 'bg-accent-500', icon: 'bi-info-circle-fill' }
+        success: { bg: '#22c55e', icon: 'bi-check-circle-fill' },
+        error: { bg: '#ef4444', icon: 'bi-x-circle-fill' },
+        warning: { bg: '#f59e0b', icon: 'bi-exclamation-triangle-fill' },
+        info: { bg: '#3b82f6', icon: 'bi-info-circle-fill' }
     };
     
     const colors = typeColors[type] || typeColors.info;
     
     const toast = document.createElement('div');
-    toast.className = `${colors.bg} text-white rounded-xl shadow-2xl p-4 transform transition-all duration-300 animate-slideInRight`;
+    toast.className = `text-white rounded-xl shadow-2xl p-4 transform transition-all duration-300 animate-slideInRight`;
+    toast.style.backgroundColor = colors.bg;
     toast.innerHTML = `
         <div class="flex items-start gap-3">
             <i class="bi ${colors.icon} text-2xl"></i>
             <div class="flex-1">
                 <div class="font-bold mb-1">${title}</div>
-                <div class="text-sm opacity-90">${message}</div>
+                <div class="text-sm" style="opacity: 0.95;">${message}</div>
             </div>
             <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200 transition-colors">
                 <i class="bi bi-x-lg"></i>
@@ -269,7 +270,7 @@ function showToast(type, title, message, duration = 5000) {
     // Auto-remove after duration
     if (duration > 0) {
         setTimeout(() => {
-            toast.classList.add('opacity-0');
+            toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
         }, duration);
     }

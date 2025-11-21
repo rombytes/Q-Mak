@@ -70,9 +70,16 @@ async function loadOrderStatus() {
             const waitTimeRange = `${waitTime} - ${waitTime + 5} mins`;
             
             // Get reference number and queue date
-            const refNumber = order.reference_number || 'REF-' + order.order_id.toString().padStart(8, '0');
+            const refNumber = order.reference_number || 'QMAK-' + order.order_id.toString().padStart(8, '0');
             const queueDate = order.queue_date || new Date(order.created_at).toISOString().split('T')[0];
             const orderType = order.order_type || 'immediate';
+            
+            // Store for position updates
+            window.currentOrder = {
+                queue_number: order.queue_number,
+                reference_number: refNumber,
+                status: order.order_status
+            };
             
             document.getElementById('orderId').innerHTML = `
                 <div class="flex items-center gap-2 mb-2">
@@ -90,7 +97,7 @@ async function loadOrderStatus() {
                     <span class="text-sm text-gray-600">Item:</span>
                     <span class="text-gray-900">${itemDisplay}</span>
                 </div>
-                <div class="flex items-center gap-2 mb-2">
+                <div class="flex items-center gap-2 mb-2" id="waitTimeDisplay">
                     <i class="fas fa-clock text-orange-500 text-sm"></i>
                     <span class="text-sm text-gray-600">Estimated Wait:</span>
                     <strong class="text-orange-900">${waitTimeRange}</strong>
@@ -121,6 +128,18 @@ async function loadOrderStatus() {
             } catch (qrError) {
                 console.warn('QR generation failed:', qrError);
                 // Don't show error to user, data is already loaded
+            }
+            
+            // Update position data if order is active
+            if (order.order_status === 'pending' || order.order_status === 'processing') {
+                await updatePositionData(order.queue_number, refNumber);
+                
+                // Poll every 30 seconds for updates
+                setInterval(() => {
+                    if (window.currentOrder && (window.currentOrder.status === 'pending' || window.currentOrder.status === 'processing')) {
+                        updatePositionData(window.currentOrder.queue_number, window.currentOrder.reference_number);
+                    }
+                }, 30000);
             }
             
             // Show all orders if multiple
@@ -196,7 +215,7 @@ function generateStatusQRCode(order, email) {
     wrapper.classList.remove('hidden');
 
     // Build QR data with new queue system fields
-    const refNumber = order.reference_number || 'REF-' + order.order_id.toString().padStart(8, '0');
+    const refNumber = order.reference_number || 'QMAK-' + order.order_id.toString().padStart(8, '0');
     const queueDate = order.queue_date || new Date(order.created_at).toISOString().split('T')[0];
     const orderType = order.order_type || 'immediate';
     
@@ -232,7 +251,7 @@ function useGoogleChartsForStatus(order, email, canvas, wrapper) {
     wrapper.classList.remove('hidden');
     const ctx = canvas.getContext('2d');
     
-    const refNumber = order.reference_number || 'REF-' + order.order_id.toString().padStart(8, '0');
+    const refNumber = order.reference_number || 'QMAK-' + order.order_id.toString().padStart(8, '0');
     const queueDate = order.queue_date || new Date(order.created_at).toISOString().split('T')[0];
     const orderType = order.order_type || 'immediate';
     
@@ -270,6 +289,51 @@ function capitalizeWords(str) {
     return str.toLowerCase().split(' ').map(word => 
         word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
+}
+
+// Update position data in real-time
+async function updatePositionData(queueNumber, referenceNumber) {
+    try {
+        const response = await fetch(`${API_BASE}/student/get_wait_time.php?queue=${queueNumber}&ref=${referenceNumber}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const waitDisplay = document.getElementById('waitTimeDisplay');
+            if (waitDisplay) {
+                const position = data.queue_position;
+                const ahead = data.orders_ahead;
+                const minutes = data.estimated_minutes;
+                
+                let positionText = '';
+                if (position === 1 && ahead === 0) {
+                    positionText = "You're next in line!";
+                } else if (ahead === 1) {
+                    positionText = `Position #${position} • ${ahead} order ahead`;
+                } else if (ahead > 1) {
+                    positionText = `Position #${position} • ${ahead} orders ahead`;
+                } else {
+                    positionText = `Position #${position}`;
+                }
+                
+                if (data.status === 'processing') {
+                    waitDisplay.innerHTML = `
+                        <i class="fas fa-bell text-orange-500 text-sm animate-pulse"></i>
+                        <span class="text-sm text-gray-600">Status:</span>
+                        <strong class="text-orange-600 animate-pulse">Your Turn! Go to counter</strong>
+                    `;
+                } else {
+                    waitDisplay.innerHTML = `
+                        <i class="fas fa-clock text-orange-500 text-sm"></i>
+                        <span class="text-sm text-gray-600">Wait Time:</span>
+                        <strong class="text-orange-900">${minutes} mins</strong>
+                        <span class="text-xs text-gray-500 ml-2">(${positionText})</span>
+                    `;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update position:', error);
+    }
 }
 
 // Load status on page load
