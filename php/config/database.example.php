@@ -20,9 +20,11 @@
 date_default_timezone_set('Asia/Manila');
 
 // Detect environment (localhost vs production)
-function isLocalhost() {
-    $localhost_names = ['localhost', '127.0.0.1', '::1'];
-    return in_array($_SERVER['SERVER_NAME'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost', $localhost_names);
+if (!function_exists('isLocalhost')) {
+    function isLocalhost() {
+        $localhost_names = ['localhost', '127.0.0.1', '::1'];
+        return in_array($_SERVER['SERVER_NAME'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost', $localhost_names);
+    }
 }
 
 // Environment-specific database credentials
