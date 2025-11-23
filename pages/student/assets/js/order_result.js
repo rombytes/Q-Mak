@@ -4,6 +4,13 @@
  * Displays order confirmation with QR code and real-time wait time updates
  */
 
+// Dynamic API base path - works on both localhost and production
+const getApiBase = () => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+};
+
 // Declare pollInterval at the top level
 let pollInterval;
 
@@ -303,7 +310,7 @@ function startWaitTimePolling() {
 
 async function updateWaitTime() {
     try {
-        const response = await fetch(`/Q-Mak/php/api/student/get_wait_time.php?queue=${orderData.queueNum}&ref=${orderData.referenceNum}`);
+        const response = await fetch(`${getApiBase()}/student/get_wait_time.php?queue=${orderData.queueNum}&ref=${orderData.referenceNum}`);
         const data = await response.json();
         
         if (data.success) {

@@ -4,6 +4,13 @@
  * Landing/Home Page functionality
  */
 
+// Dynamic API base path - works on both localhost and production
+const getApiBase = () => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+};
+
 // ============================================================================
 // COOP STATUS MANAGEMENT
 // ============================================================================
@@ -14,7 +21,7 @@ window.coopStatusData = null;
 // Load COOP status on page load
 async function loadCoopStatus() {
     try {
-        const response = await fetch('/Q-Mak/php/api/student/get_schedule.php');
+        const response = await fetch(`${getApiBase()}/student/get_schedule.php`);
         const data = await response.json();
         
         if (data.success) {

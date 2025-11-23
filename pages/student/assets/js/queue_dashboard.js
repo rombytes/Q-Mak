@@ -4,6 +4,13 @@
  * Real-time queue monitoring with auto-refresh
  */
 
+// Dynamic API base path - works on both localhost and production
+const getApiBase = () => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+};
+
 let refreshInterval;
 let scheduleData = null;
 let queueData = [];
@@ -31,7 +38,7 @@ async function initDashboard() {
 // Load COOP status
 async function loadCoopStatus() {
     try {
-        const response = await fetch('/Q-Mak/php/api/student/get_schedule.php');
+        const response = await fetch(`${getApiBase()}/student/get_schedule.php`);
         const data = await response.json();
         
         if (data.success) {
@@ -97,7 +104,7 @@ async function loadCoopStatus() {
 // Load operating schedule
 async function loadSchedule() {
     try {
-        const response = await fetch('/Q-Mak/php/api/student/get_schedule.php');
+        const response = await fetch(`${getApiBase()}/student/get_schedule.php`);
         const data = await response.json();
         
         if (data.success && data.schedule) {
@@ -149,7 +156,7 @@ async function loadSchedule() {
 // Load current queue
 async function loadCurrentQueue() {
     try {
-        const response = await fetch('/Q-Mak/php/api/student/get_queue_display.php');
+        const response = await fetch(`${getApiBase()}/student/get_queue_display.php`);
         const data = await response.json();
         
         if (data.success) {

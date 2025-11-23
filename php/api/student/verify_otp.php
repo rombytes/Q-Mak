@@ -255,6 +255,7 @@ try {
             $cols = ['queue_number','student_id','item_name'];
             $values = [$queueNum, $student['student_id'], $orderData['purchasing']];
             $placeholders = ['?','?','?'];
+            $itemDescription = $orderData['purchasing']; // For item_ordered column
         } else {
             // For printing, set consistent item_name for analytics
             $cols = ['queue_number','student_id','item_name'];
@@ -299,9 +300,7 @@ try {
         // Existing columns
         if (isset($ordersColsMap['item_ordered'])) { 
             $cols[] = 'item_ordered'; 
-            // Use appropriate value based on service type
-            $itemOrderedValue = $serviceType === 'items' ? $orderData['purchasing'] : $itemDescription;
-            $values[] = $itemOrderedValue; 
+            $values[] = $itemDescription; // Always use itemDescription (set above based on service type)
             $placeholders[] = '?'; 
         }
         if (isset($ordersColsMap['estimated_wait_time'])) { 

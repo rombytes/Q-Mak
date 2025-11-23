@@ -2,6 +2,7 @@
 /**
  * Security Configuration for Q-Mak System - EXAMPLE FILE
  * Brute Force Protection Settings
+ * Automatically detects localhost vs production environment
  * 
  * IMPORTANT: 
  * 1. Copy this file to security_config.php
@@ -9,6 +10,14 @@
  * 3. Get keys from: https://www.google.com/recaptcha/admin/create
  * 4. NEVER commit security_config.php to GitHub!
  */
+
+// Detect environment (localhost vs production)
+if (!function_exists('isLocalhost')) {
+    function isLocalhost() {
+        $localhost_names = ['localhost', '127.0.0.1', '::1'];
+        return in_array($_SERVER['SERVER_NAME'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost', $localhost_names);
+    }
+}
 
 // ============================================
 // LOGIN ATTEMPT LIMITS
@@ -60,16 +69,19 @@ define('CAPTCHA_EXPIRY_MINUTES', 10);
 // CAPTCHA type: 'math', 'text', 'recaptcha', or 'recaptcha_v3'
 define('CAPTCHA_TYPE', 'recaptcha');
 
-// Google reCAPTCHA v2 keys
-// ⚠️ REPLACE THESE WITH YOUR OWN KEYS! ⚠️
-// Get your keys from: https://www.google.com/recaptcha/admin/create
-define('RECAPTCHA_SITE_KEY', 'YOUR_RECAPTCHA_SITE_KEY_HERE'); // Replace with your site key
-define('RECAPTCHA_SECRET_KEY', 'YOUR_RECAPTCHA_SECRET_KEY_HERE'); // Replace with your secret key
-
-// Testing: You can use Google's test keys that always succeed
-// Test Site Key: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
-// Test Secret Key: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
-// ⚠️ WARNING: Test keys always succeed - DO NOT use in production!
+// Google reCAPTCHA v2 keys - Environment-specific
+if (isLocalhost()) {
+    // LOCALHOST (XAMPP/WAMP) - Development/Testing
+    // Using Google's test keys that always succeed (for development only)
+    define('RECAPTCHA_SITE_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI');
+    define('RECAPTCHA_SECRET_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe');
+} else {
+    // PRODUCTION (Hostinger/Live Server)
+    // ⚠️ REPLACE THESE WITH YOUR ACTUAL PRODUCTION RECAPTCHA KEYS! ⚠️
+    // Get your keys from: https://www.google.com/recaptcha/admin/create
+    define('RECAPTCHA_SITE_KEY', 'YOUR_PRODUCTION_RECAPTCHA_SITE_KEY_HERE');
+    define('RECAPTCHA_SECRET_KEY', 'YOUR_PRODUCTION_RECAPTCHA_SECRET_KEY_HERE');
+}
 
 // ============================================
 // IP BLACKLIST SETTINGS
@@ -107,11 +119,16 @@ define('SECURITY_LOG_RETENTION_DAYS', 90);
 // ============================================
 
 // Send email notifications for security events
-define('ENABLE_SECURITY_NOTIFICATIONS', true);
+define('ENABLE_SECURITY_NOTIFICATIONS', !isLocalhost()); // Disable in development
 
-// Admin emails to notify (comma separated)
-// ⚠️ REPLACE WITH YOUR ACTUAL ADMIN EMAILS! ⚠️
-define('SECURITY_NOTIFICATION_EMAILS', 'admin@yourdomain.com,security@yourdomain.com');
+// Admin emails to notify (comma separated) - Environment-specific
+if (isLocalhost()) {
+    // LOCALHOST - Test email addresses
+    define('SECURITY_NOTIFICATION_EMAILS', 'test-admin@localhost.com');
+} else {
+    // PRODUCTION - ⚠️ REPLACE WITH YOUR ACTUAL ADMIN EMAILS! ⚠️
+    define('SECURITY_NOTIFICATION_EMAILS', 'admin@qmak.online,security@qmak.online');
+}
 
 // Events that trigger notifications
 define('NOTIFY_ON_ACCOUNT_LOCKED', true);
@@ -181,14 +198,18 @@ define('CLEANUP_LOGS_AFTER_DAYS', 90);
 // DEVELOPMENT/DEBUG SETTINGS
 // ============================================
 
-// Disable security in development mode
-define('SECURITY_DEBUG_MODE', false);
-
-// Show detailed error messages (disable in production)
-define('SHOW_DETAILED_ERRORS', false);
-
-// Log all attempts (even successful ones)
-define('LOG_ALL_ATTEMPTS', true);
+// Environment-aware debug settings
+if (isLocalhost()) {
+    // LOCALHOST - Enable debugging
+    define('SECURITY_DEBUG_MODE', false);        // Keep security active even in dev
+    define('SHOW_DETAILED_ERRORS', true);        // Show errors in development
+    define('LOG_ALL_ATTEMPTS', true);            // Log everything for debugging
+} else {
+    // PRODUCTION - Strict security
+    define('SECURITY_DEBUG_MODE', false);        // Never disable security in production
+    define('SHOW_DETAILED_ERRORS', false);       // Hide errors from users
+    define('LOG_ALL_ATTEMPTS', true);            // Log for security auditing
+}
 
 // ============================================
 // HELPER FUNCTIONS

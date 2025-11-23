@@ -62,10 +62,9 @@ composer.lock
 error_log
 php_error_log
 
-# Test Files
+# Test and Debug Files (exclude diagnostic/testing scripts only)
 test*.php
 debug*.php
-reset*.php
 
 # Keep fix_database.php and handle_closing_time.php
 # (they are needed in production)

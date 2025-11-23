@@ -4,7 +4,12 @@
  * Handles OTP verification for both order creation and status checking
  */
 
-const API_BASE = '../../php/api';
+// Dynamic API base path - works on both localhost and production
+const API_BASE = (() => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+})();
 let otpTries = 3;
 const currentOtp = sessionStorage.getItem('currentOtp');
 const otpMode = sessionStorage.getItem('otpMode');

@@ -4,6 +4,13 @@
  * Version: 1.0.0
  */
 
+// Dynamic API base path - works on both localhost and production
+const getApiBase = () => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base ? base + '/php/api' : '../../php/api';
+};
+
 // Printing prices (will be loaded from settings)
 let printingPrices = {
     'B&W': {
@@ -27,7 +34,7 @@ const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx'];
  */
 async function loadPrintingPrices() {
     try {
-        const response = await fetch('../../php/api/get_printing_prices.php');
+        const response = await fetch(`${getApiBase()}/get_printing_prices.php`);
         
         if (!response.ok) {
             console.warn('Failed to load printing prices, using defaults');

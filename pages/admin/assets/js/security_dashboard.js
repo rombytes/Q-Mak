@@ -4,6 +4,13 @@
  * Handles security monitoring and brute force protection management
  */
 
+// Dynamic API base path - works on both localhost and production
+const getApiBase = () => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+};
+
 let currentPage = 1;
 let totalPages = 1;
 const logsPerPage = 50;
@@ -30,7 +37,7 @@ function refreshDashboard() {
 // Load statistics
 async function loadStatistics() {
     try {
-        const response = await fetch('../../php/api/admin/security_management.php?action=get_statistics');
+        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=get_statistics`);
         const result = await response.json();
         
         if (result.success) {
@@ -52,7 +59,7 @@ async function loadStatistics() {
 // Load locked accounts
 async function loadLockedAccounts() {
     try {
-        const response = await fetch('../../php/api/admin/security_management.php?action=get_locked_accounts');
+        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=get_locked_accounts`);
         const result = await response.json();
         
         const table = document.getElementById('locked-accounts-table');
@@ -102,7 +109,7 @@ async function loadSecurityLogs() {
         if (severity) params.append('severity', severity);
         if (eventType) params.append('event_type', eventType);
         
-        const response = await fetch('../../php/api/admin/security_management.php?' + params);
+        const response = await fetch(`${getApiBase()}/admin/security_management.php?` + params);
         const result = await response.json();
         
         const table = document.getElementById('security-logs-table');
@@ -135,7 +142,7 @@ async function loadSecurityLogs() {
 // Load IP blacklist
 async function loadIPBlacklist() {
     try {
-        const response = await fetch('../../php/api/admin/security_management.php?action=get_ip_blacklist');
+        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=get_ip_blacklist`);
         const result = await response.json();
         
         const table = document.getElementById('ip-blacklist-table');
@@ -184,7 +191,7 @@ async function unlockAccount(identifier, attemptType) {
     }
     
     try {
-        const response = await fetch('../../php/api/admin/security_management.php?action=unlock_account', {
+        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=unlock_account`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ identifier, attempt_type: attemptType })
@@ -212,7 +219,7 @@ async function unblockIP(ipAddress) {
     }
     
     try {
-        const response = await fetch('../../php/api/admin/security_management.php?action=unblock_ip', {
+        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=unblock_ip`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ ip_address: ipAddress })

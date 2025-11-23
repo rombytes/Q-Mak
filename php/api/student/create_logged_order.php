@@ -57,6 +57,13 @@ try {
     $notes = isset($input['notes']) ? trim($input['notes']) : null;
     $scheduledDate = isset($input['scheduled_date']) ? $input['scheduled_date'] : null;
     
+    // Determine if this is a printing service order
+    // Check if items contains printing-related patterns
+    $isPrintingOrder = preg_match('/\.(pdf|doc|docx)\s*-\s*\d+\s*(page|pages)/i', $items);
+    
+    // Set item_name for analytics: "Printing Services" for printing, actual items for regular orders
+    $itemName = $isPrintingOrder ? 'Printing Services' : $items;
+    
     // Validate pre-order date
     if ($orderType === 'pre-order') {
         if (empty($scheduledDate)) {
@@ -122,8 +129,8 @@ try {
         $studentId,
         $queueNumber,
         $queueDateForNumber,
-        $items,  // item_name (same as item_ordered for compatibility)
-        $items,  // item_ordered
+        $itemName,  // item_name ("Printing Services" for printing, items for regular orders)
+        $items,  // item_ordered (detailed info)
         $quantity,
         $notes,
         $status,

@@ -3,6 +3,13 @@
  * Fetches inventory data and provides helper functions for displaying stock status
  */
 
+// Dynamic API base path - works on both localhost and production
+const getApiBase = () => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base ? base + '/php/api' : '../../php/api';
+};
+
 let inventoryCache = [];
 let inventoryLastFetch = 0;
 const CACHE_DURATION = 30000; // 30 seconds
@@ -21,7 +28,7 @@ async function fetchInventory(forceRefresh = false) {
     }
     
     try {
-        const response = await fetch('../../php/api/inventory.php');
+        const response = await fetch(`${getApiBase()}/inventory.php`);
         const result = await response.json();
         
         if (result.success && result.data && result.data.items) {

@@ -1,4 +1,9 @@
-const API_BASE = '../../php/api';
+// Dynamic API base path - works on both localhost and production
+const API_BASE = (() => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+})();
 let ordersData = [];
 let studentsData = [];
 let refreshInterval = null;
@@ -1367,28 +1372,31 @@ function displayQueueTable(filteredOrders = null) {
                </div>`
             : '';
         
+        // Use item_name for display (analytics-friendly)
+        const displayName = order.item_name || order.item_ordered;
+        
         // Format items with quantity - show unique items only
-        const items = order.item_ordered ? order.item_ordered.split(',').map(i => i.trim()) : [];
+        const items = displayName ? displayName.split(',').map(i => i.trim()) : [];
         const itemCount = items.length;
         const uniqueItems = [...new Set(items)];
         const itemText = uniqueItems.map(item => capitalizeWords(item)).join(', ');
         
         // Check if this is a printing service order
-        const isPrintingOrder = order.order_type_service === 'printing' || order.item_name === 'Printing Services';
+        const isPrintingOrder = order.order_type_service === 'printing' || displayName === 'Printing Services';
         
         const itemDisplay = isPrintingOrder
             ? `<div class="flex items-center gap-2">
-                <span class="text-gray-700">${capitalizeWords(order.item_name || 'Printing Services')}</span>
+                <span class="text-gray-700">${capitalizeWords(displayName)}</span>
                 <button onclick="event.stopPropagation(); viewOrderDetails(${order.order_id})" 
                         class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg text-xs font-semibold transition-all shadow-sm hover:shadow" 
-                        title="View printing files">
+                        title="View printing details">
                     <i class="fas fa-file-pdf"></i>
-                    <span>Files</span>
+                    <span>Details</span>
                 </button>
                </div>`
             : (itemCount > 1 
                 ? `<span class="font-semibold text-blue-900">${itemCount} items:</span> <span class="text-gray-700">${itemText}</span>` 
-                : `<span class="text-gray-700">${capitalizeWords(order.item_ordered)}</span>`);
+                : `<span class="text-gray-700">${capitalizeWords(displayName)}</span>`);
         
         row.innerHTML = `
             <td class="px-6 py-4">
@@ -1491,7 +1499,9 @@ async function viewOrderDetails(orderId) {
         minute: '2-digit' 
     });
     
-    const items = order.item_ordered ? order.item_ordered.split(',').map(i => i.trim()) : [];
+    // Display detailed item information from item_ordered
+    const itemOrdered = order.item_ordered || order.item_name || 'N/A';
+    const items = itemOrdered.split(',').map(i => i.trim());
     const itemList = items.map(item => `<li class="text-gray-700">• ${capitalizeWords(item)}</li>`).join('');
     
     const statusColor = getStatusColor(order.order_status);
@@ -1668,9 +1678,12 @@ async function viewOrderDetails(orderId) {
                             </div>
                             <span>Items Ordered</span>
                         </h4>
-                        <ul class="space-y-2.5 mb-4">
-                            ${itemList}
-                        </ul>
+                        <div class="bg-white/70 rounded-xl p-4 mb-4">
+                            <p class="text-sm text-gray-600 font-semibold mb-2">Order Details:</p>
+                            <ul class="space-y-2.5">
+                                ${itemList}
+                            </ul>
+                        </div>
                         <div class="mt-4 pt-4 border-t-2 border-orange-200 flex items-center justify-between bg-white/50 rounded-lg px-4 py-3">
                             <span class="text-sm font-semibold text-gray-700">Total Items:</span>
                             <span class="text-2xl font-bold text-orange-900">${items.length}</span>
@@ -5478,7 +5491,7 @@ async function resetDailyQueue() {
     messageEl.className = 'mt-3 text-sm font-medium text-center text-blue-600';
     
     try {
-        const response = await fetch('../../php/api/admin/reset_daily_queue.php', {
+        const response = await fetch(`${API_BASE}/admin/reset_daily_queue.php`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

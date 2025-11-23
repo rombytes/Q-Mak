@@ -1,24 +1,127 @@
 <?php
 /**
- * Handle Closing Time Script
+ * Handle Closing Time Script - Production Ready
  * Moves pending orders to next business day
  * Run this script at closing time (e.g., 5:05 PM)
  * 
- * Cron: 5 17 * * 1-5 php /path/to/handle_closing_time.php
+ * ============================================================================
+ * HOSTINGER CRON SETUP INSTRUCTIONS
+ * ============================================================================
+ * 
+ * 1. Find Your User Path:
+ *    - Login to Hostinger hPanel
+ *    - Go to: Advanced → Cron Jobs
+ *    - Look for "Current Path" or the example shown (usually /home/u123456789)
+ *    - Or use SSH/File Manager to check: echo $HOME
+ * 
+ * 2. Determine Full Script Path:
+ *    Format: /home/uXXXXXXXXX/domains/yourdomain.com/public_html/scripts/handle_closing_time.php
+ *    Example: /home/u123456789/domains/qmak.com/public_html/scripts/handle_closing_time.php
+ * 
+ * 3. Cron Job Command (paste this in Hostinger):
+ *    /usr/bin/php /home/uXXXXXXXXX/domains/yourdomain.com/public_html/scripts/handle_closing_time.php
+ * 
+ * 4. Schedule (Common Options):
+ *    Run at 5:05 PM weekdays:  5 17 * * 1-5
+ *    Run at 6:00 PM daily:     0 18 * * *
+ *    Run every hour:           0 * * * *
+ * 
+ * 5. Complete Cron Entry Example:
+ *    Minute: 5
+ *    Hour: 17
+ *    Day: *
+ *    Month: *
+ *    Weekday: 1-5
+ *    Command: /usr/bin/php /home/u123456789/domains/qmak.com/public_html/scripts/handle_closing_time.php
+ * 
+ * 6. Email Output (optional):
+ *    Add: > /dev/null 2>&1  (to suppress emails)
+ *    Full: /usr/bin/php /path/to/script.php > /dev/null 2>&1
+ * 
+ * ============================================================================
  */
 
-require_once __DIR__ . '/../php/config/database.php';
-require_once __DIR__ . '/../php/utils/email.php';
-require_once __DIR__ . '/../php/utils/queue_functions.php';
+// ============================================================================
+// ENVIRONMENT DETECTION - CLI vs WEB
+// ============================================================================
+$isCLI = php_sapi_name() === 'cli' || php_sapi_name() === 'cli-server';
+$isWeb = !$isCLI;
+
+// Security: Prevent web access (only allow CLI/Cron execution)
+if ($isWeb) {
+    http_response_code(403);
+    die('⛔ ACCESS DENIED: This script can only be executed via command line (Cron).<br>' . 
+        'If you need to test, run: <code>php ' . basename(__FILE__) . '</code> in terminal.');
+}
+
+// ============================================================================
+// ABSOLUTE PATH CONFIGURATION - Production Robust
+// ============================================================================
+
+// Define base directory using absolute path resolution
+define('SCRIPT_DIR', __DIR__);
+define('BASE_DIR', dirname(SCRIPT_DIR));
+
+// Verify we're in the correct location
+if (!file_exists(BASE_DIR . '/php/config/database.php')) {
+    die("ERROR: Cannot locate required files. Check script location.\nExpected: {BASE_DIR}/php/config/database.php\n");
+}
+
+// Load required files using absolute paths
+require_once BASE_DIR . '/php/config/database.php';
+require_once BASE_DIR . '/php/utils/email.php';
+require_once BASE_DIR . '/php/utils/queue_functions.php';
 
 // Set timezone
 date_default_timezone_set('Asia/Manila');
 
-echo "=== CLOSING TIME HANDLER ===\n";
-echo "Started at: " . date('Y-m-d H:i:s') . "\n\n";
+// ============================================================================
+// EXECUTION LOG
+// ============================================================================
+$logFile = BASE_DIR . '/logs/closing_time.log';
+$logDir = dirname($logFile);
+
+// Ensure logs directory exists
+if (!is_dir($logDir)) {
+    @mkdir($logDir, 0755, true);
+}
+
+/**
+ * Log message to both console and file
+ */
+function logMessage($message, $isError = false) {
+    global $logFile;
+    
+    $timestamp = date('Y-m-d H:i:s');
+    $logEntry = "[{$timestamp}] {$message}\n";
+    
+    // Output to console
+    echo $logEntry;
+    
+    // Write to log file
+    @file_put_contents($logFile, $logEntry, FILE_APPEND);
+    
+    // Also log errors to PHP error log
+    if ($isError) {
+        error_log("CLOSING_TIME_SCRIPT: {$message}");
+    }
+}
+
+// ============================================================================
+// MAIN EXECUTION
+// ============================================================================
+
+logMessage("=== CLOSING TIME HANDLER - START ===");
+logMessage("Execution Mode: CLI (Cron)");
+logMessage("PHP Version: " . PHP_VERSION);
+logMessage("Script Path: " . __FILE__);
+logMessage("Working Directory: " . getcwd());
+logMessage("");
 
 try {
+    // Get database connection
     $db = getDB();
+    logMessage("✓ Database connection established");
     
     // Check if auto-move is enabled
     $settingStmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = 'auto_move_pending_to_next_day'");
@@ -26,23 +129,29 @@ try {
     $autoMove = $settingStmt->fetch();
     
     if (!$autoMove || $autoMove['setting_value'] != '1') {
-        echo "Auto-move disabled. Exiting.\n";
+        logMessage("ℹ Auto-move feature is DISABLED in settings");
+        logMessage("Exiting without processing orders");
         exit(0);
     }
+    
+    logMessage("✓ Auto-move feature is ENABLED");
     
     // Get next business day
     $nextBusinessDay = getNextBusinessDay($db);
     
     if (!$nextBusinessDay) {
-        echo "ERROR: No business day found in next 14 days!\n";
-        error_log("CLOSING TIME: No business day found for order migration");
+        logMessage("ERROR: No business day found in next 14 days!", true);
+        logMessage("Check your schedule settings in admin dashboard", true);
         exit(1);
     }
     
-    echo "Next business day: {$nextBusinessDay}\n\n";
+    logMessage("✓ Next business day calculated: {$nextBusinessDay}");
+    logMessage("");
     
     // Get all pending orders for today
     $today = date('Y-m-d');
+    logMessage("📅 Today's date: {$today}");
+    
     $stmt = $db->prepare("
         SELECT 
             o.order_id,
@@ -63,17 +172,19 @@ try {
     $pendingOrders = $stmt->fetchAll();
     
     if (empty($pendingOrders)) {
-        echo "No pending orders to move. All done!\n";
+        logMessage("✓ No pending orders to move. All done!");
+        logMessage("=== CLOSING TIME HANDLER - COMPLETE ===");
         exit(0);
     }
     
-    echo "Found " . count($pendingOrders) . " pending orders to move\n\n";
+    logMessage("📦 Found " . count($pendingOrders) . " pending order(s) to move");
+    logMessage("");
     
     $movedCount = 0;
     $errorCount = 0;
     
     foreach ($pendingOrders as $order) {
-        echo "Processing Order #{$order['order_id']} - {$order['queue_number']}...\n";
+        logMessage("→ Processing Order #{$order['order_id']} - {$order['queue_number']}");
         
         try {
             // Generate new queue number for next day
@@ -97,7 +208,7 @@ try {
                 $order['order_id']
             ]);
             
-            echo "  ✓ Moved to {$nextBusinessDay} as {$newQueueNumber}\n";
+            logMessage("  ✓ Moved to {$nextBusinessDay} as {$newQueueNumber}");
             
             // Send notification email
             if ($order['email']) {
@@ -114,32 +225,40 @@ try {
                     ];
                     
                     EmailService::sendOrderMovedNotification($order['email'], $emailData);
-                    echo "  ✓ Email sent to {$order['email']}\n";
+                    logMessage("  ✓ Email sent to {$order['email']}");
                 } catch (Exception $e) {
-                    echo "  ⚠ Email failed: " . $e->getMessage() . "\n";
+                    logMessage("  ⚠ Email failed: " . $e->getMessage());
                 }
+            } else {
+                logMessage("  ℹ No email address for this order");
             }
             
             $movedCount++;
             
         } catch (Exception $e) {
-            echo "  ✗ Error: " . $e->getMessage() . "\n";
-            error_log("CLOSING TIME ERROR - Order #{$order['order_id']}: " . $e->getMessage());
+            logMessage("  ✗ Error: " . $e->getMessage(), true);
             $errorCount++;
         }
         
-        echo "\n";
+        logMessage("");
     }
     
-    echo "=== SUMMARY ===\n";
-    echo "Total orders: " . count($pendingOrders) . "\n";
-    echo "Successfully moved: {$movedCount}\n";
-    echo "Errors: {$errorCount}\n";
-    echo "Completed at: " . date('Y-m-d H:i:s') . "\n";
+    logMessage("=== EXECUTION SUMMARY ===");
+    logMessage("Total orders found: " . count($pendingOrders));
+    logMessage("Successfully moved: {$movedCount}");
+    logMessage("Errors encountered: {$errorCount}");
+    
+    if ($errorCount > 0) {
+        logMessage("⚠ Some orders failed to move. Check logs above.", true);
+    } else {
+        logMessage("✓ All orders processed successfully!");
+    }
+    
+    logMessage("=== CLOSING TIME HANDLER - COMPLETE ===");
     
 } catch (Exception $e) {
-    echo "FATAL ERROR: " . $e->getMessage() . "\n";
-    error_log("CLOSING TIME FATAL ERROR: " . $e->getMessage());
+    logMessage("🚨 FATAL ERROR: " . $e->getMessage(), true);
+    logMessage("Stack trace: " . $e->getTraceAsString(), true);
     exit(1);
 }
 

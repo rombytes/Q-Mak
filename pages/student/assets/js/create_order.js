@@ -4,7 +4,12 @@
  * Handles order creation with email validation, inventory checking, and OTP flow
  */
 
-const API_BASE = '/Q-Mak/php/api';
+// Dynamic API base path - works on both localhost and production
+const API_BASE = (() => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+})();
 let selectedQuantity = 1;
 let inventoryStock = {};
 

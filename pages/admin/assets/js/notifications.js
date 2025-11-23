@@ -4,12 +4,19 @@
  * Handles bell notifications and notification panel
  */
 
+// Dynamic API base path - works on both localhost and production
+const getApiBase = () => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+};
+
 let notificationsData = [];
 let currentFilter = 'all'; // 'all', 'unread', 'read'
 
 async function loadNotifications() {
     try {
-        const response = await fetch('/Q-Mak/php/api/admin/get_notifications.php');
+        const response = await fetch(`${getApiBase()}/admin/get_notifications.php`);
         const data = await response.json();
         
         if (data.success) {
@@ -146,7 +153,7 @@ async function markAsRead(notificationId, event) {
         
         console.log('Marking notification as read:', notificationId);
         
-        const response = await fetch('/Q-Mak/php/api/admin/get_notifications.php', {
+        const response = await fetch(`${getApiBase()}/admin/get_notifications.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ notification_id: notificationId, action: 'mark_read' })
@@ -172,7 +179,7 @@ async function markAllRead() {
             if (unreadCount === 0) return;
         }
         
-        const response = await fetch('/Q-Mak/php/api/admin/get_notifications.php', {
+        const response = await fetch(`${getApiBase()}/admin/get_notifications.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'mark_all_read' })

@@ -5,6 +5,27 @@
 -- Created: November 2025
 -- Description: Complete database schema for queue management,
 --              inventory tracking, and admin/student portals
+-- 
+-- IMPORTANT NOTES:
+-- ============================================================
+-- 1. PRINTING SERVICES STANDARDIZATION:
+--    - All printing orders use item_name = "Printing Services"
+--    - File details are stored in item_ordered column
+--    - This ensures proper analytics grouping
+--    - Backend automatically detects and categorizes printing orders
+--
+-- 2. AFTER IMPORTING THIS SCHEMA:
+--    If you have existing orders that need standardization, run:
+--    UPDATE orders 
+--    SET item_name = 'Printing Services', updated_at = NOW()
+--    WHERE (item_name REGEXP '\\.(pdf|doc|docx)' 
+--           OR item_name REGEXP ' - [0-9]+ (page|pages)')
+--    AND item_name != 'Printing Services';
+--
+-- 3. DEFAULT ADMIN ACCOUNTS:
+--    - Super Admin: superadmin@umak.edu.ph / SuperAdmin123
+--    - Regular Admin: admin@umak.edu.ph / Admin123
+--    CHANGE THESE PASSWORDS IMMEDIATELY AFTER FIRST LOGIN!
 -- ============================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -224,6 +245,48 @@ CREATE TABLE IF NOT EXISTS `system_notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
+-- Table structure for table `notifications`
+-- Student-specific notifications for orders and system messages
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `notification_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `student_id` VARCHAR(50) NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `message` TEXT NOT NULL,
+  `type` ENUM('order', 'system', 'promotion', 'announcement') NOT NULL DEFAULT 'order',
+  `related_order_id` INT(11) NULL,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` DATETIME NULL,
+  PRIMARY KEY (`notification_id`),
+  INDEX `idx_student_id` (`student_id`),
+  INDEX `idx_type` (`type`),
+  INDEX `idx_is_read` (`is_read`),
+  INDEX `idx_created_at` (`created_at`),
+  FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for table `services`
+-- Service catalog with estimated completion times
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `services` (
+  `service_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `service_name` VARCHAR(100) NOT NULL,
+  `description` TEXT NULL,
+  `estimated_time` INT(11) NOT NULL DEFAULT 10 COMMENT 'Estimated service time in minutes',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`service_id`),
+  UNIQUE KEY `unique_service_name` (`service_name`),
+  INDEX `idx_service_name` (`service_name`),
+  INDEX `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
 -- Table structure for table `admin_logs`
 -- --------------------------------------------------------
 
@@ -421,7 +484,7 @@ WHERE stock_quantity = 0
   OR is_available = 0
 ORDER BY item_name ASC;
 
--- View: Available items for ordering
+-- View: Available items for ordering (matches XAMPP database)
 CREATE OR REPLACE VIEW `v_available_items` AS
 SELECT 
   item_id,
@@ -695,7 +758,7 @@ DELIMITER ;
 -- Views for Queue Management
 -- --------------------------------------------------------
 
--- View: Today's queue
+-- View: Today's queue (matches XAMPP database)
 CREATE OR REPLACE VIEW `v_today_queue` AS
 SELECT 
   o.order_id,
@@ -719,7 +782,7 @@ WHERE o.queue_date = CURDATE()
   AND o.is_archived = 0
 ORDER BY queue_position ASC;
 
--- View: Pending orders count
+-- View: Pending orders count (matches XAMPP database)
 CREATE OR REPLACE VIEW `v_pending_orders_today` AS
 SELECT 
   COUNT(*) as pending_count,
@@ -729,7 +792,7 @@ WHERE queue_date = CURDATE()
   AND status IN ('pending', 'processing')
   AND is_archived = 0;
 
--- View: Current operating status
+-- View: Current operating status (matches XAMPP database)
 CREATE OR REPLACE VIEW `v_current_operating_status` AS
 SELECT 
   DAYOFWEEK(CURDATE()) as current_day,
@@ -759,7 +822,7 @@ LEFT JOIN special_hours sh ON sh.date = CURDATE()
 WHERE wh.day_of_week = DAYOFWEEK(CURDATE())
   AND wh.is_active = 1;
 
--- View: Upcoming schedule (next 7 days)
+-- View: Upcoming schedule (next 7 days) - matches XAMPP database
 CREATE OR REPLACE VIEW `v_upcoming_schedule` AS
 SELECT 
   d.date,

@@ -1,10 +1,11 @@
 <?php
 /**
  * Email Configuration Example for Q-Mak System
+ * Automatically detects localhost vs production environment
  *
  * INSTRUCTIONS:
  * 1. Copy this file and rename it to: email.php
- * 2. Update the values below with your actual email credentials
+ * 2. Update the PRODUCTION values below with your actual email credentials
  * 3. DO NOT commit email.php to GitHub (it's in .gitignore)
  *
  * For Gmail:
@@ -15,15 +16,38 @@
  * Alternative: Use the combined configuration in database.example.php
  */
 
-// Email configuration constants
-define('SMTP_HOST', 'smtp.gmail.com');                           // SMTP server (Gmail: smtp.gmail.com)
-define('SMTP_PORT', 587);                                        // SMTP port (587 for TLS, 465 for SSL)
-define('SMTP_USERNAME', 'your-email@gmail.com');                // Your email address
-define('SMTP_PASSWORD', 'your-app-password');                   // Your email password or app password
-define('SMTP_ENCRYPTION', 'tls');                                // Encryption type: 'tls' or 'ssl'
-define('SMTP_FROM_EMAIL', 'your-email@gmail.com');              // Sender email address
-define('SMTP_FROM_NAME', 'UMak COOP Order Hub');                // Sender name
-define('SMTP_REPLY_TO', 'coop@umak.edu.ph');                     // Reply-to email address
+// Detect environment (localhost vs production)
+if (!function_exists('isLocalhost')) {
+    function isLocalhost() {
+        $localhost_names = ['localhost', '127.0.0.1', '::1'];
+        return in_array($_SERVER['SERVER_NAME'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost', $localhost_names);
+    }
+}
+
+// Environment-specific email configuration
+if (isLocalhost()) {
+    // LOCALHOST (XAMPP/WAMP) - Development Environment
+    // Test credentials (update with your test email)
+    define('SMTP_HOST', 'smtp.gmail.com');
+    define('SMTP_PORT', 587);
+    define('SMTP_USERNAME', 'your-test-email@gmail.com');      // Development email
+    define('SMTP_PASSWORD', 'your-test-app-password');         // Development app password
+    define('SMTP_ENCRYPTION', 'tls');
+    define('SMTP_FROM_EMAIL', 'your-test-email@gmail.com');
+    define('SMTP_FROM_NAME', 'UMak COOP [DEV]');              // Mark as development
+    define('SMTP_REPLY_TO', 'test@umak.edu.ph');
+} else {
+    // PRODUCTION (Hostinger/Live Server)
+    // ⚠️ REPLACE THESE WITH YOUR PRODUCTION EMAIL CREDENTIALS
+    define('SMTP_HOST', 'smtp.gmail.com');
+    define('SMTP_PORT', 587);
+    define('SMTP_USERNAME', 'your-email@gmail.com');           // Production email
+    define('SMTP_PASSWORD', 'your-app-password');              // Production app password
+    define('SMTP_ENCRYPTION', 'tls');
+    define('SMTP_FROM_EMAIL', 'your-email@gmail.com');
+    define('SMTP_FROM_NAME', 'UMak COOP Order Hub');
+    define('SMTP_REPLY_TO', 'coop@umak.edu.ph');
+}
 
 // Email settings
 define('OTP_EXPIRY_MINUTES', 10);                               // OTP expiry time in minutes

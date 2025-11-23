@@ -5,7 +5,12 @@
  * Enhanced with multi-step wizard and password strength validation
  */
 
-const API_BASE = '../../php/api';
+// Dynamic API base path - works on both localhost and production
+const API_BASE = (() => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+})();
 let registrationEmail = '';
 let currentStep = 1;
 const totalSteps = 3;

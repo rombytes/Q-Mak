@@ -3,7 +3,12 @@
  * Q-Mak Queue Management System - SPA Version
  */
 
-const API_BASE = '/Q-Mak/php/api';
+// Dynamic API base path - works on both localhost and production
+const API_BASE = (() => {
+    const path = window.location.pathname;
+    const base = path.substring(0, path.indexOf('/pages/'));
+    return base + '/php/api';
+})();
 let currentOrder = null;
 let orderHistory = [];
 let orderStats = { total: 0, completed: 0, pending: 0, cancelled: 0 };
@@ -358,7 +363,7 @@ function displayCurrentOrder(order) {
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-semibold text-gray-600">Items Ordered</h4>
-                                    <p class="text-sm font-semibold text-gray-800">${order.item_ordered}</p>
+                                    <p class="text-sm font-semibold text-gray-800">${order.item_name || order.item_ordered}</p>
                                 </div>
                             </div>
                         </div>
@@ -588,7 +593,7 @@ function displayOrderHistory(orders) {
         return `
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-6 py-4 font-mono text-sm font-semibold text-blue-600">${order.queue_number}</td>
-                <td class="px-6 py-4">${order.item_ordered}</td>
+                <td class="px-6 py-4">${order.item_name || order.item_ordered}</td>
                 <td class="px-6 py-4">
                     <span class="${statusColor} px-3 py-1 rounded-full text-xs font-bold uppercase">
                         ${order.order_status}
@@ -623,7 +628,7 @@ function displayOrderHistory(orders) {
                 <div class="flex justify-between items-start mb-3">
                     <div>
                         <p class="font-bold text-lg text-blue-600 font-mono">#${order.queue_number}</p>
-                        <p class="text-sm font-semibold text-gray-800">${order.item_ordered}</p>
+                        <p class="text-sm font-semibold text-gray-800">${order.item_name || order.item_ordered}</p>
                     </div>
                     <span class="${status.bg} ${status.text} px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-1">
                         <i class="bi ${status.icon}"></i>
@@ -735,7 +740,7 @@ function displayRecentActivity(recentOrders) {
                             <i class="bi ${status.icon} ${status.color} text-xl mt-1"></i>
                             <div class="flex-1">
                                 <div class="font-semibold text-gray-900">${order.queue_number} - ${order.order_status}</div>
-                                <div class="text-sm text-gray-600">${order.item_ordered}</div>
+                                <div class="text-sm text-gray-600">${order.item_name || order.item_ordered}</div>
                                 <div class="text-xs text-gray-500 mt-1">${time}</div>
                             </div>
                             <button onclick="viewOrderDetails(${order.order_id})" class="text-accent-600 hover:text-accent-800 text-sm font-semibold">

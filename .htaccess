@@ -1,45 +1,75 @@
-# Q-Mak System .htaccess Configuration
+# Q-Mak System Configuration
+# Works on both localhost (XAMPP) and production (Hostinger)
 
-# Enable Rewrite Engine
 RewriteEngine On
 
-# Set default homepage
-DirectoryIndex homepage.html
+# Redirect root to landing page
+RewriteCond %{REQUEST_URI} ^/$
+RewriteRule ^$ /pages/index.html [R=301,L]
 
-# Enable CORS for API calls (development only)
-<IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
-    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
-</IfModule>
+# Map /assets to /pages/assets for root access compatibility
+RewriteRule ^assets/(.*)$ /pages/assets/$1 [L]
 
-# PHP Error Handling (disable in production)
-php_flag display_errors On
-php_value error_reporting E_ALL
+# Enable PHP
+AddHandler application/x-httpd-php .php
+
+# Prevent directory listing
+Options -Indexes
 
 # Security Headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
+    
+    # CORS for API calls (adjust for production)
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 </IfModule>
 
-# Prevent directory listing
-Options -Indexes
+# Environment-aware PHP error handling
+# Localhost: display errors, Production: hide errors
+<IfModule mod_env.c>
+    # Production (Hostinger) - Hide errors
+    SetEnvIf Host "qmak.online" IS_PRODUCTION
+    php_flag display_errors Off
+    php_value error_reporting 0
+    
+    # Localhost (XAMPP) - Show errors for debugging
+    SetEnvIfNoCase Host "localhost" IS_LOCALHOST
+    <If "%{HTTP_HOST} =~ /localhost/">
+        php_flag display_errors On
+        php_value error_reporting E_ALL
+    </If>
+</IfModule>
 
-# Protect sensitive files
-<FilesMatch "^(composer\.(json|lock)|\.env|\.git)">
+# Protect sensitive files and folders
+<FilesMatch "^(composer\.(json|lock)|\.env|\.git.*|database\.php|security_config\.php|\.htaccess)$">
     Order allow,deny
     Deny from all
 </FilesMatch>
 
-# Cache static assets
+# Block access to sensitive directories
+RedirectMatch 403 ^/\.git
+RedirectMatch 403 ^/sessions
+RedirectMatch 403 ^/logs
+
+# Cache static assets for performance
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType image/jpg "access plus 1 year"
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/gif "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+</IfModule>
+
+# Compression for faster loading
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
 </IfModule>
