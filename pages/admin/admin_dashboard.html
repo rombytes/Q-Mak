@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
     <title>Admin Dashboard - UMak COOP</title>
+    
+    <!-- Mobile Web App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Q-Mak Admin">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="msapplication-navbutton-color" content="#1e3a8a">
+    <meta name="msapplication-TileColor" content="#1e3a8a">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,11 +26,20 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="../assets/css/root.css">
     <link rel="stylesheet" href="../assets/css/utilities.css">
+    <link rel="stylesheet" href="../assets/css/mobile-common.css">
     <link rel="stylesheet" href="assets/css/admin_dashboard.css">
 </head>
 <body class="flex h-screen bg-gray-50">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay"></div>
+    
     <!-- Retractable Sidebar -->
-    <div class="sidebar bg-blue-900 text-white flex flex-col fixed h-full z-50 shadow-2xl">
+    <div class="sidebar bg-blue-900 text-white flex flex-col fixed h-full z-100 shadow-2xl" id="sidebar">
         <div class="sidebar-content">
             <!-- Profile Section -->
             <div class="p-4 border-b border-blue-700/50">
@@ -132,7 +150,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto bg-gray-50" style="margin-left: 80px;">
+    <div class="flex-1 overflow-y-auto bg-gray-50 main-content-adjusted" style="margin-left: 80px;">
         <!-- Top Bar -->
         <div class="bg-white/80 backdrop-blur-md shadow-lg sticky top-0 z-40 px-8 py-5 border-b border-blue-100">
             <div class="flex justify-between items-center">
@@ -141,11 +159,6 @@
                 </h1>
                 <div class="flex items-center gap-4">
                     <p class="text-gray-600 text-sm font-medium" id="currentDate"></p>
-                    
-                    <!-- Command Palette Button -->
-                    <button onclick="window.commandPalette?.toggle()" class="relative p-2 hover:bg-blue-50 rounded-lg transition-all duration-200" title="Command Palette (Ctrl+K)">
-                        <i class="bi bi-command text-gray-700 text-xl"></i>
-                    </button>
                     
                     <!-- Notification Bell -->
                     <button onclick="toggleNotifications()" class="relative p-2 hover:bg-blue-50 rounded-lg transition-all duration-200" title="System Notifications">
@@ -190,8 +203,29 @@
             <div id="content-queue-management" class="tab-content">
                 <!-- Page Header -->
                 <div class="mb-8">
-                    <h2 class="text-3xl font-bold text-blue-900 mb-2">Queue & Orders Management</h2>
-                    <p class="text-gray-600">Monitor and process customer orders in real-time</p>
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-blue-900 mb-2">Queue & Orders Management</h2>
+                            <p class="text-gray-600">Monitor and process customer orders in real-time</p>
+                        </div>
+                        
+                        <!-- Filter Toggle Buttons -->
+                        <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                            <button 
+                                id="filterTodayBtn" 
+                                onclick="setQueueFilter('today')" 
+                                class="queue-filter-btn active px-6 py-2.5 rounded-md font-semibold transition-all duration-200">
+                                <i class="bi bi-calendar-day mr-2"></i>Today's Queue
+                            </button>
+                            <button 
+                                id="filterUpcomingBtn" 
+                                onclick="setQueueFilter('upcoming')" 
+                                class="queue-filter-btn px-6 py-2.5 rounded-md font-semibold transition-all duration-200 relative">
+                                <i class="bi bi-calendar-event mr-2"></i>Upcoming Orders
+                                <span id="upcomingBadge" class="hidden absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">0</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Current Queue Display -->
@@ -657,6 +691,30 @@
                     .stock-in { background-color: #d1fae5; color: #065f46; }
                     .stock-low { background-color: #fef3c7; color: #92400e; }
                     .stock-out { background-color: #fee2e2; color: #991b1b; }
+                    
+                    /* Queue Filter Button Styles */
+                    .queue-filter-btn {
+                        background: transparent;
+                        color: #6b7280;
+                        border: none;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+                    
+                    .queue-filter-btn:hover {
+                        background: rgba(59, 130, 246, 0.1);
+                        color: #1e40af;
+                    }
+                    
+                    .queue-filter-btn.active {
+                        background: white;
+                        color: #1e40af;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    }
+                    
+                    .queue-filter-btn i {
+                        font-size: 1rem;
+                    }
                 </style>
             </div>
 
@@ -1329,7 +1387,7 @@
                 <div id="admin-content-accounts" class="admin-subtab-content">
                     <!-- Stats Cards -->
                     <div class="grid grid-cols-3 gap-6 mb-6">
-                        <div class="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-6 rounded-lg shadow-lg">
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-6 rounded-lg shadow-lg transform transition-all hover:scale-105">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-blue-100 text-sm mb-1">Total Admins</p>
@@ -1340,7 +1398,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-gradient-to-br from-purple-500 to-purple-700 text-white p-6 rounded-lg shadow-lg">
+                        <div class="bg-gradient-to-br from-purple-500 to-purple-700 text-white p-6 rounded-lg shadow-lg transform transition-all hover:scale-105">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-purple-100 text-sm mb-1">Super Admins</p>
@@ -1351,7 +1409,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-6 rounded-lg shadow-lg">
+                        <div class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-6 rounded-lg shadow-lg transform transition-all hover:scale-105">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-orange-100 text-sm mb-1">Archived</p>
@@ -1363,118 +1421,72 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Create New Admin Form -->
-                    <div class="bg-white rounded-lg shadow-lg mb-6">
-                        <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white p-4 rounded-t-lg">
+                    
+                    <!-- Header with Search and Add Button -->
+                    <div class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
                             <h3 class="text-xl font-bold">
-                                <i class="fas fa-user-plus mr-2"></i>Create New Admin Account
-                            </h3>
-                        </div>
-                        <div class="p-6">
-                            <form id="createAdminForm" class="space-y-4">
-                                <div class="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <label class="block font-bold mb-2 text-gray-700">
-                                            <i class="fas fa-user mr-1 text-blue-600"></i>Full Name *
-                                        </label>
-                                        <input type="text" id="newAdminFullName" required 
-                                               class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition" 
-                                               placeholder="Enter full name" />
-                                    </div>
-                                    <div>
-                                        <label class="block font-bold mb-2 text-gray-700">
-                                            <i class="fas fa-id-badge mr-1 text-blue-600"></i>Username *
-                                        </label>
-                                        <input type="text" id="newAdminUsername" required 
-                                               class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition" 
-                                               placeholder="Enter username" />
-                                    </div>
-                                    <div>
-                                        <label class="block font-bold mb-2 text-gray-700">
-                                            <i class="fas fa-envelope mr-1 text-blue-600"></i>Email *
-                                        </label>
-                                        <input type="email" id="newAdminEmail" required 
-                                               class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition" 
-                                               placeholder="admin@example.com" />
-                                    </div>
-                                    <div>
-                                        <label class="block font-bold mb-2 text-gray-700">
-                                            <i class="fas fa-lock mr-1 text-blue-600"></i>Password * (min 8 characters)
-                                        </label>
-                                        <input type="password" id="newAdminPassword" required minlength="8" 
-                                               class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition" 
-                                               placeholder="••••••••" />
-                                    </div>
-                                    <div class="col-span-2">
-                                        <label class="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-purple-50 hover:border-purple-300 transition">
-                                            <input type="checkbox" id="newAdminSuperAdmin" class="w-5 h-5 text-purple-600" />
-                                            <div>
-                                                <span class="font-bold text-gray-800">
-                                                    <i class="fas fa-crown mr-2 text-purple-600"></i>Super Admin Privileges
-                                                </span>
-                                                <p class="text-sm text-gray-600">Grant full access to all admin features including logs and admin management</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                                <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
-                                    <i class="fas fa-plus-circle mr-2"></i>Create Admin Account
-                                </button>
-                            </form>
-                            <div id="createAdminMessage" class="mt-4 text-sm font-medium"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- View Archived Button and Search -->
-                    <div class="bg-white p-4 rounded-lg shadow mb-6">
-                        <div class="flex gap-4 items-center justify-between">
-                            <div class="flex-1">
-                                <input type="text" id="searchAdmins" placeholder="Search by name, username, or email..." 
-                                       onkeyup="filterAdmins()" 
-                                       class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition" />
-                            </div>
-                            <button onclick="toggleArchivedAdminsView()" id="viewArchivedAdminsBtn" 
-                                    class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-bold whitespace-nowrap shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-archive mr-2"></i>View Archived
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Admins List -->
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                        <div class="bg-gray-50 p-6 border-b-2 border-gray-200">
-                            <h3 class="text-xl font-bold text-blue-900" id="adminAccountsTableTitle">
                                 <i class="fas fa-users mr-2"></i>Admin Accounts
                             </h3>
+                            <button onclick="openCreateAdminModal()" 
+                                    class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Add Admin</span>
+                            </button>
                         </div>
+                        
+                        <!-- Search Bar and Actions -->
+                        <div class="p-4 border-b border-gray-200 bg-gray-50">
+                            <div class="flex gap-4 items-center">
+                                <div class="flex-1 relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="searchAdmins" 
+                                           placeholder="Search by name, username, or email..." 
+                                           oninput="searchAdmins()" 
+                                           class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" />
+                                </div>
+                                <button onclick="toggleArchivedAdminsView()" id="viewArchivedAdminsBtn" 
+                                        class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-bold whitespace-nowrap shadow-lg hover:shadow-xl transition-all">
+                                    <i class="fas fa-archive mr-2"></i>View Archived
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Admins Table -->
                         <div class="overflow-x-auto">
                             <table class="w-full">
-                                <thead class="bg-gray-50 border-b border-gray-200">
+                                <thead class="bg-gray-50 border-b-2 border-gray-200">
                                     <tr>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-hashtag mr-1"></i>ID
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            Admin
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-user mr-1"></i>Full Name
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            Contact
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-id-badge mr-1"></i>Username
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            Role
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-envelope mr-1"></i>Email
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            Status
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-shield-alt mr-1"></i>Role
-                                        </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-cog mr-1"></i>Actions
+                                        <th class="px-6 py-4 text-center text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            Actions
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminAccountsTableBody" class="divide-y divide-gray-200">
+                                <tbody id="adminAccountsTableBody" class="divide-y divide-gray-200 bg-white">
+                                    <!-- Table rows will be populated by JavaScript -->
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="adminEmptyState" class="hidden p-12 text-center">
+                            <i class="fas fa-users-slash text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 text-lg font-semibold">No admins found</p>
+                            <p class="text-gray-400 text-sm">Try adjusting your search criteria</p>
                         </div>
                     </div>
                 </div>
@@ -1647,6 +1659,103 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Admin Modal -->
+            <div id="createAdminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 animate-modal-in">
+                    <!-- Modal Header -->
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-8 py-6 rounded-t-2xl">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold flex items-center gap-2">
+                                <i class="fas fa-user-plus"></i>
+                                Create New Admin Account
+                            </h3>
+                            <button onclick="closeCreateAdminModal()" class="text-white hover:text-gray-200 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <div class="p-8">
+                        <form id="createAdminForm" class="space-y-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <!-- Full Name -->
+                                <div>
+                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="fas fa-user text-blue-600"></i>
+                                        Full Name *
+                                    </label>
+                                    <input type="text" id="newAdminFullName" required 
+                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           placeholder="John Doe" />
+                                </div>
+                                
+                                <!-- Username -->
+                                <div>
+                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="fas fa-id-badge text-blue-600"></i>
+                                        Username *
+                                    </label>
+                                    <input type="text" id="newAdminUsername" required 
+                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           placeholder="johndoe" />
+                                </div>
+                                
+                                <!-- Email -->
+                                <div>
+                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="fas fa-envelope text-blue-600"></i>
+                                        Email *
+                                    </label>
+                                    <input type="email" id="newAdminEmail" required 
+                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           placeholder="admin@example.com" />
+                                </div>
+                                
+                                <!-- Password -->
+                                <div>
+                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="fas fa-lock text-blue-600"></i>
+                                        Password *
+                                    </label>
+                                    <input type="password" id="newAdminPassword" required minlength="8" 
+                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           placeholder="••••••••" />
+                                    <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Super Admin Checkbox -->
+                            <div class="mt-6">
+                                <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-purple-50 hover:border-purple-300 transition">
+                                    <input type="checkbox" id="newAdminSuperAdmin" class="w-5 h-5 text-purple-600 mt-0.5 rounded" />
+                                    <div class="flex-1">
+                                        <span class="font-bold text-gray-800 flex items-center gap-2">
+                                            <i class="fas fa-crown text-purple-600"></i>
+                                            Grant Super Admin Privileges
+                                        </span>
+                                        <p class="text-sm text-gray-600 mt-1">Full access to all admin features including logs, admin management, and system settings</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex gap-3 pt-4">
+                                <button type="submit" 
+                                        class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+                                    <i class="fas fa-check-circle"></i>
+                                    Create Admin Account
+                                </button>
+                                <button type="button" onclick="closeCreateAdminModal()" 
+                                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold transition-all">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -2070,12 +2179,10 @@
 
     <!-- Core Scripts -->
     <script src="../assets/js/ui-utilities.js?v=1"></script>
-    <script src="../assets/js/kanban-board.js?v=1"></script>
     
     <!-- Enhanced UI Features -->
     <script src="../assets/js/gesture-system.js?v=1"></script>
     <script src="../assets/js/keyboard-shortcuts.js?v=1"></script>
-    <script src="../assets/js/command-palette.js?v=1"></script>
     
     <script src="assets/js/admin_dashboard.js?v=2"></script>
 </body>

@@ -135,7 +135,7 @@ async function fetchStudents() {
             updateStudentTable();
         } else if (response.status === 401) {
             sessionStorage.clear();
-            window.location.href = 'admin_login.html';
+            window.location.href = '../pages/login.html';
         }
     } catch (error) {
         console.error('Error fetching students:', error);

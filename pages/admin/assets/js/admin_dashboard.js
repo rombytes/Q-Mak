@@ -9,6 +9,7 @@ let currentAnalyticsPeriod = 'daily';
 let showingArchivedLogs = false;
 let selectedLogIds = [];
 let inventoryStock = {};
+let currentQueueFilter = 'today'; // Track current queue filter (today/upcoming)
 
 // Archive variables
 let showingArchivedStudents = false;
@@ -21,8 +22,87 @@ let analyticsCharts = {};
 
 // Check if admin is logged in
 if (!sessionStorage.getItem('adminLoggedIn')) {
-    window.location.href = 'admin_login.html';
+    window.location.href = '../login.html';
 }
+
+// ============================================================================
+// MOBILE MENU FUNCTIONALITY
+// ============================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileSidebarOverlay = document.getElementById('mobileSidebarOverlay');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (mobileMenuToggle && mobileSidebarOverlay && sidebar) {
+        // Toggle mobile menu
+        mobileMenuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('mobile-open');
+            mobileSidebarOverlay.classList.toggle('active');
+            
+            // Change icon
+            const icon = this.querySelector('i');
+            if (sidebar.classList.contains('mobile-open')) {
+                icon.classList.remove('bi-list');
+                icon.classList.add('bi-x');
+            } else {
+                icon.classList.remove('bi-x');
+                icon.classList.add('bi-list');
+            }
+        });
+        
+        // Close menu when clicking overlay
+        mobileSidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('mobile-open');
+            mobileSidebarOverlay.classList.remove('active');
+            const icon = mobileMenuToggle.querySelector('i');
+            icon.classList.remove('bi-x');
+            icon.classList.add('bi-list');
+        });
+        
+        // Close menu when clicking a menu item
+        const menuItems = sidebar.querySelectorAll('nav li');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('mobile-open');
+                    mobileSidebarOverlay.classList.remove('active');
+                    const icon = mobileMenuToggle.querySelector('i');
+                    icon.classList.remove('bi-x');
+                    icon.classList.add('bi-list');
+                }
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('mobile-open');
+                mobileSidebarOverlay.classList.remove('active');
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('bi-x');
+                icon.classList.add('bi-list');
+            }
+        });
+    }
+    
+    // Make charts responsive on resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            if (analyticsCharts && Object.keys(analyticsCharts).length > 0) {
+                Object.values(analyticsCharts).forEach(chart => {
+                    if (chart && typeof chart.resize === 'function') {
+                        chart.resize();
+                    }
+                });
+            }
+            if (ordersChart && typeof ordersChart.resize === 'function') {
+                ordersChart.resize();
+            }
+        }, 250);
+    });
+});
 
 // Display current date
 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -160,7 +240,7 @@ async function fetchOrders() {
         } else if (response.status === 401) {
             // Session expired, redirect to login
             sessionStorage.clear();
-            window.location.href = 'admin_login.html';
+            window.location.href = '../login.html';
         }
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -185,7 +265,7 @@ async function fetchStudents() {
             updateStudentTable();
         } else if (response.status === 401) {
             sessionStorage.clear();
-            window.location.href = 'admin_login.html';
+            window.location.href = '../login.html';
         }
     } catch (error) {
         console.error('Error fetching students:', error);
@@ -783,7 +863,7 @@ async function fetchHistory() {
             displayHistoryTable(result.data.orders);
         } else if (response.status === 401) {
             sessionStorage.clear();
-            window.location.href = 'admin_login.html';
+            window.location.href = '../login.html';
         }
     } catch (error) {
         console.error('Error fetching order history:', error);
@@ -911,7 +991,7 @@ async function fetchAnalyticsByPeriod(period) {
             displayAnalytics(result.data, period, result.data.date_range);
         } else if (response.status === 401) {
             sessionStorage.clear();
-            window.location.href = 'admin_login.html';
+            window.location.href = '../login.html';
         } else {
             const errorMsg = result.error || result.message || 'Unknown error';
             console.error('Analytics API Error:', result);
@@ -934,7 +1014,7 @@ async function fetchAnalyticsByDateRange(startDate, endDate) {
             displayAnalytics(result.data, 'custom', result.data.date_range);
         } else if (response.status === 401) {
             sessionStorage.clear();
-            window.location.href = 'admin_login.html';
+            window.location.href = '../login.html';
         } else {
             const errorMsg = result.error || result.message || 'Unknown error';
             console.error('Analytics API Error:', result);
@@ -1191,6 +1271,55 @@ function renderOrdersChart(timeline, period) {
     });
 }
 
+// Set queue filter (today or upcoming)
+function setQueueFilter(filterType) {
+    currentQueueFilter = filterType;
+    
+    // Update button states
+    const todayBtn = document.getElementById('filterTodayBtn');
+    const upcomingBtn = document.getElementById('filterUpcomingBtn');
+    
+    if (todayBtn && upcomingBtn) {
+        if (filterType === 'today') {
+            todayBtn.classList.add('active');
+            upcomingBtn.classList.remove('active');
+        } else {
+            todayBtn.classList.remove('active');
+            upcomingBtn.classList.add('active');
+        }
+    }
+    
+    // Show/hide current queue display
+    const currentQueueDisplay = document.getElementById('currentQueueDisplay');
+    const queueControls = document.querySelector('.glass-effect.rounded-2xl.shadow-md.p-6.mb-8');
+    
+    if (currentQueueDisplay && queueControls) {
+        if (filterType === 'today') {
+            currentQueueDisplay.style.display = 'block';
+            queueControls.style.display = 'block';
+        } else {
+            currentQueueDisplay.style.display = 'none';
+            queueControls.style.display = 'none';
+        }
+    }
+    
+    // Fetch orders with the selected filter
+    fetchOrders(filterType);
+}
+
+// Update upcoming orders badge
+function updateUpcomingBadge(count) {
+    const badge = document.getElementById('upcomingBadge');
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+}
+
 // Initialize queue table
 function displayQueueTable(filteredOrders = null) {
     const tbody = document.getElementById('queueTableBody');
@@ -1199,6 +1328,13 @@ function displayQueueTable(filteredOrders = null) {
     const dataToDisplay = filteredOrders || ordersData;
 
     if (dataToDisplay.length === 0) {
+        const emptyMessage = currentQueueFilter === 'upcoming' 
+            ? 'No upcoming orders found' 
+            : 'No orders found';
+        const emptySubtext = currentQueueFilter === 'upcoming'
+            ? 'Pre-orders for future dates will appear here'
+            : 'Orders will appear here when students place them';
+            
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-12 text-center">
@@ -1208,7 +1344,8 @@ function displayQueueTable(filteredOrders = null) {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                             </svg>
                         </div>
-                        <p class="text-gray-500 font-medium">No orders found</p>
+                        <p class="text-gray-500 font-medium">${emptyMessage}</p>
+                        <p class="text-gray-400 text-sm">${emptySubtext}</p>
                     </div>
                 </td>
             </tr>
@@ -1222,6 +1359,13 @@ function displayQueueTable(filteredOrders = null) {
         row.style.animation = `fadeInUp 0.3s ease-out ${index * 0.05}s both`;
         
         const createdTime = new Date(order.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        
+        // Format queue date for upcoming orders
+        const queueDateDisplay = currentQueueFilter === 'upcoming' && order.queue_date 
+            ? `<div class="text-xs text-orange-600 font-semibold mt-1">
+                <i class="bi bi-calendar-event"></i> ${new Date(order.queue_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+               </div>`
+            : '';
         
         // Format items with quantity - show unique items only
         const items = order.item_ordered ? order.item_ordered.split(',').map(i => i.trim()) : [];
@@ -1251,6 +1395,7 @@ function displayQueueTable(filteredOrders = null) {
                 <div class="flex flex-col">
                     <span class="font-bold text-blue-900 text-base">${order.queue_number}</span>
                     ${order.reference_number ? `<span class="text-xs text-purple-600 font-semibold mt-0.5">Ref: ${order.reference_number}</span>` : ''}
+                    ${queueDateDisplay}
                 </div>
             </td>
             <td class="px-6 py-4">
@@ -2012,7 +2157,7 @@ async function fetchEmailLogs() {
             updateEmailStats(result.data.stats);
         } else if (response.status === 401) {
             sessionStorage.clear();
-            window.location.href = 'admin_login.html';
+            window.location.href = '../login.html';
         }
     } catch (error) {
         console.error('Error fetching email logs:', error);
@@ -2544,50 +2689,100 @@ async function fetchAdminAccounts() {
 // Display admin accounts in table
 function displayAdminAccounts(admins) {
     const tbody = document.getElementById('adminAccountsTableBody');
+    const emptyState = document.getElementById('adminEmptyState');
     tbody.innerHTML = '';
     
+    if (admins.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    emptyState.classList.add('hidden');
     const currentAdminId = JSON.parse(sessionStorage.getItem('adminData') || '{}').admin_id;
     
-    admins.forEach(admin => {
+    // Avatar color palette
+    const avatarColors = [
+        'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-green-500', 
+        'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-teal-500'
+    ];
+    
+    admins.forEach((admin, index) => {
         const row = document.createElement('tr');
-        row.className = 'hover:bg-gray-50';
+        row.className = 'hover:bg-blue-50 transition-colors duration-150';
         
-        const roleColor = admin.is_super_admin == 1 ? 'bg-purple-500' : 'bg-blue-500';
+        const roleColor = admin.is_super_admin == 1 ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-blue-500 to-blue-600';
+        const roleIcon = admin.is_super_admin == 1 ? 'fa-crown' : 'fa-user-shield';
         const roleText = admin.is_super_admin == 1 ? 'Super Admin' : 'Admin';
         
         const isCurrentUser = admin.admin_id == currentAdminId;
+        const avatarColor = avatarColors[index % avatarColors.length];
+        
+        // Get initials from full name
+        const getInitials = (name) => {
+            const parts = name.trim().split(' ');
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        };
+        const initials = getInitials(admin.full_name);
         
         row.innerHTML = `
-            <td class="px-6 py-4">${admin.admin_id}</td>
-            <td class="px-6 py-4">${admin.full_name} ${isCurrentUser ? '(You)' : ''}</td>
-            <td class="px-6 py-4">${admin.username}</td>
-            <td class="px-6 py-4">${admin.email}</td>
             <td class="px-6 py-4">
-                <span class="${roleColor} text-white px-3 py-1 rounded text-xs font-bold">
+                <div class="flex items-center gap-3">
+                    <div class="${avatarColor} w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                        ${initials}
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-800">${admin.full_name} ${isCurrentUser ? '<span class="text-orange-600">(You)</span>' : ''}</div>
+                        <div class="text-sm text-gray-500">@${admin.username}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-2 text-gray-700">
+                    <i class="fas fa-envelope text-blue-600"></i>
+                    <span>${admin.email}</span>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="${roleColor} text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md inline-flex items-center gap-1">
+                    <i class="fas ${roleIcon}"></i>
                     ${roleText}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
+                    <i class="fas fa-circle text-green-500 text-[6px]"></i>
+                    Active
                 </span>
             </td>
             <td class="px-6 py-4">
                 <div class="flex gap-2">
                     ${!showingArchivedAdmins ? `
-                        <button onclick='editAdmin(${JSON.stringify(admin)})' 
-                                class="border-2 border-blue-900 text-blue-900 hover:bg-gray-100 px-4 py-1 rounded text-sm font-bold">
-                            <i class="fas fa-edit mr-1"></i>Edit
+                        <button onclick='editAdmin(${JSON.stringify(admin).replace(/'/g, "&#39;")})' 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit</span>
                         </button>
                         ${!isCurrentUser ? `
-                            <button onclick="archiveAdmin(${admin.admin_id}, '${admin.full_name}')" 
-                                    class="border-2 border-orange-600 text-orange-600 hover:bg-orange-50 px-4 py-1 rounded text-sm font-bold">
-                                <i class="fas fa-archive mr-1"></i>Archive
+                            <button onclick="archiveAdmin(${admin.admin_id}, '${admin.full_name.replace(/'/g, "&#39;")}')" 
+                                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
+                                <i class="fas fa-archive"></i>
+                                <span>Archive</span>
                             </button>
                         ` : ''}
                     ` : `
-                        <button onclick="restoreAdmin(${admin.admin_id}, '${admin.full_name}')" 
-                                class="border-2 border-green-600 text-green-600 hover:bg-green-50 px-4 py-1 rounded text-sm font-bold">
-                            <i class="fas fa-undo mr-1"></i>Restore
+                        <button onclick="restoreAdmin(${admin.admin_id}, '${admin.full_name.replace(/'/g, "&#39;")}')" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
+                            <i class="fas fa-undo"></i>
+                            <span>Restore</span>
                         </button>
-                        <button onclick="permanentDeleteAdmin(${admin.admin_id}, '${admin.full_name}')" 
-                                class="border-2 border-red-600 text-red-600 hover:bg-red-50 px-4 py-1 rounded text-sm font-bold">
-                            <i class="fas fa-trash mr-1"></i>Delete
+                        <button onclick="permanentDeleteAdmin(${admin.admin_id}, '${admin.full_name.replace(/'/g, "&#39;")}')" 
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete</span>
                         </button>
                     `}
                 </div>
@@ -2597,16 +2792,56 @@ function displayAdminAccounts(admins) {
     });
 }
 
+// Modal functions for Create Admin
+function openCreateAdminModal() {
+    const modal = document.getElementById('createAdminModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('createAdminForm').reset();
+}
+
+function closeCreateAdminModal() {
+    const modal = document.getElementById('createAdminModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+// Search admin accounts
+function searchAdmins() {
+    const searchTerm = document.getElementById('searchAdmins').value.toLowerCase();
+    const tbody = document.getElementById('adminAccountsTableBody');
+    const rows = tbody.getElementsByTagName('tr');
+    let visibleCount = 0;
+    
+    for (let row of rows) {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    }
+    
+    // Show/hide empty state
+    const emptyState = document.getElementById('adminEmptyState');
+    if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+        emptyState.querySelector('p').textContent = 'No admins match your search';
+    } else {
+        emptyState.classList.add('hidden');
+    }
+}
+
 // Create admin form handler
 document.getElementById('createAdminForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const messageEl = document.getElementById('createAdminMessage');
     const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnContent = submitBtn.innerHTML;
     
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Creating...';
-    messageEl.textContent = '';
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
     
     const formData = {
         full_name: document.getElementById('newAdminFullName').value,
@@ -2627,21 +2862,19 @@ document.getElementById('createAdminForm').addEventListener('submit', async func
         const result = await response.json();
         
         if (result.success) {
-            messageEl.textContent = 'Admin account created successfully!';
-            messageEl.className = 'mt-4 text-sm font-medium text-green-600';
+            showNotification('Admin account created successfully!', 'success');
+            closeCreateAdminModal();
             e.target.reset();
             await fetchAdminAccounts();
         } else {
-            messageEl.textContent = `Error: ${result.message}`;
-            messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+            showNotification(`Error: ${result.message}`, 'error');
         }
     } catch (error) {
         console.error('Error creating admin:', error);
-        messageEl.textContent = 'A connection error occurred.';
-        messageEl.className = 'mt-4 text-sm font-medium text-red-600';
+        showNotification('A connection error occurred.', 'error');
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Create Admin Account';
+        submitBtn.innerHTML = originalBtnContent;
     }
 });
 

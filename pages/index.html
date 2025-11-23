@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1e3a8a">
     <title>UMak COOP - Order Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bootstrap Icons CDN -->
@@ -17,24 +21,24 @@
 </head>
 <body class="min-h-screen bg-gray-100">
     <!-- Mobile Bottom Navigation -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-2xl safe-area-bottom">
-        <div class="flex justify-around py-2">
-            <button class="flex flex-col items-center py-2 px-4 hover:bg-gray-50 rounded-lg transition-all" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-                <i class="bi bi-house-fill text-xl text-gray-600"></i>
-                <span class="text-xs text-gray-600 mt-1">Home</span>
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-200 h-16 safe-area-bottom" role="navigation" aria-label="Mobile navigation">
+        <div class="flex justify-around h-full">
+            <button class="flex-1 flex flex-col items-center justify-center text-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Go to home">
+                <i class="bi bi-house-fill text-2xl block" aria-hidden="true"></i>
+                <span class="block text-xs font-semibold mt-1">Home</span>
             </button>
-            <button class="flex flex-col items-center py-2 px-4 hover:bg-warning-50 rounded-lg transition-all" onclick="showOrderModal()">
-                <i class="bi bi-cart-plus-fill text-xl text-warning-500"></i>
-                <span class="text-xs text-warning-600 font-bold mt-1">Order</span>
+            <button class="flex-1 flex flex-col items-center justify-center text-center text-warning-600 hover:bg-warning-50 active:bg-warning-100 transition-all touch-feedback" onclick="showOrderModal()" aria-label="Place an order">
+                <i class="bi bi-cart-plus-fill text-2xl block" aria-hidden="true"></i>
+                <span class="block text-xs font-bold mt-1">Order</span>
             </button>
-            <button class="flex flex-col items-center py-2 px-4 hover:bg-gray-50 rounded-lg transition-all" onclick="window.location.href='student/check_status.html'">
-                <i class="bi bi-search text-xl text-gray-600"></i>
-                <span class="text-xs text-gray-600 mt-1">Track</span>
-            </button>
-            <button class="flex flex-col items-center py-2 px-4 hover:bg-gray-50 rounded-lg transition-all" onclick="window.location.href='login.html'">
-                <i class="bi bi-person-circle text-xl text-gray-600"></i>
-                <span class="text-xs text-gray-600 mt-1">Login</span>
-            </button>
+            <a href="student/check_status.html" class="flex-1 flex flex-col items-center justify-center text-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" aria-label="Track your order">
+                <i class="bi bi-search text-2xl block" aria-hidden="true"></i>
+                <span class="block text-xs font-semibold mt-1">Track</span>
+            </a>
+            <a href="login.html" class="flex-1 flex flex-col items-center justify-center text-center text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" aria-label="Login to your account">
+                <i class="bi bi-person-circle text-2xl block" aria-hidden="true"></i>
+                <span class="block text-xs font-semibold mt-1">Login</span>
+            </a>
         </div>
     </nav>
     
@@ -64,14 +68,14 @@
                     <a href="#about" class="hover:text-warning-400 transition-all duration-300 font-medium">About</a>
                     <a href="#how-it-works" class="hover:text-warning-400 transition-all duration-300 font-medium">How It Works</a>
                     <a href="#contact" class="hover:text-warning-400 transition-all duration-300 font-medium">Contact</a>
-                    <button onclick="window.location.href='login.html'" class="border-2 border-warning-500 text-warning-500 hover:bg-warning-500 hover:text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg btn-hover">
+                    <a href="login.html" class="border-2 border-warning-500 text-warning-500 hover:bg-warning-500 hover:text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg btn-hover inline-flex items-center">
                         <i class="bi bi-box-arrow-in-right mr-2"></i>Login
-                    </button>
+                    </a>
                 </nav>
                 
                 <!-- Mobile Menu Button -->
-                <button class="md:hidden text-white" onclick="toggleMobileMenu()" aria-label="Toggle menu">
-                    <i class="bi bi-list text-3xl" id="menuIcon"></i>
+                <button class="md:hidden text-white p-2 -mr-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-all touch-feedback" onclick="toggleMobileMenu()" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+                    <i class="bi bi-list text-3xl" id="menuIcon" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
@@ -91,19 +95,19 @@
                 <a href="#contact" class="text-white hover:text-warning-400 transition-all py-2 font-medium" onclick="closeMobileMenu()">
                     <i class="bi bi-telephone-fill mr-2"></i>Contact
                 </a>
-                <button onclick="window.location.href='login.html'; closeMobileMenu();" class="bg-warning-500 hover:bg-warning-600 text-white px-6 py-3 rounded-lg font-semibold transition-all text-left">
+                <a href="login.html" onclick="closeMobileMenu()" class="bg-warning-500 hover:bg-warning-600 text-white px-6 py-3 rounded-lg font-semibold transition-all text-left block">
                     <i class="bi bi-box-arrow-in-right mr-2"></i>Login
-                </button>
+                </a>
             </nav>
         </div>
     </header>
 
     <div class="pt-20">
         <!-- Hero Section with UMak Background -->
-        <div class="relative text-white pt-32 pb-20 px-8 min-h-[600px] flex items-center overflow-hidden">
+        <div class="relative text-white pt-24 pb-16 px-4 min-h-[400px] md:min-h-[600px] flex items-center overflow-hidden">
             <!-- Background Image - Full brightness -->
             <div class="absolute inset-0">
-                <img src="../images/UMak-Facade-Admin-2024.jpg" alt="" class="w-full h-full object-cover">
+                <img src="../images/UMak-Facade-Admin-2024.jpg" alt="UMak Facade" class="w-full h-full object-cover">
             </div>
             
             <!-- Dark Gradient Overlay for text contrast -->
@@ -114,44 +118,36 @@
             
             <div class="max-w-7xl mx-auto text-center relative z-10">
                 <!-- Content Box with lower opacity - lets the UMak building show through -->
-                <div class="bg-primary-900/40 backdrop-blur-lg rounded-3xl p-12 mb-0 shadow-2xl border border-white/30 animate-fade-in">
-                    <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight" style="text-shadow: 2px 4px 12px rgba(0,0,0,0.8);">
-                        Q-Mak: <span class="text-warning-400">Queue smarter,</span><br class="hidden md:block">
-                        <span class="text-white">not harder.</span>
+                <div class="bg-primary-900/40 backdrop-blur-lg rounded-3xl p-6 md:p-12 mb-0 shadow-2xl border border-white/30 animate-fade-in">
+                    <h1 class="text-4xl md:text-7xl font-extrabold mb-4 md:mb-6 leading-tight" style="text-shadow: 2px 4px 12px rgba(0,0,0,0.8);">
+                        Q-Mak: <span class="text-warning-400">Queue Smarter.</span>
                     </h1>
-                    <p class="text-xl md:text-2xl mb-8 text-white font-light max-w-3xl mx-auto" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">
-                        Pre-order from UMak COOP and skip the line. Get your essentials without the wait.
+                    <p class="text-lg md:text-2xl mb-6 md:mb-8 text-white font-light max-w-3xl mx-auto" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">
+                        Pre-order from UMak COOP and skip the line.
                     </p>
                     
                     <!-- Trust Badges with lower opacity -->
-                    <div class="flex flex-wrap justify-center gap-4 md:gap-6 mb-10 text-sm md:text-base">
-                        <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-4 py-2 rounded-lg border border-white/40 shadow-lg">
+                    <div class="flex flex-wrap justify-center gap-3 md:gap-6 mb-8 md:mb-10 text-xs md:text-base">
+                        <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-white/40 shadow-lg">
                             <i class="bi bi-shield-check-fill text-success-400"></i>
                             <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Secure Ordering</span>
                         </div>
-                        <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-4 py-2 rounded-lg border border-white/40 shadow-lg">
+                        <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-white/40 shadow-lg">
                             <i class="bi bi-clock-history text-accent-400"></i>
                             <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Real-Time Updates</span>
-                        </div>
-                        <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-4 py-2 rounded-lg border border-white/40 shadow-lg">
-                            <i class="bi bi-credit-card text-warning-400"></i>
-                            <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">No Hidden Fees</span>
                         </div>
                     </div>
                     
                     <!-- CTA Buttons with better visibility -->
-                    <div class="flex gap-4 justify-center flex-wrap">
-                        <button onclick="showOrderModal()" class="bg-warning-500 hover:bg-warning-600 text-white px-12 py-5 rounded-xl text-xl font-bold transition-all duration-300 shadow-2xl hover:shadow-warning-500/50 btn-hover transform hover:-translate-y-1 flex items-center gap-3">
-                            <i class="bi bi-cart-plus-fill text-2xl"></i>
-                            Start Ordering Now
+                    <div class="flex gap-3 md:gap-4 justify-center flex-wrap">
+                        <button onclick="showOrderModal()" class="bg-warning-500 hover:bg-warning-600 active:bg-warning-700 text-white px-8 py-3 md:px-12 md:py-5 rounded-xl text-lg md:text-xl font-bold transition-all duration-300 shadow-2xl hover:shadow-warning-500/50 btn-hover transform hover:-translate-y-1 flex items-center gap-2 md:gap-3 touch-feedback" aria-label="Open order menu">
+                            <i class="bi bi-cart-plus-fill text-xl md:text-2xl" aria-hidden="true"></i>
+                            Order Now
                         </button>
-                        <button onclick="window.location.href='student/queue_dashboard.html'" class="bg-accent-600 hover:bg-accent-700 text-white px-10 py-5 rounded-xl text-lg font-bold transition-all duration-300 shadow-2xl hover:shadow-accent-500/50 btn-hover flex items-center gap-2 transform hover:-translate-y-1">
-                            <i class="bi bi-speedometer2"></i>
-                            Queue Dashboard
-                        </button>
-                        <button onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})" class="bg-white/90 backdrop-blur-sm border-2 border-white text-primary-900 hover:bg-white px-10 py-5 rounded-xl text-lg font-bold transition-all duration-300 shadow-2xl btn-hover">
-                            How It Works
-                        </button>
+                        <a href="student/queue_dashboard.html" class="bg-accent-600 hover:bg-accent-700 active:bg-accent-800 text-white px-6 py-3 md:px-10 md:py-5 rounded-xl text-base md:text-lg font-bold transition-all duration-300 shadow-2xl hover:shadow-accent-500/50 btn-hover flex items-center gap-1 md:gap-2 transform hover:-translate-y-1 touch-feedback" aria-label="View queue dashboard">
+                            <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                            Dashboard
+                        </a>
                     </div>
                 </div>
             </div>
@@ -185,71 +181,65 @@
         </div>
 
         <!-- About Section with Full-Width Carousel -->
-        <div id="about" class="relative bg-gradient-to-br from-gray-50 to-gray-100">
+        <div id="about" class="relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
             <div class="relative overflow-hidden">
                 <!-- Carousel Wrapper -->
-                <div id="carouselWrapper" class="flex transition-transform duration-700 ease-in-out" style="transform: translateX(0%); will-change: transform;">
+                <div id="carouselWrapper" class="flex transition-transform duration-700 ease-in-out" style="transform: translateX(0%); will-change: transform; touch-action: pan-y pinch-zoom;">
                     <!-- Slide 1: About & Why Choose Us -->
-                    <div class="min-w-full flex-shrink-0 min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100">
-                        <div class="max-w-7xl mx-auto px-8 pt-8 pb-8">
-                            <h2 class="text-4xl font-extrabold mb-8 text-center animate-fade-in">
+                    <div class="min-w-full flex-shrink-0 min-h-[400px] md:min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 md:px-8">
+                        <div class="max-w-7xl mx-auto">
+                            <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-center animate-fade-in">
                                 About <span class="gradient-text">UMak COOP</span>
                             </h2>
                             
                             <!-- About Info -->
-                            <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
-                                <h3 class="text-xl font-semibold text-primary-900 mb-3 flex items-center gap-2">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
-                                        <i class="bi bi-mortarboard-fill text-white text-lg"></i>
+                            <div class="bg-white rounded-2xl shadow-xl p-4 md:p-6 mb-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+                                <h3 class="text-lg md:text-xl font-semibold text-primary-900 mb-2 flex items-center gap-2">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
+                                        <i class="bi bi-mortarboard-fill text-white text-base md:text-lg"></i>
                                     </div>
                                     The UMak Experience
                                 </h3>
-                                <p class="text-gray-700 mb-3 leading-relaxed text-base">
-                                    The University of Makati (UMak) is a progressive city university committed to producing globally competitive, value-driven, and socially responsible professionals. As the Center for Technology-Based Learning, UMak fosters innovation and excellence in education.
+                                <p class="text-gray-700 mb-3 leading-relaxed text-sm md:text-base">
+                                    UMak is a progressive city university. The COOP Order Hub simplifies access to essential campus needs.
                                 </p>
-                                <div class="bg-gradient-to-r from-warning-50 to-warning-100 rounded-xl p-4 border-l-4 border-warning-500 shadow-sm">
-                                    <p class="text-gray-800 leading-relaxed text-base flex items-center gap-2">
-                                        <i class="bi bi-heart-fill text-warning-500"></i>
-                                        <span class="text-warning-600 font-bold">Welcome to the UMak COOP Order Hub,</span> your digital nest for essential needs.
-                                    </p>
-                                </div>
                             </div>
                             
                             <!-- Why Choose Us -->
-                            <div class="bg-gradient-to-br from-accent-50 via-indigo-50 to-purple-50 rounded-2xl shadow-xl p-6 border border-accent-100">
-                                <h3 class="text-2xl font-bold text-primary-900 mb-6 flex items-center justify-center gap-2">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
-                                        <i class="bi bi-star-fill text-white text-lg"></i>
+                            <div class="bg-gradient-to-br from-accent-50 via-indigo-50 to-purple-50 rounded-2xl shadow-xl p-4 md:p-6 border border-accent-100">
+                                <h3 class="text-xl md:text-2xl font-bold text-primary-900 mb-4 md:mb-6 flex items-center justify-center gap-2">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
+                                        <i class="bi bi-star-fill text-white text-base md:text-lg"></i>
                                     </div>
                                     Why Choose Us?
                                 </h3>
-                                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
-                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
-                                            <i class="bi bi-rocket-takeoff-fill text-white text-xl"></i>
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-3 md:p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
+                                            <i class="bi bi-rocket-takeoff-fill text-white text-lg md:text-xl"></i>
                                         </div>
-                                        <p class="font-bold text-gray-900 mb-1 text-base">Fast & Convenient</p>
+                                        <p class="font-bold text-gray-900 mb-1 text-sm md:text-base">Fast & Convenient</p>
                                         <p class="text-xs text-gray-600">Quick ordering system</p>
                                     </div>
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
-                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
-                                            <i class="bi bi-graph-up text-white text-xl"></i>
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-3 md:p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
+                                            <i class="bi bi-graph-up text-white text-lg md:text-xl"></i>
                                         </div>
-                                        <p class="font-bold text-gray-900 mb-1 text-base">Real-time Tracking</p>
+                                        <p class="font-bold text-gray-900 mb-1 text-sm md:text-base">Real-time Tracking</p>
                                         <p class="text-xs text-gray-600">Know your queue status</p>
                                     </div>
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
-                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
-                                            <i class="bi bi-award-fill text-white text-xl"></i>
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-3 md:p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
+                                            <i class="bi bi-award-fill text-white text-lg md:text-xl"></i>
                                         </div>
-                                        <p class="font-bold text-gray-900 mb-1 text-base">Quality Products</p>
+                                        <p class="font-bold text-gray-900 mb-1 text-sm md:text-base">Quality Products</p>
                                         <p class="text-xs text-gray-600">For students' needs</p>
                                     </div>
-                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
-                                        <div class="w-14 h-14 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
-                                            <i class="bi bi-shield-fill-check text-white text-xl"></i>
+                                    <div class="group flex flex-col items-center text-center bg-white rounded-xl p-3 md:p-4 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-primary-400">
+                                        <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-2 md:mb-3 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg" style="background: linear-gradient(to bottom right, #2563eb, #1e40af) !important;">
+                                            <i class="bi bi-shield-fill-check text-white text-lg md:text-xl"></i>
                                         </div>
-                                        <p class="font-bold text-gray-900 mb-1 text-base">Secure Service</p>
+                                        <p class="font-bold text-gray-900 mb-1 text-sm md:text-base">Secure Service</p>
                                         <p class="text-xs text-gray-600">Safe and reliable</p>
                                     </div>
                                 </div>
@@ -258,82 +248,83 @@
                     </div>
                     
                     <!-- Slide 2: COOP Status Dashboard -->
-                    <div class="min-w-full flex-shrink-0 min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100">
-                        <div class="max-w-7xl mx-auto px-8 pt-8 pb-8">
-                            <h2 class="text-4xl font-extrabold mb-3 text-center animate-fade-in">
+                    <div class="min-w-full flex-shrink-0 min-h-[400px] md:min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 md:px-8">
+                        <div class="max-w-7xl mx-auto">
+                            <h2 class="text-3xl md:text-4xl font-extrabold mb-3 text-center animate-fade-in">
                                 Live <span class="gradient-text">COOP Dashboard</span>
                             </h2>
-                            <p class="text-center text-gray-600 text-base mb-8 flex items-center justify-center gap-2">
+                            <p class="text-center text-gray-600 text-sm md:text-base mb-4 flex items-center justify-center gap-2">
                                 <i class="bi bi-circle-fill text-green-500 animate-pulse"></i>
                                 Real-time status and queue information
                             </p>
                             
-                            <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-3xl p-6 mb-6">
-                                <div class="grid lg:grid-cols-3 gap-6">
+                            <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-3xl p-4 md:p-6">
+                                <div class="grid lg:grid-cols-3 gap-4 md:gap-6">
                                     <!-- Current Status Card -->
-                                    <div id="coopStatusCard" class="rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-accent-100 hover:border-accent-300" style="background: white !important;">
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
-                                            <i class="bi bi-shop text-white text-lg"></i>
+                                    <div id="coopStatusCard" class="rounded-2xl shadow-xl p-4 md:p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-accent-100 hover:border-accent-300" style="background: white !important;">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
+                                                <i class="bi bi-shop text-white text-base md:text-lg"></i>
+                                            </div>
+                                            <h3 class="text-lg md:text-xl font-bold text-primary-900">COOP Status</h3>
                                         </div>
-                                        <h3 class="text-xl font-bold text-primary-900">COOP Status</h3>
-                                    </div>
-                                    <div id="statusDisplay" class="space-y-3">
-                                        <!-- Dynamic status will be loaded here -->
-                                    </div>
-                                </div>
-                                
-                                <!-- Today's Queue Stats Card -->
-                                <div class="text-white rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-primary-600" style="background: linear-gradient(to bottom right, #1d4ed8, #1e40af, #1e3a8a) !important;">
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-12 h-12 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg border border-white/30">
-                                            <i class="bi bi-pie-chart-fill text-white text-lg"></i>
+                                        <div id="statusDisplay" class="space-y-3">
+                                            <!-- Dynamic status will be loaded here -->
                                         </div>
-                                        <h3 class="text-xl font-bold">Today's Activity</h3>
                                     </div>
-                                    <div class="space-y-3">
-                                        <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-white font-medium text-base">Total Orders</span>
-                                                <span id="totalOrders" class="text-3xl font-bold text-white">--</span>
+                                    
+                                    <!-- Today's Queue Stats Card -->
+                                    <div class="text-white rounded-2xl shadow-xl p-4 md:p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-primary-600" style="background: linear-gradient(to bottom right, #1d4ed8, #1e40af, #1e3a8a) !important;">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <div class="w-10 h-10 md:w-12 md:h-12 bg-white/25 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg border border-white/30">
+                                                <i class="bi bi-pie-chart-fill text-white text-base md:text-lg"></i>
+                                            </div>
+                                            <h3 class="text-lg md:text-xl font-bold">Today's Activity</h3>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-white font-medium text-sm md:text-base">Total Orders</span>
+                                                    <span id="totalOrders" class="text-2xl md:text-3xl font-bold text-white">--</span>
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/30">
+                                                    <i class="bi bi-check-circle-fill text-green-300 text-xl md:text-2xl mb-1"></i>
+                                                    <p id="completedOrders" class="text-2xl md:text-2xl font-bold text-white">--</p>
+                                                    <p class="text-xs text-white font-medium mt-1">Completed</p>
+                                                </div>
+                                                <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/30">
+                                                    <i class="bi bi-clock-fill text-orange-300 text-xl md:text-2xl mb-1"></i>
+                                                    <p id="pendingOrders" class="text-2xl md:text-2xl font-bold text-white">--</p>
+                                                    <p class="text-xs text-white font-medium mt-1">Pending</p>
+                                                </div>
+                                            </div>
+                                            <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-white font-medium text-sm md:text-base">Avg Wait</span>
+                                                    <span id="avgWait" class="text-xl md:text-2xl font-bold text-white">--</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/30">
-                                                <i class="bi bi-check-circle-fill text-green-300 text-2xl mb-1"></i>
-                                                <p id="completedOrders" class="text-2xl font-bold text-white">--</p>
-                                                <p class="text-xs text-white font-medium mt-1">Completed</p>
-                                            </div>
-                                            <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center border border-white/30">
-                                                <i class="bi bi-clock-fill text-orange-300 text-2xl mb-1"></i>
-                                                <p id="pendingOrders" class="text-2xl font-bold text-white">--</p>
-                                                <p class="text-xs text-white font-medium mt-1">Pending</p>
-                                            </div>
-                                        </div>
-                                        <div class="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/30">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-white font-medium text-base">Avg Wait</span>
-                                                <span id="avgWait" class="text-2xl font-bold text-white">--</span>
-                                            </div>
-                                        </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Operating Hours Card -->
-                                <div class="rounded-2xl shadow-xl p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-primary-100 hover:border-primary-300" style="background: white !important;">
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
-                                            <i class="bi bi-clock-fill text-white text-lg"></i>
+                                    
+                                    <!-- Operating Hours Card -->
+                                    <div class="rounded-2xl shadow-xl p-4 md:p-6 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl border-2 border-primary-100 hover:border-primary-300" style="background: white !important;">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(to bottom right, #1d4ed8, #1e3a8a) !important;">
+                                                <i class="bi bi-clock-fill text-white text-base md:text-lg"></i>
+                                            </div>
+                                            <h3 class="text-lg md:text-xl font-bold text-primary-900">Schedule</h3>
                                         </div>
-                                        <h3 class="text-xl font-bold text-primary-900">Schedule</h3>
+                                        <div id="schedulePreview" class="space-y-2 text-xs md:text-sm mb-4">
+                                            <!-- Schedule will be loaded here -->
+                                        </div>
+                                        <a href="student/queue_dashboard.html" class="w-full text-white py-2 md:py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 font-bold flex items-center justify-center gap-2 transform hover:scale-105 text-sm md:text-base" style="background: linear-gradient(to right, #f97316, #ea580c) !important;">
+                                            <i class="bi bi-box-arrow-up-right"></i> 
+                                            Full Dashboard
+                                        </a>
                                     </div>
-                                    <div id="schedulePreview" class="space-y-2 text-sm mb-4">
-                                        <!-- Schedule will be loaded here -->
-                                    </div>
-                                    <button onclick="window.location.href='student/queue_dashboard.html'" class="w-full text-white py-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 font-bold flex items-center justify-center gap-2 transform hover:scale-105 text-base" style="background: linear-gradient(to right, #f97316, #ea580c) !important;">
-                                        <i class="bi bi-box-arrow-up-right"></i> 
-                                        View Full Dashboard
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -342,194 +333,58 @@
                 </div>
                 
                 <!-- Navigation Arrows -->
-                <button onclick="previousSlide()" class="carousel-arrow absolute left-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:-translate-x-1">
-                    <i class="bi bi-chevron-left text-xl font-bold"></i>
+                <button onclick="previousSlide()" class="carousel-arrow absolute left-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 active:bg-primary-950 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:-translate-x-1 touch-feedback" aria-label="Previous slide">
+                    <i class="bi bi-chevron-left text-xl font-bold" aria-hidden="true"></i>
                 </button>
-                <button onclick="nextSlide()" class="carousel-arrow absolute right-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:translate-x-1">
-                    <i class="bi bi-chevron-right text-xl font-bold"></i>
+                <button onclick="nextSlide()" class="carousel-arrow absolute right-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 active:bg-primary-950 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:translate-x-1 touch-feedback" aria-label="Next slide">
+                    <i class="bi bi-chevron-right text-xl font-bold" aria-hidden="true"></i>
                 </button>
                 
                 <!-- Dots Indicator - Inside carousel container with background -->
-                <div class="flex justify-center items-center gap-3 pt-6 pb-8 bg-gradient-to-b from-gray-100 to-gray-50">
-            <button onclick="goToSlide(0)" class="carousel-dot group transition-all duration-300" data-slide="0">
-                <div class="w-4 h-4 rounded-full bg-gradient-to-br from-accent-500 to-accent-600 shadow-lg group-hover:scale-125 transition-all duration-300 ring-2 ring-accent-200"></div>
-            </button>
-            <button onclick="goToSlide(1)" class="carousel-dot group transition-all duration-300" data-slide="1">
-                <div class="w-4 h-4 rounded-full bg-gray-300 shadow-md group-hover:scale-125 group-hover:bg-gray-400 transition-all duration-300"></div>
-            </button>
+                <div id="carouselDots" class="flex justify-center items-center gap-4 pt-6 pb-8 md:pt-6 md:pb-8 bg-gradient-to-b from-gray-100 to-gray-50" role="tablist" aria-label="Carousel navigation">
+                <button onclick="goToSlide(0)" class="carousel-dot group transition-all duration-300 p-2 touch-feedback" data-slide="0" role="tab" aria-label="Go to slide 1" aria-selected="true">
+                    <div class="w-4 h-4 rounded-full shadow-lg group-hover:scale-125 group-active:scale-110 transition-all duration-300"></div>
+                </button>
+                <button onclick="goToSlide(1)" class="carousel-dot group transition-all duration-300 p-2 touch-feedback" data-slide="1" role="tab" aria-label="Go to slide 2" aria-selected="false">
+                    <div class="w-4 h-4 rounded-full shadow-md group-hover:scale-125 group-hover:bg-gray-400 group-active:scale-110 transition-all duration-300"></div>
+                </button>
             </div>
         </div>
 
-        <!-- How It Works Section -->
-        <div id="how-it-works" class="py-20 bg-gradient-to-br from-gray-50 via-white to-blue-50 relative overflow-hidden">
-            <!-- Decorative Background Elements -->
-            <div class="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute bottom-0 left-0 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-30 translate-y-1/2 -translate-x-1/2"></div>
-            
-            <div class="max-w-7xl mx-auto px-6 md:px-8 relative z-10">
-                <!-- Section Header -->
-                <div class="text-center mb-16">
-                    <div class="inline-block mb-4">
-                        <span class="px-4 py-2 rounded-full text-sm font-bold" style="background: linear-gradient(135deg, #dbeafe 0%, #fef3c7 100%); color: #1e40af;">
-                            <i class="bi bi-stars"></i> SIMPLE & FAST
-                        </span>
+        <!-- How It Works Section (3-card panel) -->
+        <div id="how-it-works" class="py-12 md:py-20 bg-gradient-to-br from-gray-50 via-white to-blue-50 relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6 md:px-8">
+                <div class="bg-white/90 backdrop-blur rounded-3xl border border-gray-200 shadow-xl p-6 md:p-10">
+                    <div class="text-center mb-8 md:mb-10">
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">How it works</span>
+                        <h2 class="text-3xl md:text-5xl font-extrabold text-gray-900 mt-3">Get Your COOP Items in 3 Easy Steps</h2>
+                        <p class="text-gray-600 mt-2 md:mt-3 text-base md:text-lg">Place an order, get notified, and pick up at the COOP.</p>
                     </div>
-                    <h2 class="text-4xl md:text-6xl font-extrabold mb-4" style="color: #0f172a;">
-                        Order in <span class="gradient-text">3 Simple Steps</span>
-                    </h2>
-                    <p class="text-xl md:text-2xl" style="color: #64748b;">Get your COOP items without the wait</p>
-                </div>
-                
-                <!-- Steps Container -->
-                <div class="relative grid md:grid-cols-3 gap-8 md:gap-12 mb-16">
-                    <!-- Connecting Line (Desktop Only) -->
-                    <div class="hidden md:block absolute top-24 left-0 right-0 px-24">
-                        <div class="relative h-1" style="background: linear-gradient(to right, #93c5fd 0%, #86efac 50%, #fbbf24 100%);">
-                            <div class="absolute left-1/3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #2563eb 0%, #16a34a 100%);">
-                                <i class="bi bi-chevron-double-right text-white text-sm"></i>
+                    <div class="grid gap-4 md:gap-6 md:grid-cols-3">
+                        <!-- Card 1 -->
+                        <div class="bg-white rounded-2xl border border-gray-200 p-5 md:p-6 shadow-sm hover:shadow-md transition-all">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="bi bi-clipboard-check text-accent-600 text-2xl"></i>
+                                <h3 class="font-bold text-gray-900">1. Browse &amp; Order</h3>
                             </div>
-                            <div class="absolute left-2/3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #16a34a 0%, #f97316 100%);">
-                                <i class="bi bi-chevron-double-right text-white text-sm"></i>
-                            </div>
+                            <p class="text-gray-600 text-sm md:text-base">Submit your request and join the queue. Your dashboard shows “You’re #X in queue.”</p>
                         </div>
-                    </div>
-                    
-                    <!-- Step 1: Place Your Order -->
-                    <div class="relative group">
-                        <div class="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-200 h-full">
-                            <!-- Step Number Badge -->
-                            <div class="absolute -top-4 -right-4 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-all" style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);">
-                                <span class="font-black text-2xl text-white">1</span>
+                        <!-- Card 2 -->
+                        <div class="bg-white rounded-2xl border border-gray-200 p-5 md:p-6 shadow-sm hover:shadow-md transition-all">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="bi bi-bell text-accent-600 text-2xl"></i>
+                                <h3 class="font-bold text-gray-900">2. You’re Next</h3>
                             </div>
-                            
-                            <!-- Icon -->
-                            <div class="relative inline-block mb-6">
-                                <div class="w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-300" style="background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);">
-                                    <i class="bi bi-cart-plus-fill text-white text-4xl"></i>
-                                </div>
-                                <!-- Time Badge -->
-                                <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shadow-md" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;">
-                                    <i class="bi bi-lightning-fill"></i> 30 seconds
-                                </div>
-                            </div>
-                            
-                            <!-- Content -->
-                            <h3 class="text-2xl md:text-3xl font-extrabold mb-4 mt-6" style="color: #0f172a;">
-                                Place Your Order
-                            </h3>
-                            <p class="text-base md:text-lg leading-relaxed" style="color: #64748b;">
-                                Browse items and order online. Logged-in users enjoy instant checkout with saved details!
-                            </p>
-                            
-                            <!-- Feature List -->
-                            <ul class="mt-6 space-y-2">
-                                <li class="flex items-center gap-2 text-sm" style="color: #475569;">
-                                    <i class="bi bi-check-circle-fill text-green-500"></i>
-                                    <span>No forms needed</span>
-                                </li>
-                                <li class="flex items-center gap-2 text-sm" style="color: #475569;">
-                                    <i class="bi bi-check-circle-fill text-green-500"></i>
-                                    <span>Secure payment</span>
-                                </li>
-                            </ul>
+                            <p class="text-gray-600 text-sm md:text-base">We’ll notify you when you’re one away. Prepare to go to the counter with your QR.</p>
                         </div>
-                    </div>
-                    
-                    <!-- Step 2: Track in Real-Time -->
-                    <div class="relative group">
-                        <div class="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-green-200 h-full">
-                            <!-- Step Number Badge -->
-                            <div class="absolute -top-4 -right-4 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-all" style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);">
-                                <span class="font-black text-2xl text-white">2</span>
+                        <!-- Card 3 -->
+                        <div class="bg-white rounded-2xl border border-gray-200 p-5 md:p-6 shadow-sm hover:shadow-md transition-all">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="bi bi-qr-code-scan text-accent-600 text-2xl"></i>
+                                <h3 class="font-bold text-gray-900">3. Pick Up &amp; Complete</h3>
                             </div>
-                            
-                            <!-- Icon -->
-                            <div class="relative inline-block mb-6">
-                                <div class="w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-300" style="background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);">
-                                    <i class="bi bi-clock-history text-white text-4xl"></i>
-                                </div>
-                                <!-- Time Badge -->
-                                <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shadow-md" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #15803d;">
-                                    <i class="bi bi-hourglass-split"></i> 5-10 min wait
-                                </div>
-                            </div>
-                            
-                            <!-- Content -->
-                            <h3 class="text-2xl md:text-3xl font-extrabold mb-4 mt-6" style="color: #0f172a;">
-                                Track in Real-Time
-                            </h3>
-                            <p class="text-base md:text-lg leading-relaxed" style="color: #64748b;">
-                                Monitor your queue position live from anywhere on campus with instant updates.
-                            </p>
-                            
-                            <!-- Feature List -->
-                            <ul class="mt-6 space-y-2">
-                                <li class="flex items-center gap-2 text-sm" style="color: #475569;">
-                                    <i class="bi bi-check-circle-fill text-green-500"></i>
-                                    <span>Live queue position</span>
-                                </li>
-                                <li class="flex items-center gap-2 text-sm" style="color: #475569;">
-                                    <i class="bi bi-check-circle-fill text-green-500"></i>
-                                    <span>Push notifications</span>
-                                </li>
-                            </ul>
+                            <p class="text-gray-600 text-sm md:text-base">Show your QR at the counter, claim/pay, and you’re done. Your order is marked Completed.</p>
                         </div>
-                    </div>
-                    
-                    <!-- Step 3: Pick Up Fast -->
-                    <div class="relative group">
-                        <div class="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-2 border-transparent hover:border-orange-200 h-full">
-                            <!-- Step Number Badge -->
-                            <div class="absolute -top-4 -right-4 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transform rotate-12 group-hover:rotate-0 transition-all" style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);">
-                                <span class="font-black text-2xl text-white">3</span>
-                            </div>
-                            
-                            <!-- Icon -->
-                            <div class="relative inline-block mb-6">
-                                <div class="w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-300" style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);">
-                                    <i class="bi bi-qr-code-scan text-white text-4xl"></i>
-                                </div>
-                                <!-- Time Badge -->
-                                <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shadow-md" style="background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #c2410c;">
-                                    <i class="bi bi-box-seam"></i> Instant pickup
-                                </div>
-                            </div>
-                            
-                            <!-- Content -->
-                            <h3 class="text-2xl md:text-3xl font-extrabold mb-4 mt-6" style="color: #0f172a;">
-                                Pick Up Fast
-                            </h3>
-                            <p class="text-base md:text-lg leading-relaxed" style="color: #64748b;">
-                                Show your QR code at the counter and collect your items instantly. No waiting in line!
-                            </p>
-                            
-                            <!-- Feature List -->
-                            <ul class="mt-6 space-y-2">
-                                <li class="flex items-center gap-2 text-sm" style="color: #475569;">
-                                    <i class="bi bi-check-circle-fill text-green-500"></i>
-                                    <span>Contactless pickup</span>
-                                </li>
-                                <li class="flex items-center gap-2 text-sm" style="color: #475569;">
-                                    <i class="bi bi-check-circle-fill text-green-500"></i>
-                                    <span>Skip the line</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- CTA Section -->
-                <div class="text-center">
-                    <div class="inline-block bg-white rounded-3xl p-8 shadow-2xl">
-                        <p class="text-lg mb-4" style="color: #64748b;">Ready to experience hassle-free ordering?</p>
-                        <button onclick="showOrderModal()" class="text-white px-12 py-5 rounded-xl text-xl font-bold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 hover:scale-105" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
-                            <i class="bi bi-rocket-takeoff-fill mr-2"></i>
-                            Start Ordering Now
-                            <i class="bi bi-arrow-right ml-2"></i>
-                        </button>
-                        <p class="text-sm mt-4" style="color: #94a3b8;">
-                            <i class="bi bi-shield-check text-green-500"></i> Secure • Fast • Easy
-                        </p>
                     </div>
                 </div>
             </div>
@@ -560,12 +415,12 @@
                 <div class="space-y-4" id="faqList">
                     <!-- FAQ 1 -->
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all">
-                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 transition-all" onclick="toggleFAQ(1)">
+                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" onclick="toggleFAQ(1)" aria-expanded="false" aria-controls="faq-content-1">
                             <span class="flex items-center gap-3">
-                                <i class="bi bi-question-circle-fill text-accent-600 text-xl"></i>
+                                <i class="bi bi-question-circle-fill text-accent-600 text-xl" aria-hidden="true"></i>
                                 Do I need an account to order?
                             </span>
-                            <i class="bi bi-chevron-down transition-transform duration-300 text-gray-400" id="faq-icon-1"></i>
+                            <i class="bi bi-chevron-down transition-transform duration-300 text-gray-400" id="faq-icon-1" aria-hidden="true"></i>
                         </button>
                         <div id="faq-content-1" class="hidden p-6 pt-0 text-gray-600 bg-gray-50 text-base leading-relaxed">
                             <p>You can order as a guest, but creating an account saves your information for faster checkout and allows you to track all your orders in one place!</p>
@@ -574,7 +429,7 @@
                     
                     <!-- FAQ 2 -->
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all">
-                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 transition-all" onclick="toggleFAQ(2)">
+                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" onclick="toggleFAQ(2)" aria-expanded="false" aria-controls="faq-content-2">
                             <span class="flex items-center gap-3">
                                 <i class="bi bi-question-circle-fill text-accent-600 text-xl"></i>
                                 How does the queue system work?
@@ -588,7 +443,7 @@
                     
                     <!-- FAQ 3 -->
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all">
-                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 transition-all" onclick="toggleFAQ(3)">
+                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" onclick="toggleFAQ(3)" aria-expanded="false" aria-controls="faq-content-3">
                             <span class="flex items-center gap-3">
                                 <i class="bi bi-question-circle-fill text-accent-600 text-xl"></i>
                                 What can I order from UMak COOP?
@@ -602,7 +457,7 @@
                     
                     <!-- FAQ 4 -->
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all">
-                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 transition-all" onclick="toggleFAQ(4)">
+                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" onclick="toggleFAQ(4)" aria-expanded="false" aria-controls="faq-content-4">
                             <span class="flex items-center gap-3">
                                 <i class="bi bi-question-circle-fill text-accent-600 text-xl"></i>
                                 Is the system secure?
@@ -616,7 +471,7 @@
                     
                     <!-- FAQ 5 -->
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all">
-                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 transition-all" onclick="toggleFAQ(5)">
+                        <button class="w-full text-left p-6 font-bold text-lg flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 transition-all touch-feedback" onclick="toggleFAQ(5)" aria-expanded="false" aria-controls="faq-content-5">
                             <span class="flex items-center gap-3">
                                 <i class="bi bi-question-circle-fill text-accent-600 text-xl"></i>
                                 What are COOP operating hours?
@@ -779,7 +634,7 @@
             
             <div class="space-y-4 mt-8">
                 <!-- Student Login Card -->
-                <button onclick="window.location.href='student/student_login.html'" class="w-full group relative overflow-hidden text-white p-6 rounded-2xl font-bold transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1" style="background: linear-gradient(to right, #2563eb, #1d4ed8); cursor: pointer;">
+                <button onclick="window.location.href='login.html'" class="w-full group relative overflow-hidden text-white p-6 rounded-2xl font-bold transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1" style="background: linear-gradient(to right, #2563eb, #1d4ed8); cursor: pointer;">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 rounded-xl flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(255, 255, 255, 0.2);">
@@ -795,7 +650,7 @@
                 </button>
                 
                 <!-- Admin Login Card -->
-                <button onclick="window.location.href='admin/admin_login.html'" class="w-full group relative overflow-hidden text-white p-6 rounded-2xl font-bold transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1" style="background: linear-gradient(to right, #f97316, #ea580c); cursor: pointer;">
+                <button onclick="window.location.href='login.html'" class="w-full group relative overflow-hidden text-white p-6 rounded-2xl font-bold transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1" style="background: linear-gradient(to right, #f97316, #ea580c); cursor: pointer;">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 rounded-xl flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(255, 255, 255, 0.2);">
@@ -814,7 +669,7 @@
             <!-- Help Text -->
             <div class="mt-6 text-center">
                 <p class="text-sm" style="color: #64748b;">
-                    New student? <a href="student/student_login.html" class="font-semibold hover:underline" style="color: #2563eb;">Create an account</a>
+                    New student? <a href="student/student_register.html" class="font-semibold hover:underline" style="color: #2563eb;">Create an account</a>
                 </p>
             </div>
         </div>
@@ -913,13 +768,8 @@
             </div>
     <!-- Inline JavaScript removed - now in assets/js/index.js -->
     <!-- External JavaScript -->
-    <!-- Phase 1: Core Utilities -->
-    <script src="assets/js/ui-utilities.js?v=1"></script>
-    
-    <!-- Phase 2: Enhanced Interactions -->
-    <script src="assets/js/gesture-system.js?v=1"></script>
-    <script src="assets/js/keyboard-shortcuts.js?v=1"></script>
-    <script src="assets/js/command-palette.js?v=1"></script>
+    <!-- Mobile Enhancements -->
+    <script src="assets/js/mobile-enhancements.js?v=1"></script>
     
     <!-- Original Scripts -->
     <script src="assets/js/index.js"></script>

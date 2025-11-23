@@ -29,7 +29,6 @@ async function loadCoopStatus() {
                 console.warn('statusDisplay element not found');
                 return;
             }
-            
             // Update Status Display Card
             if (status.open) {
                 const timeLeft = formatTimeLeft(status.time_until_closing || (status.minutes_until_closing * 60));
@@ -143,6 +142,8 @@ async function loadCoopStatus() {
                 
                 schedulePreview.innerHTML = scheduleHtml;
             }
+            // Recompute uniform heights after DOM updates
+            setUniformCarouselHeight();
         }
     } catch (error) {
         console.error('Failed to load COOP status:', error);
@@ -319,27 +320,62 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Uniform height across all carousel slides (all viewports)
+function setUniformCarouselHeight() {
+    const wrapper = document.getElementById('carouselWrapper');
+    if (!wrapper) return;
+    const slides = Array.from(wrapper.children || []);
+    if (slides.length === 0) return;
+
+    // Reset previous min-heights to measure natural heights
+    slides.forEach((s) => { s.style.minHeight = ''; });
+
+    // Compute tallest slide
+    const maxH = slides.reduce((m, s) => {
+        const h = Math.ceil(s.getBoundingClientRect().height);
+        return h > m ? h : m;
+    }, 0);
+    if (!maxH || !isFinite(maxH)) return;
+
+    // Apply uniform min-height
+    slides.forEach((s) => { s.style.minHeight = maxH + 'px'; });
+}
+
 // ============================================================================
 // CAROUSEL FUNCTIONALITY
 // ============================================================================
 
 let currentSlide = 0;
-const totalSlides = 2;
+const totalSlides = 2; // We have 2 slides
 
 function updateCarousel() {
     const wrapper = document.getElementById('carouselWrapper');
-    wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
-    
-    // Update dots
+    if (!wrapper) {
+        console.error('carouselWrapper not found');
+        return;
+    }
+    // Calculate slide width robustly: prefer first slide width, fallback to container width
+    const container = wrapper.parentElement;
+    const containerWidth = container ? Math.round(container.getBoundingClientRect().width) : Math.round(window.innerWidth);
+    const firstSlide = wrapper.children && wrapper.children[0];
+    const slideWidth = Math.round(firstSlide?.getBoundingClientRect().width || containerWidth);
+    wrapper.style.transform = `translateX(-${currentSlide * slideWidth}px)`;
+
+    // Update dots indicator
     const dots = document.querySelectorAll('.carousel-dot');
     dots.forEach((dot, index) => {
         const circle = dot.querySelector('div');
+        if (!circle) return;
+
+        // Remove all active classes
+        circle.classList.remove('bg-gradient-to-br', 'from-accent-500', 'to-accent-600', 'ring-2', 'ring-accent-200');
+        // Add inactive class
+        circle.classList.add('bg-gray-300');
+        
+        // Apply active state if it's the current slide
         if (index === currentSlide) {
-            circle.classList.remove('bg-gray-300', 'w-3', 'h-3');
-            circle.classList.add('bg-gradient-to-br', 'from-blue-500', 'to-indigo-600', 'w-4', 'h-4');
-        } else {
-            circle.classList.remove('bg-gradient-to-br', 'from-blue-500', 'to-indigo-600', 'w-4', 'h-4');
-            circle.classList.add('bg-gray-300', 'w-3', 'h-3');
+            circle.classList.remove('bg-gray-300'); // Remove inactive class
+            circle.classList.add('bg-gradient-to-br', 'from-accent-500', 'to-accent-600', 'ring-2', 'ring-accent-200');
         }
     });
 }
@@ -347,59 +383,111 @@ function updateCarousel() {
 function nextSlide() {
     currentSlide = (currentSlide + 1) % totalSlides;
     updateCarousel();
+    if (currentSlide === 1) {
+        loadCoopStatus(); // Load status when switching to COOP Dashboard slide
+    }
 }
 
 function previousSlide() {
     currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
     updateCarousel();
+    if (currentSlide === 1) {
+        loadCoopStatus(); // Load status when switching to COOP Dashboard slide
+    }
 }
 
 function goToSlide(index) {
-    currentSlide = index;
-    updateCarousel();
+    if (index >= 0 && index < totalSlides) {
+        currentSlide = index;
+        updateCarousel();
+        if (currentSlide === 1) {
+            loadCoopStatus(); // Load status when switching to COOP Dashboard slide
+        }
+    }
 }
-
-// Initialize carousel with auto-advance and event listeners
-let carouselInterval;
-let isCarouselTransitioning = false;
 
 function initializeCarousel() {
     const carouselWrapper = document.getElementById('carouselWrapper');
     if (!carouselWrapper) {
-        console.warn('Carousel wrapper not found');
+        console.warn('Carousel wrapper not found, skipping initialization.');
         return;
     }
-    
-    // Initialize carousel display
+
+    // Set initial state
     updateCarousel();
-    
-    // Auto-advance carousel every 8 seconds
-    carouselInterval = setInterval(() => {
-        if (!isCarouselTransitioning) {
-            nextSlide();
-        }
-    }, 8000);
-    
-    // Pause auto-advance when hovering over carousel
-    carouselWrapper.addEventListener('mouseenter', function() {
+    setUniformCarouselHeight();
+
+    // Explicitly load COOP status if the second slide is initially active (should be currentSlide = 0 on load)
+    if (currentSlide === 1) {
+        loadCoopStatus();
+    }
+
+    // Auto-advance carousel
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const intervalMs = isMobile ? 12000 : 8000;
+    let carouselInterval = setInterval(nextSlide, intervalMs);
+    let resumeTimeout;
+
+    // Pause on hover
+    carouselWrapper.addEventListener('mouseenter', () => {
         clearInterval(carouselInterval);
+        if (resumeTimeout) clearTimeout(resumeTimeout);
     });
-    
-    carouselWrapper.addEventListener('mouseleave', function() {
-        carouselInterval = setInterval(() => {
-            if (!isCarouselTransitioning) {
-                nextSlide();
-            }
-        }, 8000);
+    carouselWrapper.addEventListener('mouseleave', () => {
+        if (resumeTimeout) clearTimeout(resumeTimeout);
+        const isMobileNow = window.matchMedia('(max-width: 768px)').matches;
+        const ms = isMobileNow ? 12000 : 8000;
+        carouselInterval = setInterval(nextSlide, ms);
     });
-    
-    // Add transition end listener to prevent overlapping transitions
-    carouselWrapper.addEventListener('transitionstart', function() {
-        isCarouselTransitioning = true;
+
+    // Add touch event listeners for swipe functionality
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isMoving = false;
+    let lastTouchX = 0;
+
+    carouselWrapper.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        lastTouchX = touchStartX;
+        isMoving = true;
+        // pause auto-advance on touch and resume after idle
+        clearInterval(carouselInterval);
+        if (resumeTimeout) clearTimeout(resumeTimeout);
+        resumeTimeout = setTimeout(() => {
+            const isMobileNow = window.matchMedia('(max-width: 768px)').matches;
+            const ms = isMobileNow ? 12000 : 8000;
+            carouselInterval = setInterval(nextSlide, ms);
+        }, 10000);
     });
-    
-    carouselWrapper.addEventListener('transitionend', function() {
-        isCarouselTransitioning = false;
+
+    carouselWrapper.addEventListener('touchmove', (e) => {
+        touchEndX = e.touches[0].clientX;
+        // Prevent vertical scrolling only when horizontal movement is detected
+        const dx = Math.abs(touchEndX - touchStartX);
+        const dy = Math.abs(e.touches[0].clientY - (e.touches[0].clientY || 0));
+        if (dx > 10 && dx > dy && e.cancelable) {
+            e.preventDefault();
+        }
+        lastTouchX = touchEndX;
+    }, { passive: false });
+
+    carouselWrapper.addEventListener('touchend', () => {
+        isMoving = false;
+        if (touchStartX - touchEndX > 40) { // Swiped left
+            nextSlide();
+        } else if (touchEndX - touchStartX > 40) { // Swiped right
+            previousSlide();
+        }
+    });
+
+    // Recalculate carousel translate when viewport changes
+    window.addEventListener('resize', () => {
+        // Small debounce to avoid layout thrash
+        clearTimeout(window._qmak_carousel_resize);
+        window._qmak_carousel_resize = setTimeout(() => {
+            updateCarousel();
+            setUniformCarouselHeight();
+        }, 120);
     });
 }
 
@@ -564,3 +652,4 @@ function searchFAQs() {
         noResults.remove();
     }
 }
+

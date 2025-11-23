@@ -67,6 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if ($filter === 'today') {
             // Filter by queue_date (not created_at) to avoid showing pre-orders for tomorrow
             $query .= " AND o.queue_date = CURDATE()";
+        } elseif ($filter === 'upcoming') {
+            // Show future orders that are not cancelled or completed
+            $query .= " AND o.queue_date > CURDATE() AND o.status NOT IN ('cancelled', 'completed')";
         } elseif ($filter === 'history') {
             // Show all orders for history (no date filter)
             $query .= "";
@@ -100,7 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $params[] = $searchParam;
         }
         
-        $query .= " ORDER BY o.created_at DESC";
+        // Sort upcoming orders by queue_date and queue_number, others by created_at
+        if ($filter === 'upcoming') {
+            $query .= " ORDER BY o.queue_date ASC, CAST(SUBSTRING(o.queue_number, 3) AS UNSIGNED) ASC";
+        } else {
+            $query .= " ORDER BY o.created_at DESC";
+        }
         
         $stmt = $db->prepare($query);
         $stmt->execute($params);
@@ -111,6 +119,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if ($filter === 'today') {
             // Use queue_date instead of created_at for consistent filtering
             $statsWhereClause = "WHERE queue_date = CURDATE()";
+        } elseif ($filter === 'upcoming') {
+            $statsWhereClause = "WHERE queue_date > CURDATE() AND status NOT IN ('cancelled', 'completed')";
         } elseif ($filter === 'history') {
             $statsWhereClause = ""; // All orders for history
         }
@@ -128,12 +138,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         ");
         $stats = $statsStmt->fetch();
         
+        // Get upcoming orders count for badge display
+        $upcomingStmt = $db->query("
+            SELECT COUNT(*) as upcoming_count
+            FROM orders
+            WHERE queue_date > CURDATE() AND status NOT IN ('cancelled', 'completed')
+        ");
+        $upcomingCount = $upcomingStmt->fetch()['upcoming_count'];
+        
         echo json_encode([
             'success' => true,
             'data' => [
                 'orders' => $orders,
                 'stats' => $stats,
-                'total_orders' => count($orders)
+                'total_orders' => count($orders),
+                'upcoming_count' => $upcomingCount
             ]
         ]);
         

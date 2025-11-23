@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1e3a8a">
     <title>Login - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="../js/notifications.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/mobile-common.css">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -63,6 +68,66 @@
         .btn-secondary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                padding: 1.5rem !important;
+                border-radius: 1.5rem;
+            }
+            
+            h3 {
+                font-size: 2rem !important;
+            }
+            
+            button, a.btn-secondary {
+                min-height: 52px;
+                font-size: 1rem;
+                border-radius: 0.875rem;
+            }
+            
+            button:active, a:active {
+                transform: scale(0.97);
+            }
+            
+            input {
+                font-size: 16px !important;
+                min-height: 52px;
+                border-radius: 0.875rem;
+            }
+            
+            .mb-8 {
+                margin-bottom: 1.5rem !important;
+            }
+            
+            .space-y-6 > * + * {
+                margin-top: 1.25rem !important;
+            }
+            
+            img[alt*="Logo"] {
+                height: 4rem;
+            }
+        }
+
+        /* Forgot Password Modal Animation */
+        .animate-modal-in {
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
     </style>
 </head>
@@ -149,7 +214,8 @@
             <button 
                 type="submit" 
                 id="loginBtn"
-                class="w-full btn-primary text-white py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center gap-2"
+                class="w-full btn-primary text-white py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center gap-2 touch-ripple"
+                aria-label="Log in to your account"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
@@ -159,9 +225,9 @@
             
             <!-- Forgot Password Link -->
             <div class="text-center mt-4">
-                <button type="button" onclick="window.location.href='student/student_login.html#forgot'" class="text-blue-900 hover:text-blue-700 text-sm font-semibold underline">
+                <a href="#forgot" class="text-blue-900 hover:text-blue-700 text-sm font-semibold underline">
                     Forgot Password?
-                </button>
+                </a>
             </div>
         </form>
 
@@ -192,6 +258,116 @@
         <div class="mt-8 text-center text-xs text-gray-500">
             <p>Secure Access</p>
             <p class="mt-1">© 2025 University of Makati COOP</p>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-modal-in">
+            <!-- Close Button -->
+            <button onclick="closeForgotPassword()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <!-- Step 1: Enter Email -->
+            <div id="forgotStep1">
+                <h2 class="text-2xl font-bold text-blue-900 mb-2">Forgot Password?</h2>
+                <p class="text-gray-600 mb-6">Enter your email address and we'll send you a verification code.</p>
+                
+                <form id="forgotEmailForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="forgotEmail" 
+                            required 
+                            placeholder="your.email@umak.edu.ph"
+                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-all shadow-lg"
+                    >
+                        Send Verification Code
+                    </button>
+                </form>
+            </div>
+
+            <!-- Step 2: Enter OTP and New Password -->
+            <div id="forgotStep2" class="hidden">
+                <h2 class="text-2xl font-bold text-blue-900 mb-2">Reset Password</h2>
+                <p class="text-gray-600 mb-6">Enter the verification code sent to <span id="resetEmail" class="font-semibold"></span></p>
+                
+                <form id="resetPasswordForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Verification Code</label>
+                        <input 
+                            type="text" 
+                            id="otpCode" 
+                            required 
+                            maxlength="6"
+                            placeholder="Enter 6-digit code"
+                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-center text-2xl font-bold tracking-widest focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                        <input 
+                            type="password" 
+                            id="newPassword" 
+                            required 
+                            minlength="8"
+                            placeholder="Enter new password"
+                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                        />
+                        <p class="text-xs text-gray-500 mt-1">Must contain: uppercase, lowercase, number, special character (8+ chars)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            required 
+                            minlength="8"
+                            placeholder="Confirm new password"
+                            class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-all shadow-lg"
+                    >
+                        Reset Password
+                    </button>
+                    <button 
+                        type="button"
+                        onclick="backToEmailStep()"
+                        class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg font-semibold transition-all"
+                    >
+                        Back
+                    </button>
+                </form>
+            </div>
+
+            <!-- Success Message -->
+            <div id="forgotSuccess" class="hidden text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-green-600 mb-2">Password Reset!</h2>
+                <p class="text-gray-600 mb-6">Your password has been successfully reset. You can now log in with your new password.</p>
+                <button 
+                    onclick="closeForgotPassword()"
+                    class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-all"
+                >
+                    Back to Login
+                </button>
+            </div>
         </div>
     </div>
 
@@ -387,6 +563,130 @@
                 // Re-enable button
                 loginBtn.disabled = false;
                 submitText.textContent = originalText;
+            }
+        });
+
+        // ============================================
+        // FORGOT PASSWORD FUNCTIONALITY
+        // ============================================
+
+        // Check URL hash on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.location.hash === '#forgot') {
+                openForgotPassword();
+            }
+        });
+
+        // Listen for hash changes
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash === '#forgot') {
+                openForgotPassword();
+            }
+        });
+
+        function openForgotPassword() {
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+            document.getElementById('forgotStep1').classList.remove('hidden');
+            document.getElementById('forgotStep2').classList.add('hidden');
+            document.getElementById('forgotSuccess').classList.add('hidden');
+            document.getElementById('forgotEmail').focus();
+        }
+
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+            window.location.hash = '';
+            // Reset forms
+            document.getElementById('forgotEmailForm').reset();
+            document.getElementById('resetPasswordForm').reset();
+        }
+
+        function backToEmailStep() {
+            document.getElementById('forgotStep1').classList.remove('hidden');
+            document.getElementById('forgotStep2').classList.add('hidden');
+        }
+
+        // Handle forgot email form submission
+        document.getElementById('forgotEmailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('forgotEmail').value.trim();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/student/forgot_password.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Move to step 2
+                    document.getElementById('resetEmail').textContent = email;
+                    document.getElementById('forgotStep1').classList.add('hidden');
+                    document.getElementById('forgotStep2').classList.remove('hidden');
+                    document.getElementById('otpCode').focus();
+                } else {
+                    alert(result.message || 'Failed to send verification code');
+                }
+            } catch (error) {
+                console.error('Forgot password error:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // Handle reset password form submission
+        document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const otpCode = document.getElementById('otpCode').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Resetting...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/student/reset_password.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        otp_code: otpCode,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show success message
+                    document.getElementById('forgotStep2').classList.add('hidden');
+                    document.getElementById('forgotSuccess').classList.remove('hidden');
+                } else {
+                    alert(result.message || 'Failed to reset password');
+                }
+            } catch (error) {
+                console.error('Reset password error:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
             }
         });
     </script>

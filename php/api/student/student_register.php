@@ -63,13 +63,65 @@ try {
             exit;
         }
         
-        // Validate password strength
+        // ============================================================
+        // ENHANCED PASSWORD VALIDATION - Strong Password Policy
+        // ============================================================
+        $passwordErrors = [];
+        
+        // Check minimum length
         if (strlen($password) < 8) {
-            echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters long']);
+            $passwordErrors[] = 'at least 8 characters';
+        }
+        
+        // Check for uppercase letter
+        if (!preg_match('/[A-Z]/', $password)) {
+            $passwordErrors[] = 'one uppercase letter (A-Z)';
+        }
+        
+        // Check for lowercase letter
+        if (!preg_match('/[a-z]/', $password)) {
+            $passwordErrors[] = 'one lowercase letter (a-z)';
+        }
+        
+        // Check for number
+        if (!preg_match('/[0-9]/', $password)) {
+            $passwordErrors[] = 'one number (0-9)';
+        }
+        
+        // Check for special character
+        if (!preg_match('/[!@#$%^&*()_+\-=\[\]{};:\'"\\|,.<>\/?]/', $password)) {
+            $passwordErrors[] = 'one special character (!@#$%^&*)';
+        }
+        
+        if (!empty($passwordErrors)) {
+            $message = 'Password must contain: ' . implode(', ', $passwordErrors);
+            echo json_encode(['success' => false, 'message' => $message]);
             exit;
         }
         
+        // ============================================================
+        // RATE LIMITING - Prevent registration spam
+        // ============================================================
         $db = getDB();
+        
+        // Check OTP attempts table for spam protection
+        $checkOTPSpam = $db->prepare("
+            SELECT COUNT(*) as otp_count
+            FROM otp_verifications
+            WHERE created_at > DATE_SUB(NOW(), INTERVAL ? SECOND)
+            AND otp_type = 'registration'
+        ");
+        $checkOTPSpam->execute([300]); // 5 minutes
+        $otpSpamResult = $checkOTPSpam->fetch();
+        
+        if ($otpSpamResult && $otpSpamResult['otp_count'] >= 10) {
+            error_log("OTP spam detected - too many registration attempts");
+            echo json_encode([
+                'success' => false,
+                'message' => 'System is busy. Please try again in a few minutes.'
+            ]);
+            exit;
+        }
         
         // Start session for claim flags
         require_once __DIR__ . '/../../config/session_config.php';
@@ -117,6 +169,12 @@ try {
         
         // Hash password
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        
+        // Debug logging
+        error_log("=== PASSWORD REGISTRATION DEBUG ===");
+        error_log("Plain password length: " . strlen($password));
+        error_log("Hashed password: " . $passwordHash);
+        error_log("Hash length: " . strlen($passwordHash));
         
         // Store registration data in session temporarily
         $_SESSION['student_registration'] = [
@@ -305,6 +363,11 @@ try {
                 unset($_SESSION['claim_existing_account']);
                 unset($_SESSION['existing_student_id']);
             } else {
+                // Debug logging
+                error_log("=== INSERTING NEW STUDENT ===");
+                error_log("Password hash from session: " . $regData['password_hash']);
+                error_log("Hash length: " . strlen($regData['password_hash']));
+                
                 // Insert new student account
                 $insertStudent = $db->prepare("
                     INSERT INTO students 
@@ -325,6 +388,8 @@ try {
                     $regData['year_level'],
                     $regData['section']
                 ]);
+                
+                error_log("✓ Student inserted successfully");
             }
             
             $db->commit();

@@ -546,19 +546,33 @@ async function loadOrderHistory(status = 'all', page = 1) {
 // Display order history in table
 function displayOrderHistory(orders) {
     const tbody = document.getElementById('ordersTableBody');
-    
-    if (orders.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="px-6 py-12 text-center">
-                    <i class="bi bi-inbox text-5xl text-gray-300 mb-3 block"></i>
-                    <p class="text-gray-500">No orders found</p>
-                </td>
-            </tr>
-        `;
+    const mobileList = document.getElementById('ordersListMobile');
+    const mobilePlaceholder = document.getElementById('ordersMobilePlaceholder');
+
+    if (!tbody || !mobileList || !mobilePlaceholder) {
+        console.error('Order display containers not found');
         return;
     }
-    
+
+    if (orders.length === 0) {
+        const emptyStateHTML = `
+            <div class="px-6 py-12 text-center bg-white rounded-xl shadow-sm border border-gray-200">
+                <i class="bi bi-inbox text-5xl text-gray-300 mb-3 block"></i>
+                <p class="text-gray-500">No orders found</p>
+                <button onclick="showQuickOrder()" class="mt-4 px-6 py-3 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-semibold transition-all">
+                    Create New Order
+                </button>
+            </div>
+        `;
+        tbody.innerHTML = `<tr><td colspan="5">${emptyStateHTML}</td></tr>`;
+        mobileList.innerHTML = emptyStateHTML;
+        mobilePlaceholder.classList.add('hidden');
+        return;
+    }
+
+    mobilePlaceholder.classList.add('hidden');
+
+    // Populate Desktop Table
     tbody.innerHTML = orders.map(order => {
         const statusColors = {
             completed: 'bg-success-100 text-success-800',
@@ -591,32 +605,90 @@ function displayOrderHistory(orders) {
             </tr>
         `;
     }).join('');
+
+    // Populate Mobile Card List
+    mobileList.innerHTML = orders.map(order => {
+        const statusColors = {
+            completed: { bg: 'bg-success-100', text: 'text-success-800', icon: 'bi-check-circle-fill' },
+            cancelled: { bg: 'bg-danger-100', text: 'text-danger-800', icon: 'bi-x-circle-fill' },
+            pending: { bg: 'bg-warning-100', text: 'text-warning-800', icon: 'bi-clock-fill' },
+            processing: { bg: 'bg-accent-100', text: 'text-accent-800', icon: 'bi-arrow-repeat' },
+            ready: { bg: 'bg-info-100', text: 'text-info-800', icon: 'bi-check2-circle' }
+        };
+        const status = statusColors[order.order_status] || statusColors.pending;
+        const orderDate = new Date(order.created_at);
+
+        return `
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4" onclick="viewOrderDetails(${order.order_id})">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <p class="font-bold text-lg text-blue-600 font-mono">#${order.queue_number}</p>
+                        <p class="text-sm font-semibold text-gray-800">${order.item_ordered}</p>
+                    </div>
+                    <span class="${status.bg} ${status.text} px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-1">
+                        <i class="bi ${status.icon}"></i>
+                        ${order.order_status}
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500">
+                    ${orderDate.toLocaleDateString()} at ${orderDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Display empty order history
 function displayEmptyOrderHistory() {
     const tbody = document.getElementById('ordersTableBody');
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="5" class="px-6 py-12 text-center">
-                <i class="bi bi-inbox text-5xl text-gray-300 mb-3 block"></i>
-                <p class="text-gray-500 mb-4">No orders found</p>
-                <button onclick="showQuickOrder()" class="px-6 py-3 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-semibold transition-all">
-                    Create Your First Order
-                </button>
-            </td>
-        </tr>
+    const mobileList = document.getElementById('ordersListMobile');
+    const mobilePlaceholder = document.getElementById('ordersMobilePlaceholder');
+
+    const emptyStateHTML = `
+        <div class="px-6 py-12 text-center bg-white rounded-xl shadow-sm border border-gray-200">
+            <i class="bi bi-inbox text-5xl text-gray-300 mb-3 block"></i>
+            <p class="text-gray-500 mb-4">No orders found</p>
+            <button onclick="showQuickOrder()" class="px-6 py-3 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-semibold transition-all">
+                Create Your First Order
+            </button>
+        </div>
     `;
+
+    tbody.innerHTML = `<tr><td colspan="5">${emptyStateHTML}</td></tr>`;
+    mobileList.innerHTML = emptyStateHTML;
+    if (mobilePlaceholder) mobilePlaceholder.classList.add('hidden');
 }
 
 // Update pagination
 function updatePagination(pagination) {
+    // Desktop Pagination
     document.getElementById('ordersShowingStart').textContent = pagination.total_items > 0 ? (pagination.current_page - 1) * pagination.per_page + 1 : 0;
     document.getElementById('ordersShowingEnd').textContent = Math.min(pagination.current_page * pagination.per_page, pagination.total_items);
     document.getElementById('ordersTotalCount').textContent = pagination.total_items;
     
     document.getElementById('ordersPrevBtn').disabled = !pagination.has_prev;
     document.getElementById('ordersNextBtn').disabled = !pagination.has_next;
+
+    // Mobile Pagination
+    const mobilePaginationContainer = document.getElementById('ordersPaginationMobile');
+    if (mobilePaginationContainer) {
+        if (pagination.total_pages <= 1) {
+            mobilePaginationContainer.innerHTML = '';
+            return;
+        }
+
+        mobilePaginationContainer.innerHTML = `
+            <button onclick="loadOrdersPage(${pagination.current_page - 1})" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" ${!pagination.has_prev ? 'disabled' : ''}>
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <div class="text-sm text-gray-600">
+                Page ${pagination.current_page} of ${pagination.total_pages}
+            </div>
+            <button onclick="loadOrdersPage(${pagination.current_page + 1})" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" ${!pagination.has_next ? 'disabled' : ''}>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        `;
+    }
 }
 
 // Display recent activity timeline

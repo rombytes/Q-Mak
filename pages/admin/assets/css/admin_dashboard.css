@@ -409,6 +409,101 @@ body {
     width: 280px;
 }
 
+/* Mobile Hamburger Menu */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 150;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    border-radius: 12px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mobile-menu-toggle:active {
+    transform: scale(0.95);
+}
+
+.mobile-menu-toggle i {
+    font-size: 20px;
+}
+
+/* Mobile Sidebar Overlay */
+.mobile-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 98;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Mobile Sidebar Adjustments */
+@media (max-width: 768px) {
+    .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .mobile-sidebar-overlay {
+        display: block;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        width: 280px !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 101 !important;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .sidebar:hover {
+        width: 280px !important;
+    }
+    
+    .sidebar-content {
+        width: 280px;
+    }
+    
+    .menu-text {
+        opacity: 1 !important;
+        max-width: none !important;
+    }
+    
+    .logo-text {
+        opacity: 1 !important;
+        max-width: 200px !important;
+    }
+    
+    .main-content-adjusted {
+        margin-left: 0 !important;
+    }
+}
+
 .menu-text {
     opacity: 0;
     white-space: nowrap;
@@ -658,4 +753,244 @@ nav li.bg-orange-500:hover {
 .stock-out { 
     background-color: #fee2e2; 
     color: #991b1b; 
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE STYLES
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    /* Body and Layout */
+    body {
+        padding-top: 0;
+        overflow-x: hidden;
+    }
+    
+    /* Main Content Container */
+    .main-content-adjusted {
+        width: 100% !important;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Top Bar Adjustments */
+    .bg-white\/80 {
+        padding-left: 4.5rem !important;
+        padding-right: 1.5rem !important;
+    }
+    
+    /* Card Grid Stacking */
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Stat Cards */
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 0.875rem;
+    }
+    
+    .stat-card p {
+        font-size: 1.5rem;
+    }
+    
+    /* Button Sizing */
+    button {
+        min-height: 48px;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9375rem;
+    }
+    
+    /* Form Inputs */
+    input,
+    select,
+    textarea {
+        min-height: 52px;
+        font-size: 16px; /* Prevent iOS zoom */
+        padding: 0.875rem 1rem;
+    }
+    
+    /* Table Wrapper for Horizontal Scroll */
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+    
+    table th,
+    table td {
+        padding: 0.875rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Modal Adjustments */
+    .custom-modal-content {
+        width: 95%;
+        max-height: 85vh;
+        margin: 1rem;
+    }
+    
+    .qr-modal-content {
+        width: 95%;
+        padding: 1.25rem;
+    }
+    
+    /* QR Scanner Button */
+    .qr-scan-button {
+        bottom: 1.25rem !important;
+        right: 1.25rem !important;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .qr-scan-button i {
+        font-size: 22px;
+    }
+    
+    /* Tab Navigation */
+    .settings-tab {
+        padding: 0.875rem 1rem;
+        font-size: 0.9375rem;
+    }
+    
+    .settings-tab svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    /* Notification Badge */
+    .notification-badge {
+        min-width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+    }
+    
+    /* Chart Containers */
+    canvas {
+        max-height: 250px !important;
+    }
+    
+    /* Profile Section */
+    .profile-avatar {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+    
+    /* Settings Content */
+    .settings-content {
+        padding: 1rem;
+    }
+    
+    .settings-content > div > div {
+        padding: 1.25rem;
+    }
+    
+    /* Spacing Adjustments */
+    .p-6 {
+        padding: 1.25rem !important;
+    }
+    
+    .p-8 {
+        padding: 1.5rem !important;
+    }
+    
+    .space-y-6 > * + * {
+        margin-top: 1.25rem !important;
+    }
+    
+    /* Typography */
+    h1 {
+        font-size: 1.75rem !important;
+    }
+    
+    h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    h3 {
+        font-size: 1.25rem !important;
+    }
+    
+    /* Touch Feedback */
+    button:active,
+    .cursor-pointer:active {
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
+    
+    /* Safe Area Insets for Notched Devices */
+    body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .qr-scan-button {
+        bottom: calc(1.25rem + env(safe-area-inset-bottom)) !important;
+        right: calc(1.25rem + env(safe-area-inset-right)) !important;
+    }
+}
+
+/* Landscape Mobile Optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    body {
+        padding-top: 3rem;
+    }
+    
+    .mobile-menu-toggle {
+        top: 0.75rem;
+        width: 44px;
+        height: 44px;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    canvas {
+        max-height: 200px !important;
+    }
+    
+    .qr-scan-button {
+        width: 54px;
+        height: 54px;
+        bottom: 1rem !important;
+    }
+}
+
+/* Small Mobile Devices (< 375px) */
+@media (max-width: 374px) {
+    .mobile-menu-toggle {
+        width: 44px;
+        height: 44px;
+    }
+    
+    button {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .stat-card p {
+        font-size: 1.25rem;
+    }
+    
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.25rem !important;
+    }
+    
+    .qr-scan-button {
+        width: 54px;
+        height: 54px;
+    }
 }

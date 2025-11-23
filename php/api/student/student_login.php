@@ -162,8 +162,18 @@ try {
         exit;
     }
     
+    // Debug logging
+    error_log("=== LOGIN ATTEMPT DEBUG ===");
+    error_log("Email: " . $email);
+    error_log("Password length: " . strlen($password));
+    error_log("Stored hash: " . $student['password']);
+    error_log("Hash length: " . strlen($student['password']));
+    
     // Verify password
-    if (!password_verify($password, $student['password'])) {
+    $passwordMatch = password_verify($password, $student['password']);
+    error_log("Password verify result: " . ($passwordMatch ? "TRUE" : "FALSE"));
+    
+    if (!$passwordMatch) {
         // Record failed attempt
         $attemptResult = $security->recordFailedAttempt($email, 'student_login', [
             'reason' => 'Invalid password'

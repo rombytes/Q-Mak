@@ -92,6 +92,22 @@
         ::-webkit-scrollbar-track { background: var(--gray-50); }
         ::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, var(--accent-600), var(--accent-500)); border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: linear-gradient(to bottom, var(--accent-700), var(--accent-600)); }
+
+        /* --- MOBILE UI ENHANCEMENTS --- */
+        /* Add padding to body to prevent content from being hidden by the bottom nav */
+        @media (max-width: 767px) {
+            body {
+                padding-bottom: 80px; /* Adjust based on nav height */
+            }
+        }
+
+        /* Styling for the new bottom navigation bar */
+        .bottom-nav-btn {
+            color: #64748b; /* text-gray-500 */
+        }
+        .bottom-nav-btn.active {
+            color: #2563eb; /* text-blue-600 */
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -187,18 +203,7 @@
                 </div>
                 </div>
             
-            <!-- Mobile Tab Navigation -->
-            <div class="md:hidden flex items-center gap-1 pb-2 overflow-x-auto">
-                <button onclick="switchTab('dashboard')" id="tab-dashboard-mobile" class="nav-tab-mobile active px-4 py-2 font-semibold text-sm whitespace-nowrap">
-                    <i class="bi bi-house-fill"></i> Dashboard
-                </button>
-                <button onclick="switchTab('orders')" id="tab-orders-mobile" class="nav-tab-mobile px-4 py-2 font-semibold text-sm whitespace-nowrap">
-                    <i class="bi bi-receipt"></i> Orders
-                </button>
-                <button onclick="switchTab('profile')" id="tab-profile-mobile" class="nav-tab-mobile px-4 py-2 font-semibold text-sm whitespace-nowrap">
-                    <i class="bi bi-person-circle"></i> Profile
-                </button>
-            </div>
+            <!-- Mobile Tab Navigation was here -->
         </div>
     </nav>
 
@@ -283,7 +288,7 @@
         <div id="content-orders" class="tab-content">
             <!-- Create Order Button -->
             <div class="mb-6">
-                <button onclick="showQuickOrder()" class="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2">
+                <button onclick="showQuickOrder()" class="hidden md:flex w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all items-center justify-center gap-2">
                     <i class="bi bi-plus-circle-fill text-xl"></i>
                     Create New Order
                 </button>
@@ -302,8 +307,8 @@
                 <input type="text" id="orderSearchInput" oninput="searchOrders()" placeholder="Search orders..." class="flex-1 min-w-[200px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500">
             </div>
             
-            <!-- Orders Table/List -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Orders Table/List (Desktop) -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hidden md:block">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b border-gray-200">
@@ -340,6 +345,19 @@
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Orders List (Mobile) -->
+            <div id="ordersListMobile" class="md:hidden space-y-4">
+                <div id="ordersMobilePlaceholder" class="text-center py-8 text-gray-500 bg-white rounded-xl shadow-sm border border-gray-200">
+                    <i class="bi bi-hourglass-split text-4xl mb-2 block"></i>
+                    Loading orders...
+                </div>
+                <!-- Mobile order cards will be injected here by JS -->
+            </div>
+            <!-- Mobile Pagination -->
+            <div id="ordersPaginationMobile" class="md:hidden mt-4 flex items-center justify-between">
+                <!-- Simplified pagination controls will be mirrored here by JS -->
             </div>
         </div>
 
@@ -705,7 +723,7 @@
     </div>
 
     <!-- QR Code Viewer Modal -->
-    <div id="qrCodeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div id="qrCodeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 60;">
         <div class="bg-white rounded-xl max-w-md w-full" style="background-color: #ffffff;">
             <div class="p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between">
@@ -1020,6 +1038,29 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Action Button for Mobile (Orders Tab) -->
+    <button onclick="showQuickOrder()" id="fabCreateOrder" class="hidden md:hidden fixed bottom-24 right-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white w-16 h-16 rounded-full shadow-xl flex items-center justify-center z-40 hover:scale-105 transition-transform">
+        <i class="bi bi-plus-lg text-3xl"></i>
+    </button>
+
+    <!-- Bottom Navigation Bar (Mobile) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 border-t border-gray-200">
+        <div class="flex justify-around h-16">
+            <button onclick="switchTab('dashboard')" id="bottom-nav-dashboard" class="bottom-nav-btn flex-1 text-center py-2 px-2 text-sm font-medium">
+                <i class="bi bi-house-fill text-2xl block mb-1"></i>
+                <span class="block text-xs font-semibold">Dashboard</span>
+            </button>
+            <button onclick="switchTab('orders')" id="bottom-nav-orders" class="bottom-nav-btn flex-1 text-center py-2 px-2 text-sm font-medium">
+                <i class="bi bi-receipt text-2xl block mb-1"></i>
+                <span class="block text-xs font-semibold">Orders</span>
+            </button>
+            <button onclick="switchTab('profile')" id="bottom-nav-profile" class="bottom-nav-btn flex-1 text-center py-2 px-2 text-sm font-medium">
+                <i class="bi bi-person-circle text-2xl block mb-1"></i>
+                <span class="block text-xs font-semibold">Profile</span>
+            </button>
+        </div>
+    </nav>
 
     <!-- Scripts - Load in correct order -->
     <!-- Core Scripts -->

@@ -204,6 +204,9 @@ id_rsa.pub
 # Development/testing pages
 test_admin_dashboard.html
 
+# Component showcase page
+pages/component-showcase.html
+
 # Password generator (contains sensitive logic)
 scripts/generate_password.php
 

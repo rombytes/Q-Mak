@@ -80,6 +80,25 @@ function switchTab(tabName) {
         activeTabMobile.classList.remove('text-primary-300');
     }
     
+    // Update new bottom navigation buttons
+    document.querySelectorAll('.bottom-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const activeBottomNav = document.getElementById(`bottom-nav-${tabName}`);
+    if (activeBottomNav) {
+        activeBottomNav.classList.add('active');
+    }
+
+    // Show/hide Floating Action Button
+    const fab = document.getElementById('fabCreateOrder');
+    if (fab) {
+        if (tabName === 'orders') {
+            fab.classList.remove('hidden');
+        } else {
+            fab.classList.add('hidden');
+        }
+    }
+    
     // Load tab-specific data
     if (tabName === 'orders') {
         loadOrdersTab();
