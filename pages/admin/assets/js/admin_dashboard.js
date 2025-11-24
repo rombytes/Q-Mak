@@ -1900,7 +1900,22 @@ async function processQueue(newStatus) {
             })
         });
         
-        const result = await response.json();
+        // Log response details for debugging
+        console.log('Process Queue Response Status:', response.status);
+        console.log('Process Queue Response OK:', response.ok);
+        
+        const responseText = await response.text();
+        console.log('Process Queue Raw Response:', responseText);
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Failed to parse response as JSON:', parseError);
+            console.error('Response text:', responseText);
+            await showAlert('Server returned invalid response. Check console for details.', 'error');
+            return;
+        }
         
         if (result.success) {
             // Store queue number before fetchOrders clears currentQueueOrder
@@ -1919,11 +1934,20 @@ async function processQueue(newStatus) {
             
             showNotification(`Order ${queueNumber} ${statusLabels[newStatus]}!`, 'success');
         } else {
-            await showAlert(result.message || 'Failed to update order status', 'error');
+            // Show detailed error information
+            console.error('Order update failed:', result);
+            let errorMsg = result.message || 'Failed to update order status';
+            if (result.error) {
+                errorMsg += '\n\nError: ' + result.error;
+            }
+            if (result.file && result.line) {
+                console.error('Error location:', result.file, 'Line:', result.line);
+            }
+            await showAlert(errorMsg, 'error');
         }
     } catch (error) {
         console.error('Error updating order status:', error);
-        await showAlert('An error occurred while updating the order status', 'error');
+        await showAlert('An error occurred while updating the order status: ' + error.message, 'error');
     }
 }
 

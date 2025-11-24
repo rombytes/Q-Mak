@@ -252,8 +252,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
     } catch (Exception $e) {
         error_log("Update Order Error: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Server error occurred']);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Server error occurred: ' . $e->getMessage(),
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
     }
     
 } else {
