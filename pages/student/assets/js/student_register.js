@@ -23,6 +23,235 @@ let passwordStrength = {
 };
 
 // ========================
+// INPUT FORMATTING UTILITIES
+// ========================
+
+/**
+ * Convert string to Proper Case (Title Case)
+ * Example: "juan dela cruz" -> "Juan Dela Cruz"
+ */
+function toProperCase(str) {
+    return str
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+/**
+ * Format middle initial - only letters, max 2 chars, auto-capitalize
+ */
+function formatMiddleInitial(str) {
+    // Remove all non-letters and dots
+    let cleaned = str.replace(/[^a-zA-Z]/g, '');
+    // Limit to 2 characters
+    cleaned = cleaned.substring(0, 2);
+    // Uppercase
+    return cleaned.toUpperCase();
+}
+
+/**
+ * Remove common suffixes from last name
+ */
+function removeNameSuffixes(lastName) {
+    const suffixes = ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv', 'v'];
+    let cleaned = lastName.toLowerCase().trim();
+    
+    // Remove suffix if present at the end
+    suffixes.forEach(suffix => {
+        const regex = new RegExp('\\s+' + suffix.replace('.', '\\.') + '$', 'i');
+        cleaned = cleaned.replace(regex, '');
+    });
+    
+    return cleaned.trim();
+}
+
+/**
+ * Calculate expected email based on name and student ID
+ */
+function calculateExpectedEmail(firstName, lastName, studentId) {
+    if (!firstName || !lastName || !studentId) return '';
+    
+    // Get first letter of first name
+    const firstLetter = firstName.charAt(0).toLowerCase();
+    
+    // Clean last name: remove spaces and suffixes
+    let cleanedLastName = lastName.toLowerCase().replace(/\s+/g, '');
+    cleanedLastName = removeNameSuffixes(cleanedLastName);
+    
+    // Use student ID as-is (already formatted)
+    const studentIdLower = studentId.toLowerCase();
+    
+    // Build email: firstletter + lastname.studentid@umak.edu.ph
+    return `${firstLetter}${cleanedLastName}.${studentIdLower}@umak.edu.ph`;
+}
+
+/**
+ * Validate email against expected format
+ */
+function validateEmailFormat(email, expectedEmail) {
+    if (!email || !expectedEmail) return false;
+    return email.toLowerCase() === expectedEmail.toLowerCase();
+}
+
+// ========================
+// REAL-TIME INPUT FORMATTING
+// ========================
+
+function initializeInputFormatting() {
+    // First Name - Proper Case
+    const firstNameInput = document.getElementById('firstName');
+    if (firstNameInput) {
+        firstNameInput.addEventListener('input', function(e) {
+            const cursorPos = e.target.selectionStart;
+            const formatted = toProperCase(e.target.value);
+            e.target.value = formatted;
+            e.target.setSelectionRange(cursorPos, cursorPos);
+            validateEmailRealtime();
+        });
+        
+        firstNameInput.addEventListener('blur', function(e) {
+            e.target.value = toProperCase(e.target.value);
+            validateEmailRealtime();
+        });
+    }
+    
+    // Last Name - Proper Case
+    const lastNameInput = document.getElementById('lastName');
+    if (lastNameInput) {
+        lastNameInput.addEventListener('input', function(e) {
+            const cursorPos = e.target.selectionStart;
+            const formatted = toProperCase(e.target.value);
+            e.target.value = formatted;
+            e.target.setSelectionRange(cursorPos, cursorPos);
+            validateEmailRealtime();
+        });
+        
+        lastNameInput.addEventListener('blur', function(e) {
+            e.target.value = toProperCase(e.target.value);
+            validateEmailRealtime();
+        });
+    }
+    
+    // Middle Initial - Letters only, max 2 chars, uppercase
+    const middleInitialInput = document.getElementById('middleInitial');
+    if (middleInitialInput) {
+        middleInitialInput.addEventListener('input', function(e) {
+            const cursorPos = e.target.selectionStart;
+            const formatted = formatMiddleInitial(e.target.value);
+            e.target.value = formatted;
+            e.target.setSelectionRange(Math.min(cursorPos, formatted.length), Math.min(cursorPos, formatted.length));
+        });
+    }
+    
+    // Student ID - Auto-capitalize
+    const studentIdInput = document.getElementById('studentId');
+    if (studentIdInput) {
+        studentIdInput.addEventListener('input', function(e) {
+            const cursorPos = e.target.selectionStart;
+            const formatted = e.target.value.toUpperCase();
+            e.target.value = formatted;
+            e.target.setSelectionRange(cursorPos, cursorPos);
+            validateEmailRealtime();
+        });
+        
+        studentIdInput.addEventListener('blur', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+            validateEmailRealtime();
+        });
+    }
+    
+    // Email - Real-time validation
+    const emailInput = document.getElementById('email');
+    if (emailInput) {
+        emailInput.addEventListener('input', validateEmailRealtime);
+        emailInput.addEventListener('blur', validateEmailRealtime);
+    }
+}
+
+/**
+ * Real-time email validation with visual feedback
+ */
+function validateEmailRealtime() {
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    const studentIdInput = document.getElementById('studentId');
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (!firstNameInput || !lastNameInput || !studentIdInput || !emailInput) return;
+    
+    const firstName = firstNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+    const studentId = studentIdInput.value.trim();
+    const email = emailInput.value.trim();
+    
+    // Calculate expected email
+    const expectedEmail = calculateExpectedEmail(firstName, lastName, studentId);
+    
+    // Get or create error message div
+    let errorDiv = document.getElementById('emailValidationError');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'emailValidationError';
+        errorDiv.className = 'mt-2 text-sm';
+        emailInput.parentNode.appendChild(errorDiv);
+    }
+    
+    // Only validate if all required fields have values
+    if (firstName && lastName && studentId && email) {
+        const isValid = validateEmailFormat(email, expectedEmail);
+        
+        if (isValid) {
+            // Valid - Green border
+            emailInput.classList.remove('border-red-500');
+            emailInput.classList.add('border-green-500');
+            errorDiv.classList.add('hidden');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        } else {
+            // Invalid - Red border and show error
+            emailInput.classList.remove('border-green-500');
+            emailInput.classList.add('border-red-500');
+            errorDiv.classList.remove('hidden');
+            errorDiv.className = 'mt-2 text-sm text-red-600 font-medium';
+            errorDiv.innerHTML = `
+                <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <p>Email format incorrect.</p>
+                        <p class="mt-1">Expected: <span class="font-mono bg-red-50 px-2 py-0.5 rounded">${expectedEmail}</span></p>
+                    </div>
+                </div>
+            `;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    } else {
+        // Not enough data to validate
+        emailInput.classList.remove('border-green-500', 'border-red-500');
+        errorDiv.classList.add('hidden');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+}
+
+// Initialize formatting when DOM loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeInputFormatting);
+} else {
+    initializeInputFormatting();
+}
+
+// ========================
 // STEP NAVIGATION
 // ========================
 
@@ -373,35 +602,16 @@ document.getElementById('registrationForm').addEventListener('submit', async fun
         return;
     }
 
-    // Validate UMak email format based on student ID and name
-    // Format: firstLetterOfFirstName + lastName + . + studentID + @umak.edu.ph
-    // Example: jgillego.12345324@umak.edu.ph or jfaustino.a12345404@umak.edu.ph
+    // Validate UMak email format using the standardized calculation
+    const expectedEmail = calculateExpectedEmail(firstName, lastName, studentId);
     
-    // Extract the actual ID part (after dash if present, or entire ID if no dash)
-    // Handle formats like: 2021-12345, A12345678, K12345, etc.
-    let studentIdPart = studentId;
-    if (studentId.includes('-')) {
-        // Format like 2021-12345, extract the part after the dash
-        studentIdPart = studentId.split('-').pop();
-    }
-    // Convert to lowercase for case-insensitive comparison
-    studentIdPart = studentIdPart.toLowerCase();
-    
-    if (!studentIdPart || studentIdPart.length === 0) {
+    if (!expectedEmail) {
         notificationManager.error('Invalid Student ID format');
         return;
     }
     
-    // Build expected email format (no prefix, just dot separator)
-    // All comparisons in lowercase for case-insensitive matching
-    const firstLetter = firstName.charAt(0).toLowerCase();
-    const lastNameLower = lastName.toLowerCase();
-    const expectedEmailPrefix = `${firstLetter}${lastNameLower}.${studentIdPart}`;
-    const expectedEmail = `${expectedEmailPrefix}@umak.edu.ph`;
-    
     // Check if email matches the expected format (case-insensitive)
-    // Both are already in lowercase from earlier trim().toLowerCase()
-    if (email !== expectedEmail) {
+    if (!validateEmailFormat(email, expectedEmail)) {
         notificationManager.error(`Email format doesn't match your Student ID and Name`);
         
         setTimeout(() => {
