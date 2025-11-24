@@ -1876,10 +1876,9 @@ async function processQueue(newStatus) {
     }
     
     const confirmMessages = {
-        'processing': 'Start processing this order?',
-        'ready': 'Mark this order as ready for pickup?',
+        'processing': 'Start processing this order? The student will be notified to proceed to COOP.',
         'completed': 'Mark this order as completed?',
-        'cancelled': 'Cancel this order? This action cannot be undone.'
+        'cancelled': 'Cancel this order? You will need to provide a reason.'
     };
     
     const confirmed = await showConfirm(confirmMessages[newStatus]);
@@ -1926,13 +1925,12 @@ async function processQueue(newStatus) {
             
             // Show success message
             const statusLabels = {
-                'processing': 'started processing',
-                'ready': 'marked as ready',
-                'completed': 'completed',
-                'cancelled': 'cancelled'
+                'processing': 'is now being processed! Student has been notified.',
+                'completed': 'has been completed successfully!',
+                'cancelled': 'has been cancelled.'
             };
             
-            showNotification(`Order ${queueNumber} ${statusLabels[newStatus]}!`, 'success');
+            showNotification(`Order ${queueNumber} ${statusLabels[newStatus]}`, 'success');
         } else {
             // Show detailed error information
             console.error('Order update failed:', result);
