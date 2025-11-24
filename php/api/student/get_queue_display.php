@@ -78,6 +78,14 @@ try {
     $hoursElapsed = max(1, (time() - $firstOrderTime) / 3600);
     $ordersPerHour = $completedCount > 0 ? round($completedCount / $hoursElapsed, 1) : 0;
     
+    // Determine current serving - if no processing order, show the first pending
+    if (!$currentProcessing && count($queueData) > 0) {
+        $firstPending = array_filter($queueData, fn($item) => $item['status'] === 'pending');
+        if (count($firstPending) > 0) {
+            $currentProcessing = reset($firstPending)['queue'];
+        }
+    }
+    
     echo json_encode([
         'success' => true,
         'queue' => $queueData,

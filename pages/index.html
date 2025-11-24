@@ -186,7 +186,7 @@
                 <!-- Carousel Wrapper -->
                 <div id="carouselWrapper" class="flex transition-transform duration-700 ease-in-out" style="transform: translateX(0%); will-change: transform; touch-action: pan-y pinch-zoom;">
                     <!-- Slide 1: About & Why Choose Us -->
-                    <div class="min-w-full flex-shrink-0 min-h-[400px] md:min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 md:px-8">
+                    <div class="min-w-full flex-shrink-0 h-auto md:min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 md:py-8 md:px-8">
                         <div class="max-w-7xl mx-auto">
                             <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-center animate-fade-in">
                                 About <span class="gradient-text">UMak COOP</span>
@@ -248,7 +248,7 @@
                     </div>
                     
                     <!-- Slide 2: COOP Status Dashboard -->
-                    <div class="min-w-full flex-shrink-0 min-h-[400px] md:min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 md:px-8">
+                    <div class="min-w-full flex-shrink-0 h-auto md:min-h-[500px] bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 md:py-8 md:px-8">
                         <div class="max-w-7xl mx-auto">
                             <h2 class="text-3xl md:text-4xl font-extrabold mb-3 text-center animate-fade-in">
                                 Live <span class="gradient-text">COOP Dashboard</span>
@@ -333,10 +333,10 @@
                 </div>
                 
                 <!-- Navigation Arrows -->
-                <button onclick="previousSlide()" class="carousel-arrow absolute left-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 active:bg-primary-950 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:-translate-x-1 touch-feedback" aria-label="Previous slide">
+                <button onclick="previousSlide()" class="carousel-arrow hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 active:bg-primary-950 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:-translate-x-1 touch-feedback" aria-label="Previous slide">
                     <i class="bi bi-chevron-left text-xl font-bold" aria-hidden="true"></i>
                 </button>
-                <button onclick="nextSlide()" class="carousel-arrow absolute right-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 active:bg-primary-950 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:translate-x-1 touch-feedback" aria-label="Next slide">
+                <button onclick="nextSlide()" class="carousel-arrow hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 bg-primary-900 hover:bg-primary-800 active:bg-primary-950 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 z-20 transform hover:scale-110 hover:translate-x-1 touch-feedback" aria-label="Next slide">
                     <i class="bi bi-chevron-right text-xl font-bold" aria-hidden="true"></i>
                 </button>
                 
@@ -677,23 +677,24 @@
 
     <!-- Order Modal -->
     <div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-70 modal-backdrop flex items-center justify-center z-50 p-4" onclick="closeModalOnBackdrop(event, 'orderModal')">
-        <div class="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 max-w-3xl w-full shadow-2xl modal-content border-2 border-primary-100">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h3 class="text-4xl font-extrabold text-primary-900 mb-1">COOP Orders</h3>
-                    <p class="text-gray-600 text-base">Choose how you want to order</p>
-                </div>
-                <button onclick="hideOrderModal()" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full p-3 transition-all duration-300 hover:rotate-90">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
+        <div class="bg-gradient-to-br from-white to-gray-50 rounded-3xl max-w-3xl w-full shadow-2xl modal-content border-2 border-primary-100 overflow-hidden">
             
-            <!-- COOP Status Display -->
-            <div id="modalCoopStatus" class="mb-8 p-5 rounded-2xl text-sm shadow-lg border-2 border-primary-100">
-                <!-- Status will be loaded here -->
-            </div>
+            <div class="overflow-y-auto p-8 custom-scrollbar max-h-[85vh]">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="text-4xl font-extrabold text-primary-900 mb-1">COOP Orders</h3>
+                        <p class="text-gray-600 text-base">Choose how you want to order</p>
+                    </div>
+                    <button onclick="hideOrderModal()" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full p-3 transition-all duration-300 hover:rotate-90">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div id="modalCoopStatus" class="mb-8 p-5 rounded-2xl text-sm shadow-lg border-2 border-primary-100">
+                    <!-- Status will be loaded here -->
+                </div>
             
             <div class="grid md:grid-cols-2 gap-6 mt-6">
                 <!-- Login to Dashboard -->
@@ -760,12 +761,10 @@
                         <i class="bi bi-arrow-right text-white text-xl group-hover:translate-x-1 transition-transform"></i>
                     </div>
                 </button>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                    Queue Dashboard
-                </button>
             </div>
+        </div>
+        </div>
+    </div>
     <!-- Inline JavaScript removed - now in assets/js/index.js -->
     <!-- External JavaScript -->
     <!-- Mobile Enhancements -->

@@ -195,20 +195,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $input = json_decode(file_get_contents('php://input'), true);
         
         $itemId = intval($input['item_id'] ?? 0);
-        $itemName = trim($input['item_name'] ?? '');
-        $description = trim($input['description'] ?? '');
-        $stockQuantity = isset($input['stock_quantity']) ? intval($input['stock_quantity']) : null;
-        $lowStockThreshold = intval($input['low_stock_threshold'] ?? 20);
-        $estimatedTime = intval($input['estimated_time'] ?? 10);
-        $isActive = isset($input['is_active']) ? intval($input['is_active']) : 1;
         
         if ($itemId <= 0) {
             echo json_encode(['success' => false, 'message' => 'Item ID is required']);
-            exit;
-        }
-        
-        if (empty($itemName)) {
-            echo json_encode(['success' => false, 'message' => 'Item name is required']);
             exit;
         }
         
@@ -221,6 +210,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (!$currentItem) {
             echo json_encode(['success' => false, 'message' => 'Item not found']);
+            exit;
+        }
+        
+        // Check if this is a simple availability toggle (only is_available field sent)
+        if (isset($input['is_available']) && count($input) == 2) { // item_id + is_available only
+            $isAvailable = intval($input['is_available']);
+            $stmt = $db->prepare("UPDATE inventory_items SET is_available = ? WHERE item_id = ?");
+            $stmt->execute([$isAvailable, $itemId]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Item availability updated successfully'
+            ]);
+            exit;
+        }
+        
+        // Check if this is a stock adjustment only (stock_quantity field sent)
+        if (isset($input['stock_quantity']) && !isset($input['item_name'])) {
+            $newQuantity = intval($input['stock_quantity']);
+            $quantityChange = $newQuantity - $currentItem['stock_quantity'];
+            $movementType = $quantityChange > 0 ? 'restock' : 'adjustment';
+            $reason = $input['stock_reason'] ?? 'Manual stock adjustment';
+            
+            // Call stored procedure for stock adjustment
+            $adjustStmt = $db->prepare("CALL sp_adjust_stock(?, ?, ?, ?, ?)");
+            $adjustStmt->execute([
+                $itemId, 
+                $quantityChange, 
+                $movementType, 
+                $reason, 
+                $_SESSION['admin_id']
+            ]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Stock updated successfully'
+            ]);
+            exit;
+        }
+        
+        // Full item update (edit form)
+        $itemName = trim($input['item_name'] ?? '');
+        $description = trim($input['description'] ?? '');
+        $stockQuantity = isset($input['stock_quantity']) ? intval($input['stock_quantity']) : null;
+        $lowStockThreshold = intval($input['low_stock_threshold'] ?? 20);
+        $estimatedTime = intval($input['estimated_time'] ?? 10);
+        $isActive = isset($input['is_active']) ? intval($input['is_active']) : 1;
+        
+        if (empty($itemName)) {
+            echo json_encode(['success' => false, 'message' => 'Item name is required']);
             exit;
         }
         
@@ -244,11 +283,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $lowStockThreshold, $estimatedTime, $isActive, $itemId
         ]);
         
-        // If stock quantity is being updated, use stock adjustment
+        // If stock quantity is being updated in full edit, use stock adjustment
         if ($stockQuantity !== null && $stockQuantity != $currentItem['stock_quantity']) {
             $quantityChange = $stockQuantity - $currentItem['stock_quantity'];
             $movementType = $quantityChange > 0 ? 'restock' : 'adjustment';
-            $reason = isset($input['stock_reason']) ? $input['stock_reason'] : 'Manual adjustment';
+            $reason = $input['stock_reason'] ?? 'Manual adjustment';
             
             // Call stored procedure for stock adjustment
             $adjustStmt = $db->prepare("CALL sp_adjust_stock(?, ?, ?, ?, ?)");

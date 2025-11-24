@@ -449,12 +449,14 @@ function initializeCarousel() {
 
     // Add touch event listeners for swipe functionality
     let touchStartX = 0;
+    let touchStartY = 0;
     let touchEndX = 0;
     let isMoving = false;
     let lastTouchX = 0;
 
     carouselWrapper.addEventListener('touchstart', (e) => {
         touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
         lastTouchX = touchStartX;
         isMoving = true;
         // pause auto-advance on touch and resume after idle
@@ -466,24 +468,37 @@ function initializeCarousel() {
             carouselInterval = setInterval(nextSlide, ms);
         }, 10000);
     });
-
+    
     carouselWrapper.addEventListener('touchmove', (e) => {
+        if (!isMoving) return;
+        
         touchEndX = e.touches[0].clientX;
-        // Prevent vertical scrolling only when horizontal movement is detected
+        const touchY = e.touches[0].clientY;
+        
+        // Calculate distances
         const dx = Math.abs(touchEndX - touchStartX);
-        const dy = Math.abs(e.touches[0].clientY - (e.touches[0].clientY || 0));
-        if (dx > 10 && dx > dy && e.cancelable) {
+        const dy = Math.abs(touchY - touchStartY);
+        
+        // Prevent vertical scrolling only when horizontal movement is detected
+        if (dx > 15 && dx > dy && e.cancelable) {
             e.preventDefault();
         }
         lastTouchX = touchEndX;
     }, { passive: false });
 
     carouselWrapper.addEventListener('touchend', () => {
+        if (!isMoving) return;
         isMoving = false;
-        if (touchStartX - touchEndX > 40) { // Swiped left
-            nextSlide();
-        } else if (touchEndX - touchStartX > 40) { // Swiped right
-            previousSlide();
+        
+        const swipeDistance = touchStartX - touchEndX;
+        const swipeThreshold = 50; // Minimum swipe distance
+        
+        if (Math.abs(swipeDistance) > swipeThreshold) {
+            if (swipeDistance > 0) { // Swiped left
+                nextSlide();
+            } else { // Swiped right
+                previousSlide();
+            }
         }
     });
 

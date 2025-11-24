@@ -163,8 +163,16 @@ async function loadCurrentQueue() {
             const queueItems = data.queue || [];
             
             // Update current serving
-            const currentServing = data.current_serving || 'Q-0';
-            document.getElementById('currentServing').textContent = currentServing;
+            const currentServing = data.current_serving || (queueItems.length > 0 ? queueItems[0].queue : null);
+            const servingElement = document.getElementById('currentServing');
+            
+            if (currentServing) {
+                servingElement.textContent = currentServing;
+                servingElement.classList.add('has-gradient');
+            } else {
+                servingElement.innerHTML = '<span class="text-gray-400">--</span>';
+                servingElement.classList.remove('has-gradient');
+            }
             
             // Update queue list
             const queueList = document.getElementById('queueList');

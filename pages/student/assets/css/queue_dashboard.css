@@ -189,9 +189,23 @@ body {
    CURRENT SERVING DISPLAY
    ==================================== */
 #currentServing {
-    text-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
     letter-spacing: -0.02em;
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 10;
+    /* Fallback for browsers that don't support background-clip */
+    color: #1e3a8a;
+}
+
+/* Gradient text effect with proper support */
+#currentServing.has-gradient {
+    background: linear-gradient(to right, #1e40af, #1e3a8a, #2563eb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+    /* Drop shadow for better visibility */
+    filter: drop-shadow(0 2px 8px rgba(30, 58, 138, 0.15));
 }
 
 #currentServing:hover {
@@ -294,29 +308,36 @@ body {
 @media (max-width: 768px) {
     /* Mobile Navigation */
     nav .container {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
     }
     
     nav h1 {
-        font-size: 1.25rem;
+        font-size: 1.125rem;
     }
     
     nav p {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
     }
     
     nav button {
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 0.75rem;
         font-size: 0.875rem;
-    }
-    
-    nav button span {
-        display: none;
     }
     
     nav .w-10 {
         width: 2rem;
         height: 2rem;
+    }
+    
+    /* Sticky Current Serving on Mobile */
+    #currentQueueDisplay {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 1rem;
+    }
+    
+    #currentQueueDisplay .text-6xl {
+        font-size: 2.5rem;
     }
     
     /* Mobile Container */
@@ -357,23 +378,36 @@ body {
     /* Mobile Queue Cards */
     .queue-card {
         padding: 1rem;
+        border-radius: 1rem;
     }
     
     .queue-card .text-2xl {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
     
-    /* Mobile Status Counts */
-    .flex.items-center.gap-3 {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: stretch;
+    .queue-card .text-xl {
+        font-size: 1.125rem;
     }
     
-    .flex.items-center.gap-3 > div {
-        width: 100%;
-        justify-content: center;
+    .queue-card .text-sm {
+        font-size: 0.8rem;
+    }
+    
+    /* Card-based Queue List for Mobile */
+    #queueList > * {
         display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1.25rem;
+        border-radius: 1rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%);
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        margin-bottom: 0.75rem;
+    }
+    
+    #queueList > *:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
     /* Mobile Floating Button */
@@ -387,6 +421,18 @@ body {
         width: 100%;
         justify-content: center;
         padding: 1rem;
+    }
+    
+    /* Mobile Safe Area for Bottom Button */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .fixed.bottom-8.right-8 {
+            padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+        }
+    }
+    
+    /* Mobile Container Padding for Button */
+    .container {
+        padding-bottom: 6rem;
     }
 }
 

@@ -990,3 +990,34 @@ body {
     clip: auto;
     white-space: normal;
 }
+
+/* Fix for modal positioning conflict */
+/* Overrides utilities.css to prevent the "jump" effect */
+#orderModal .modal-content,
+#loginModal .modal-content {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Custom scrollbar for modal */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--accent-500), var(--accent-700));
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--accent-600), var(--primary-900));
+}
