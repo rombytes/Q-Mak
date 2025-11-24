@@ -1807,6 +1807,7 @@ function stopAutoRefresh() {
 
 // Queue Management Functions
 function updateCurrentQueue() {
+    // Get pending/processing orders - already sorted by created_at ASC (FIFO) from API
     const pendingOrders = ordersData.filter(o => o.order_status === 'pending' || o.order_status === 'processing');
     
     // --- ADDED: Get references to the button containers ---
@@ -3395,7 +3396,13 @@ const INVENTORY_API_URL = '../../php/api/inventory.php';
 // Load inventory on page load
 async function loadInventory() {
     try {
-        const response = await fetch(INVENTORY_API_URL);
+        const response = await fetch(INVENTORY_API_URL, {
+            method: 'GET',
+            credentials: 'include', // Include session cookies
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
         const result = await response.json();
         
         if (result.success) {
@@ -3573,6 +3580,7 @@ async function saveInventoryItem(event) {
 
         const response = await fetch(INVENTORY_API_URL, {
             method: method,
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
@@ -3602,6 +3610,7 @@ async function adjustInventoryStock(event) {
     try {
         const response = await fetch(INVENTORY_API_URL, {
             method: 'PUT',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 item_id: itemId,
@@ -3635,6 +3644,7 @@ async function toggleItemAvailability(itemId, currentStatus) {
     try {
         const response = await fetch(INVENTORY_API_URL, {
             method: 'PUT',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 item_id: itemId,
@@ -3666,6 +3676,7 @@ async function deleteInventoryItem(itemId, itemName) {
     try {
         const response = await fetch(INVENTORY_API_URL, {
             method: 'DELETE',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ item_id: itemId })
         });
@@ -5774,7 +5785,15 @@ async function manualRescheduleOrders() {
 async function updateAutoRescheduleTimeDisplay() {
     try {
         const response = await fetch(`${API_BASE}/admin/get_cron_status.php`);
-        const result = await response.json();
+        
+        // Check if response has content
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+            console.warn('Empty response from get_cron_status.php');
+            return;
+        }
+        
+        const result = JSON.parse(text);
 
         if (result.success) {
             const autoRescheduleTimeElement = document.getElementById('autoRescheduleTime');

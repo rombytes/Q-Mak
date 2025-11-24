@@ -103,10 +103,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $params[] = $searchParam;
         }
         
-        // Sort upcoming orders by queue_date and queue_number, others by created_at
+        // Sort orders appropriately
         if ($filter === 'upcoming') {
+            // Upcoming orders: sort by queue_date and queue_number
             $query .= " ORDER BY o.queue_date ASC, CAST(SUBSTRING(o.queue_number, 3) AS UNSIGNED) ASC";
+        } elseif ($filter === 'today') {
+            // Today's queue: FIFO - sort by created_at ASC (oldest first)
+            $query .= " ORDER BY o.created_at ASC";
         } else {
+            // History: show newest first
             $query .= " ORDER BY o.created_at DESC";
         }
         

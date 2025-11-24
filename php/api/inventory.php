@@ -18,8 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/../config/database.php';
 
-// GET - Retrieve inventory items (public access for available items)
+// GET - Retrieve inventory items
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Start session to check authentication
+    session_start();
+    
+    // Check if admin is logged in for full inventory access
+    $isAdmin = isset($_SESSION['admin_id']);
+    
     try {
         $db = getDB();
         
@@ -28,16 +34,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $category = $_GET['category'] ?? null;
         
         if ($lowStockOnly) {
-            // Get low stock items
-            $query = "SELECT * FROM v_low_stock_items";
+            // Get low stock items (admin only)
+            if (!$isAdmin && !$availableOnly) {
+                // For non-admin requests, only show available items
+                $query = "SELECT * FROM v_available_items WHERE stock_quantity <= low_stock_threshold";
+            } else {
+                $query = "SELECT * FROM v_low_stock_items";
+            }
             $stmt = $db->query($query);
         } elseif ($availableOnly) {
             // Get available items for students
             $query = "SELECT * FROM v_available_items";
             $stmt = $db->query($query);
         } else {
-            // Get all items (admin view)
-            $query = "SELECT * FROM inventory_items ORDER BY item_name ASC";
+            // Get all items (admin view only)
+            if ($isAdmin) {
+                $query = "SELECT * FROM inventory_items ORDER BY item_name ASC";
+            } else {
+                // Non-admin users only see available items
+                $query = "SELECT * FROM v_available_items ORDER BY item_name ASC";
+            }
             $stmt = $db->query($query);
         }
         

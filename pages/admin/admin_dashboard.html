@@ -14,6 +14,20 @@
     <meta name="msapplication-navbutton-color" content="#1e3a8a">
     <meta name="msapplication-TileColor" content="#1e3a8a">
     
+    <!-- Tailwind CSS - Using CDN for rapid development -->
+    <!-- TODO: For production optimization, consider using Tailwind CLI: https://tailwindcss.com/docs/installation -->
+    <script>
+        // Suppress Tailwind CDN production warning
+        if (typeof console !== 'undefined' && console.warn) {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && args[0].includes && args[0].includes('cdn.tailwindcss.com')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
