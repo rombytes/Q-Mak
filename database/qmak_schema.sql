@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `started_processing_at` DATETIME NULL COMMENT 'When order processing started',
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `completed_at` DATETIME NULL COMMENT 'When order was completed',
+  `cancelled_at` DATETIME NULL COMMENT 'When order was cancelled',
   `claimed_at` DATETIME NULL,
   `is_archived` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Archive status',
   `archived_at` DATETIME NULL,

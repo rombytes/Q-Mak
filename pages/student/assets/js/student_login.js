@@ -112,9 +112,22 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const password = document.getElementById('password').value;
     const loginBtn = document.getElementById('loginBtn');
     const submitText = document.getElementById('submitText');
+    const emailInput = document.getElementById('email');
     
     // Hide any previous errors
     document.getElementById('errorMessage').classList.add('hidden');
+    
+    // Soft Validation: Check UMak email domain
+    if (!email.endsWith('@umak.edu.ph')) {
+        // Prevent form submission
+        emailInput.classList.add('border-red-500');
+        showError('Please use your official @umak.edu.ph email address.');
+        emailInput.focus();
+        return;
+    }
+    
+    // Remove error styling if validation passes
+    emailInput.classList.remove('border-red-500');
     
     // Check if CAPTCHA is required and get response
     let recaptchaResponse = null;
@@ -201,9 +214,25 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
-// Auto-lowercase email
-document.getElementById('email').addEventListener('blur', function(e) {
+// Email field enhancements
+const emailInput = document.getElementById('email');
+
+// Auto-lowercase and remove error styling on blur
+emailInput.addEventListener('blur', function(e) {
     e.target.value = e.target.value.toLowerCase();
+});
+
+// Remove error styling when user starts typing
+emailInput.addEventListener('focus', function(e) {
+    e.target.classList.remove('border-red-500');
+    document.getElementById('errorMessage').classList.add('hidden');
+});
+
+// Input event to remove error styling while typing
+emailInput.addEventListener('input', function(e) {
+    if (e.target.classList.contains('border-red-500')) {
+        e.target.classList.remove('border-red-500');
+    }
 });
 
 // Forgot Password Functions

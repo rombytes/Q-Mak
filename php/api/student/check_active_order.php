@@ -29,7 +29,7 @@ try {
         exit;
     }
     
-    // Check for active orders (not completed, not cancelled, not claimed)
+    // Phase 7: Check for active orders by service type (pending/processing only, NOT scheduled)
     $query = "SELECT 
                 o.order_id,
                 o.reference_number,
@@ -39,38 +39,53 @@ try {
                 o.created_at
               FROM orders o
               WHERE o.student_id = :student_id
-              AND o.status NOT IN ('completed', 'cancelled')
-              AND o.claimed_at IS NULL
+              AND o.status IN ('pending', 'processing')
               AND o.is_archived = 0
-              ORDER BY o.created_at DESC
-              LIMIT 1";
+              ORDER BY o.created_at DESC";
     
     $stmt = $conn->prepare($query);
     $stmt->bindParam(':student_id', $student_id);
     $stmt->execute();
     
-    $activeOrder = $stmt->fetch(PDO::FETCH_ASSOC);
+    $activeOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    if ($activeOrder) {
-        echo json_encode([
-            'success' => true,
-            'hasActiveOrder' => true,
-            'activeOrder' => [
-                'order_id' => $activeOrder['order_id'],
-                'reference_number' => $activeOrder['reference_number'],
-                'queue_number' => $activeOrder['queue_number'],
-                'status' => $activeOrder['status'],
-                'service_type' => $activeOrder['order_type_service'],
-                'created_at' => $activeOrder['created_at']
-            ]
-        ]);
-    } else {
-        echo json_encode([
-            'success' => true,
-            'hasActiveOrder' => false,
-            'activeOrder' => null
-        ]);
+    // Initialize granular status
+    $activeOrdersByType = [
+        'items' => false,
+        'printing' => false
+    ];
+    
+    $details = [];
+    
+    // Check each active order and categorize by service type
+    foreach ($activeOrders as $order) {
+        $serviceType = $order['order_type_service'];
+        
+        // Mark this service type as having an active order
+        if (isset($activeOrdersByType[$serviceType])) {
+            $activeOrdersByType[$serviceType] = true;
+        }
+        
+        // Add to details array
+        $details[] = [
+            'order_id' => $order['order_id'],
+            'reference_number' => $order['reference_number'],
+            'queue_number' => $order['queue_number'],
+            'status' => $order['status'],
+            'service_type' => $order['order_type_service'],
+            'created_at' => $order['created_at']
+        ];
     }
+    
+    // Return granular response
+    echo json_encode([
+        'success' => true,
+        'active_orders' => $activeOrdersByType,
+        'details' => $details,
+        // Legacy support for old API consumers
+        'hasActiveOrder' => count($details) > 0,
+        'activeOrder' => count($details) > 0 ? $details[0] : null
+    ]);
     
 } catch (PDOException $e) {
     error_log("Check Active Order Error: " . $e->getMessage());

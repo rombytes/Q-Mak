@@ -107,12 +107,10 @@ function initializeInputFormatting() {
             const formatted = toProperCase(e.target.value);
             e.target.value = formatted;
             e.target.setSelectionRange(cursorPos, cursorPos);
-            validateEmailRealtime();
         });
         
         firstNameInput.addEventListener('blur', function(e) {
             e.target.value = toProperCase(e.target.value);
-            validateEmailRealtime();
         });
     }
     
@@ -124,12 +122,10 @@ function initializeInputFormatting() {
             const formatted = toProperCase(e.target.value);
             e.target.value = formatted;
             e.target.setSelectionRange(cursorPos, cursorPos);
-            validateEmailRealtime();
         });
         
         lastNameInput.addEventListener('blur', function(e) {
             e.target.value = toProperCase(e.target.value);
-            validateEmailRealtime();
         });
     }
     
@@ -152,42 +148,44 @@ function initializeInputFormatting() {
             const formatted = e.target.value.toUpperCase();
             e.target.value = formatted;
             e.target.setSelectionRange(cursorPos, cursorPos);
-            validateEmailRealtime();
         });
         
         studentIdInput.addEventListener('blur', function(e) {
             e.target.value = e.target.value.toUpperCase();
-            validateEmailRealtime();
         });
     }
     
-    // Email - Real-time validation
+    // Email - Guide on Focus, Validate on Blur
     const emailInput = document.getElementById('email');
     if (emailInput) {
-        emailInput.addEventListener('input', validateEmailRealtime);
-        emailInput.addEventListener('blur', validateEmailRealtime);
+        // Show helper on focus
+        emailInput.addEventListener('focus', function() {
+            const helper = document.getElementById('emailHelper');
+            if (helper) {
+                helper.textContent = 'Suggested format: first.last.id@umak.edu.ph';
+                helper.className = 'text-xs text-blue-600 mt-1';
+                helper.classList.remove('hidden');
+            }
+            // Remove error styling when user starts interacting
+            this.classList.remove('border-red-500', 'border-green-500');
+            const errorDiv = document.getElementById('emailValidationError');
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+            }
+        });
+        
+        // Validate on blur (when user leaves the field)
+        emailInput.addEventListener('blur', validateEmailOnBlur);
     }
 }
 
 /**
- * Real-time email validation with visual feedback
+ * Validate email on blur - checks domain, format, and database
  */
-function validateEmailRealtime() {
-    const firstNameInput = document.getElementById('firstName');
-    const lastNameInput = document.getElementById('lastName');
-    const studentIdInput = document.getElementById('studentId');
+async function validateEmailOnBlur() {
     const emailInput = document.getElementById('email');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    if (!firstNameInput || !lastNameInput || !studentIdInput || !emailInput) return;
-    
-    const firstName = firstNameInput.value.trim();
-    const lastName = lastNameInput.value.trim();
-    const studentId = studentIdInput.value.trim();
-    const email = emailInput.value.trim();
-    
-    // Calculate expected email
-    const expectedEmail = calculateExpectedEmail(firstName, lastName, studentId);
+    const helper = document.getElementById('emailHelper');
+    const email = emailInput.value.trim().toLowerCase();
     
     // Get or create error message div
     let errorDiv = document.getElementById('emailValidationError');
@@ -198,23 +196,80 @@ function validateEmailRealtime() {
         emailInput.parentNode.appendChild(errorDiv);
     }
     
-    // Only validate if all required fields have values
-    if (firstName && lastName && studentId && email) {
-        const isValid = validateEmailFormat(email, expectedEmail);
+    // If empty, just hide helper and return
+    if (!email) {
+        if (helper) helper.classList.add('hidden');
+        emailInput.classList.remove('border-red-500', 'border-green-500');
+        errorDiv.classList.add('hidden');
+        return;
+    }
+    
+    // Step 1: Domain Check - Must end with @umak.edu.ph
+    if (!email.endsWith('@umak.edu.ph')) {
+        emailInput.classList.remove('border-green-500');
+        emailInput.classList.add('border-red-500');
+        if (helper) helper.classList.add('hidden');
+        errorDiv.classList.remove('hidden');
+        errorDiv.className = 'mt-2 text-sm text-red-600 font-medium';
+        errorDiv.innerHTML = `
+            <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <p>Invalid email domain.</p>
+                    <p class="mt-1">Please use your official <strong>@umak.edu.ph</strong> email address.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Step 2: Format Check (optional - check against expected if name fields are filled)
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    const studentIdInput = document.getElementById('studentId');
+    
+    if (firstNameInput && lastNameInput && studentIdInput) {
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        const studentId = studentIdInput.value.trim();
         
-        if (isValid) {
-            // Valid - Green border
-            emailInput.classList.remove('border-red-500');
-            emailInput.classList.add('border-green-500');
-            errorDiv.classList.add('hidden');
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        if (firstName && lastName && studentId) {
+            const expectedEmail = calculateExpectedEmail(firstName, lastName, studentId);
+            
+            if (expectedEmail && !validateEmailFormat(email, expectedEmail)) {
+                emailInput.classList.remove('border-green-500');
+                emailInput.classList.add('border-red-500');
+                if (helper) helper.classList.add('hidden');
+                errorDiv.classList.remove('hidden');
+                errorDiv.className = 'mt-2 text-sm text-orange-600 font-medium';
+                errorDiv.innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p>Email format doesn't match your name and Student ID.</p>
+                            <p class="mt-1">Expected: <span class="font-mono bg-orange-50 px-2 py-0.5 rounded">${expectedEmail}</span></p>
+                        </div>
+                    </div>
+                `;
+                return;
             }
-        } else {
-            // Invalid - Red border and show error
+        }
+    }
+    
+    // Step 3: Database Check - Is email already registered?
+    try {
+        const response = await fetch(`${API_BASE}/student/check_email.php?email=${encodeURIComponent(email)}`);
+        const result = await response.json();
+        
+        if (result.exists) {
+            // Email already registered
             emailInput.classList.remove('border-green-500');
             emailInput.classList.add('border-red-500');
+            if (helper) helper.classList.add('hidden');
             errorDiv.classList.remove('hidden');
             errorDiv.className = 'mt-2 text-sm text-red-600 font-medium';
             errorDiv.innerHTML = `
@@ -223,24 +278,33 @@ function validateEmailRealtime() {
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                     </svg>
                     <div>
-                        <p>Email format incorrect.</p>
-                        <p class="mt-1">Expected: <span class="font-mono bg-red-50 px-2 py-0.5 rounded">${expectedEmail}</span></p>
+                        <p>Email is already registered.</p>
+                        <p class="mt-1">Please <a href="../login.html" class="text-blue-600 hover:text-blue-800 underline font-semibold">login</a> or use a different email.</p>
                     </div>
                 </div>
             `;
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
+        } else if (result.success) {
+            // Email is available - Success!
+            emailInput.classList.remove('border-red-500');
+            emailInput.classList.add('border-green-500');
+            if (helper) helper.classList.add('hidden');
+            errorDiv.classList.remove('hidden');
+            errorDiv.className = 'mt-2 text-sm text-green-600 font-medium';
+            errorDiv.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Email is available ✓</span>
+                </div>
+            `;
         }
-    } else {
-        // Not enough data to validate
-        emailInput.classList.remove('border-green-500', 'border-red-500');
+    } catch (error) {
+        console.error('Email check error:', error);
+        // On error, just remove styling and let form submission handle validation
+        emailInput.classList.remove('border-red-500', 'border-green-500');
+        if (helper) helper.classList.add('hidden');
         errorDiv.classList.add('hidden');
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
     }
 }
 

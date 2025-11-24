@@ -65,6 +65,8 @@ async function initDashboard() {
         calculateOrderStats();
         updateDashboardStats();
         fetchInventoryStatus();
+        // Phase 7: Check active orders and disable buttons if needed
+        await checkActiveOrdersAndDisableButtons();
     } catch (error) {
         console.error('Dashboard initialization error:', error);
         showToast('error', 'Error', 'Failed to load dashboard data');
@@ -552,9 +554,11 @@ async function cancelOrderDashboard() {
             showToast('Order cancelled successfully. Your reserved item has been released.', 'success');
             
             // Reload current order to clear display
-            setTimeout(() => {
-                loadCurrentOrder();
-                loadOrderHistory(); // Refresh history to show cancelled status
+            setTimeout(async () => {
+                await loadCurrentOrder();
+                await loadOrderHistory(); // Refresh history to show cancelled status
+                // Phase 7: Refresh active orders status after cancellation
+                await checkActiveOrdersAndDisableButtons();
             }, 1500);
             
         } else {
@@ -1009,31 +1013,129 @@ async function fetchInventoryStatus() {
     }
 }
 
+// Phase 7: Global variable to track active orders by service type
+let activeOrdersStatus = {
+    items: false,
+    printing: false
+};
+
+// Phase 7: Check active orders and disable buttons if needed
+async function checkActiveOrdersAndDisableButtons() {
+    try {
+        const response = await fetch(`${API_BASE}/student/check_active_order.php`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.active_orders) {
+            // Store active orders status
+            activeOrdersStatus = result.active_orders;
+            
+            // Update UI to disable service type tabs if they have active orders
+            updateServiceTypeTabsDisabledState();
+        }
+    } catch (error) {
+        console.error('Error checking active orders:', error);
+    }
+}
+
+// Phase 7: Update service type tabs disabled state
+function updateServiceTypeTabsDisabledState() {
+    const itemsTab = document.getElementById('modalOrderTypeItems');
+    const printingTab = document.getElementById('modalOrderTypePrinting');
+    
+    // Disable Items tab if there's an active items order
+    if (activeOrdersStatus.items && itemsTab) {
+        itemsTab.disabled = true;
+        itemsTab.classList.add('opacity-50', 'cursor-not-allowed');
+        itemsTab.innerHTML = `
+            <i class="bi bi-bag-check-fill mr-2"></i>
+            Items
+            <span class="ml-2 px-2 py-1 bg-orange-500 text-white text-xs rounded-full">Pending Order</span>
+        `;
+    } else if (itemsTab) {
+        itemsTab.disabled = false;
+        itemsTab.classList.remove('opacity-50', 'cursor-not-allowed');
+        itemsTab.innerHTML = `
+            <i class="bi bi-bag-check-fill mr-2"></i>
+            Items
+        `;
+    }
+    
+    // Disable Printing tab if there's an active printing order
+    if (activeOrdersStatus.printing && printingTab) {
+        printingTab.disabled = true;
+        printingTab.classList.add('opacity-50', 'cursor-not-allowed');
+        printingTab.innerHTML = `
+            <i class="bi bi-printer-fill mr-2"></i>
+            Printing
+            <span class="ml-2 px-2 py-1 bg-purple-500 text-white text-xs rounded-full">Pending Job</span>
+        `;
+    } else if (printingTab) {
+        printingTab.disabled = false;
+        printingTab.classList.remove('opacity-50', 'cursor-not-allowed');
+        printingTab.innerHTML = `
+            <i class="bi bi-printer-fill mr-2"></i>
+            Printing
+        `;
+    }
+}
+
 // Show quick order (for logged-in students)
 function showQuickOrder() {
-    document.getElementById('createOrderModal').classList.remove('hidden');
-    
-    // Reset to items form by default
-    switchOrderTypeModal('items');
-    
-    // Add order type toggle listener
-    const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
-    orderTypeRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            const scheduledDateField = document.getElementById('scheduledDateField');
-            if (this.value === 'pre-order') {
-                scheduledDateField.classList.remove('hidden');
-                document.getElementById('scheduledDate').required = true;
-            } else {
-                scheduledDateField.classList.add('hidden');
-                document.getElementById('scheduledDate').required = false;
-            }
+    // Phase 7: Refresh active orders status before showing modal
+    checkActiveOrdersAndDisableButtons().then(() => {
+        document.getElementById('createOrderModal').classList.remove('hidden');
+        
+        // Determine which tab to show based on active orders
+        if (activeOrdersStatus.items && !activeOrdersStatus.printing) {
+            // Items is blocked, show printing
+            switchOrderTypeModal('printing');
+        } else if (activeOrdersStatus.printing && !activeOrdersStatus.items) {
+            // Printing is blocked, show items
+            switchOrderTypeModal('items');
+        } else if (activeOrdersStatus.items && activeOrdersStatus.printing) {
+            // Both are blocked - show error and close modal
+            showToast('error', 'Cannot Create Order', 'You have pending orders for both services. Please complete or cancel them first.');
+            document.getElementById('createOrderModal').classList.add('hidden');
+            return;
+        } else {
+            // Neither is blocked, default to items
+            switchOrderTypeModal('items');
+        }
+        
+        // Add order type toggle listener
+        const orderTypeRadios = document.querySelectorAll('input[name="orderType"]');
+        orderTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const scheduledDateField = document.getElementById('scheduledDateField');
+                if (this.value === 'pre-order') {
+                    scheduledDateField.classList.remove('hidden');
+                    document.getElementById('scheduledDate').required = true;
+                } else {
+                    scheduledDateField.classList.add('hidden');
+                    document.getElementById('scheduledDate').required = false;
+                }
+            });
         });
     });
 }
 
 // Switch order type in modal (items vs printing)
 function switchOrderTypeModal(type) {
+    // Phase 7: Check if the service type is disabled due to active order
+    if (type === 'items' && activeOrdersStatus.items) {
+        showToast('warning', 'Cannot Order Items', 'You already have a pending Items/Merchandise order. Please complete or cancel it first.');
+        return;
+    }
+    
+    if (type === 'printing' && activeOrdersStatus.printing) {
+        showToast('warning', 'Cannot Order Printing', 'You already have a pending Printing Services order. Please complete or cancel it first.');
+        return;
+    }
+    
     // Update hidden input
     document.getElementById('modalOrderTypeService').value = type;
     
@@ -1495,6 +1597,8 @@ async function verifyOTP() {
             await loadOrderHistory();
             calculateOrderStats();
             updateDashboardStats();
+            // Phase 7: Refresh active orders status
+            await checkActiveOrdersAndDisableButtons();
         } else {
             showToast('error', 'Error', result.message || 'Failed to verify OTP');
         }

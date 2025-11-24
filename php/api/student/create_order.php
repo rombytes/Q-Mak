@@ -172,6 +172,31 @@ try {
     
     $db->beginTransaction();
     
+    // Phase 7: Check if student already has an active order for this service type
+    // Only check pending/processing orders (NOT scheduled orders)
+    $checkActiveOrder = $db->prepare("
+        SELECT COUNT(*) as order_count 
+        FROM orders 
+        WHERE student_id = ? 
+        AND order_type_service = ? 
+        AND status IN ('pending', 'processing')
+        AND is_archived = 0
+    ");
+    $checkActiveOrder->execute([$studentId, $serviceType]);
+    $activeOrderCheck = $checkActiveOrder->fetch();
+    
+    if ($activeOrderCheck['order_count'] > 0) {
+        $db->rollBack();
+        $serviceTypeName = ($serviceType === 'items') ? 'Items/Merchandise' : 'Printing Services';
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode([
+            'success' => false,
+            'message' => "You already have a pending {$serviceTypeName} order. Please complete or cancel it before placing a new one.",
+            'error_code' => 'ACTIVE_ORDER_EXISTS'
+        ]);
+        exit;
+    }
+    
     // Upsert student: insert or update if student_id or email already exists
     $upsertStudent = $db->prepare("
         INSERT INTO students (student_id, first_name, last_name, middle_initial, email, college, program, year_level, section)
