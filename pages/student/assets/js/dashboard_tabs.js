@@ -144,9 +144,35 @@ async function loadProfileTab() {
     if (currentData) {
         populateProfileData();
     } else {
-        console.warn('Student data not available yet. Please wait for session to load.');
-        // Try again after a short delay
-        setTimeout(loadProfileTab, 500);
+        // Initialize retry counter
+        if (!window.profileLoadRetries) window.profileLoadRetries = 0;
+        window.profileLoadRetries++;
+        
+        // Max 10 retries (5 seconds total)
+        if (window.profileLoadRetries < 10) {
+            console.warn(`Student data not available yet (attempt ${window.profileLoadRetries}/10). Retrying...`);
+            setTimeout(loadProfileTab, 500);
+        } else {
+            console.error('Failed to load student data after 10 attempts. Please refresh the page.');
+            // Show error message to user
+            const profileTab = document.getElementById('profile-tab');
+            if (profileTab) {
+                profileTab.innerHTML = `
+                    <div class="flex items-center justify-center h-64">
+                        <div class="text-center">
+                            <svg class="w-16 h-16 mx-auto text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p class="text-gray-700 font-semibold mb-2">Failed to load profile</p>
+                            <p class="text-gray-500 text-sm mb-4">Unable to retrieve your profile information</p>
+                            <button onclick="window.location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                Refresh Page
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
     }
 }
 

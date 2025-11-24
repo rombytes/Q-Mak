@@ -79,10 +79,19 @@ async function loadStudentProfile() {
             credentials: 'include'
         });
         
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response from get_profile.php:', text);
+            throw new Error('Server returned invalid response format');
+        }
+        
         const result = await response.json();
         
         if (result.success && result.data) {
             window.studentData = result.data;
+            window.profileLoadRetries = 0; // Reset retry counter on success
             // Update nav profile (function may be in dashboard_tabs.js)
             if (typeof updateNavProfile === 'function') {
                 updateNavProfile(window.studentData);
@@ -92,11 +101,13 @@ async function loadStudentProfile() {
             }
             return true;
         } else {
-            console.error('Failed to load profile');
+            console.error('Failed to load profile:', result.message || 'Unknown error');
+            if (result.error) console.error('Error details:', result.error);
             return false;
         }
     } catch (error) {
         console.error('Error loading profile:', error);
+        console.error('Error details:', error.message);
         return false;
     }
 }
