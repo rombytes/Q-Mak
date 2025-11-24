@@ -25,20 +25,31 @@ async function fetchInventory(forceRefresh = false) {
     
     // Use cache if available and not expired
     if (!forceRefresh && inventoryCache.length > 0 && (now - inventoryLastFetch) < CACHE_DURATION) {
+        console.log('Using cached inventory:', inventoryCache.length, 'items');
         return inventoryCache;
     }
     
     try {
-        const response = await fetch(`${getApiBase()}/inventory.php`);
+        const apiUrl = `${getApiBase()}/inventory.php`;
+        console.log('Fetching inventory from:', apiUrl);
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            console.error('Inventory API HTTP error:', response.status, response.statusText);
+            return [];
+        }
+        
         const result = await response.json();
+        console.log('Inventory API response:', result);
         
         if (result.success && result.data && result.data.items) {
             inventoryCache = result.data.items;
             inventoryLastFetch = now;
+            console.log('Successfully loaded', inventoryCache.length, 'inventory items');
             return inventoryCache;
         }
         
-        console.error('Failed to fetch inventory:', result.message);
+        console.error('Failed to fetch inventory:', result.message || 'Unknown error');
         return [];
     } catch (error) {
         console.error('Error fetching inventory:', error);
@@ -96,20 +107,35 @@ async function populateInventorySelect(selectId, showOutOfStock = false) {
         return;
     }
     
+    console.log(`Populating select ${selectId}...`);
     const items = await fetchInventory();
+    console.log(`Retrieved ${items.length} items for ${selectId}`);
+    
+    if (items.length === 0) {
+        console.warn(`No inventory items found for ${selectId}`);
+        return;
+    }
     
     // Clear existing options except the first placeholder
     const placeholder = selectElement.options[0];
-    selectElement.innerHTML = '';
-    if (placeholder) {
-        selectElement.add(placeholder);
-    }
+    const placeholderText = placeholder ? placeholder.text : 'Select Item';
+    const placeholderValue = placeholder ? placeholder.value : '';
     
+    selectElement.innerHTML = '';
+    
+    // Re-add placeholder
+    const newPlaceholder = document.createElement('option');
+    newPlaceholder.value = placeholderValue;
+    newPlaceholder.textContent = placeholderText;
+    selectElement.add(newPlaceholder);
+    
+    let addedCount = 0;
     items.forEach(item => {
         const isAvailable = isItemAvailable(item);
         
         // Skip out of stock items if not showing them
         if (!showOutOfStock && !isAvailable) {
+            console.log(`Skipping unavailable item: ${item.item_name}`);
             return;
         }
         
@@ -133,7 +159,10 @@ async function populateInventorySelect(selectId, showOutOfStock = false) {
         option.dataset.isAvailable = item.is_available;
         
         selectElement.add(option);
+        addedCount++;
     });
+    
+    console.log(`Added ${addedCount} items to ${selectId}`);
 }
 
 /**

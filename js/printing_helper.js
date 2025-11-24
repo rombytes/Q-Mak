@@ -38,7 +38,7 @@ async function loadPrintingPrices() {
         const response = await fetch(`${getApiBase()}/get_printing_prices.php`);
         
         if (!response.ok) {
-            console.warn('Failed to load printing prices, using defaults');
+            console.warn('Failed to load printing prices (HTTP ' + response.status + '), using defaults');
             return;
         }
         
@@ -52,9 +52,14 @@ async function loadPrintingPrices() {
         
         if (data.success && data.prices) {
             printingPrices = data.prices;
+            console.log('Successfully loaded printing prices from server');
+        } else if (data.prices) {
+            // Even if success is false, use prices if provided (fallback case)
+            printingPrices = data.prices;
+            console.log('Using fallback printing prices from server');
         }
     } catch (error) {
-        console.warn('Error loading printing prices, using defaults:', error);
+        console.warn('Error loading printing prices, using defaults:', error.message);
         // Keep default prices that are already set
     }
 }
