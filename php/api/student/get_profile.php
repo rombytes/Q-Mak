@@ -34,9 +34,12 @@ try {
     $db = getDB();
     $studentId = $_SESSION['student_id'];
     
-    // Get student profile data
-    $stmt = $db->prepare("
-        SELECT 
+    // Check if profile_picture column exists
+    $columnsCheck = $db->query("SHOW COLUMNS FROM students LIKE 'profile_picture'");
+    $hasProfilePicture = $columnsCheck->rowCount() > 0;
+    
+    // Build SELECT query based on available columns
+    $selectFields = "
             s.student_id,
             s.first_name,
             s.last_name,
@@ -47,11 +50,15 @@ try {
             s.year_level,
             s.section,
             s.is_verified,
-            s.profile_picture,
+            " . ($hasProfilePicture ? "s.profile_picture," : "NULL as profile_picture,") . "
             s.created_at,
             s.last_login,
             COUNT(DISTINCT o.order_id) as total_orders,
-            COUNT(DISTINCT CASE WHEN o.order_status = 'completed' THEN o.order_id END) as completed_orders
+            COUNT(DISTINCT CASE WHEN o.order_status = 'completed' THEN o.order_id END) as completed_orders";
+    
+    // Get student profile data
+    $stmt = $db->prepare("
+        SELECT $selectFields
         FROM students s
         LEFT JOIN orders o ON s.student_id = o.student_id
         WHERE s.student_id = ?
