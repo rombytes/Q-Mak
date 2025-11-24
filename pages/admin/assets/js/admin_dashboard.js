@@ -1717,7 +1717,6 @@ async function viewOrderDetails(orderId) {
                             <option value="">Change Status...</option>
                             <option value="pending" ${order.order_status === 'pending' ? 'selected' : ''}>Pending</option>
                             <option value="processing" ${order.order_status === 'processing' ? 'selected' : ''}>Processing</option>
-                            <option value="ready" ${order.order_status === 'ready' ? 'selected' : ''}>Ready for Pick Up</option>
                             <option value="completed" ${order.order_status === 'completed' ? 'selected' : ''}>Completed</option>
                             <option value="cancelled" ${order.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>

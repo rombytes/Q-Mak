@@ -16,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/session_config.php';
+require_once __DIR__ . '/../../config/database.php';
 
 // Check admin authentication
 if (!isset($_SESSION['admin_id'])) {

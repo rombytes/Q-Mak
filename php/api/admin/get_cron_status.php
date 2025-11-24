@@ -14,11 +14,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+require_once __DIR__ . '/../../config/session_config.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../utils/cron_manager.php';
 
-// Admin authentication check would go here
-// For now, we'll skip it for testing
+// Admin authentication check
+if (!isset($_SESSION['admin_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized - Please log in']);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
@@ -59,11 +64,14 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Get CRON Status Error: " . $e->getMessage());
+    error_log("Get CRON Status Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Failed to get CRON status: ' . $e->getMessage()
+        'message' => 'Failed to get CRON status: ' . $e->getMessage(),
+        'error' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
     ]);
 }
 ?>
