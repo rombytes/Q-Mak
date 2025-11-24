@@ -3427,7 +3427,7 @@ window.addEventListener('beforeunload', () => {
 // ============================================
 
 let inventoryData = [];
-const INVENTORY_API_URL = '../../php/api/inventory.php';
+const INVENTORY_API_URL = `${API_BASE}/inventory.php`; // Use absolute path from same origin
 
 // Load inventory on page load
 async function loadInventory() {

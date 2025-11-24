@@ -128,8 +128,7 @@ try {
     }
     
     // Connect to database
-    $database = new Database();
-    $db = $database->getConnection();
+    $db = getDB();
     
     // =============================================
     // STEP 1: Check students table
