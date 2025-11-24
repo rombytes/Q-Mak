@@ -3,8 +3,9 @@
  * Fetches inventory data and provides helper functions for displaying stock status
  */
 
-// Dynamic API base path - works on both localhost and production
+// Use global API_BASE if available, otherwise create getApiBase function
 const getApiBase = () => {
+    if (typeof API_BASE !== 'undefined') return API_BASE;
     const path = window.location.pathname;
     const base = path.substring(0, path.indexOf('/pages/'));
     return base ? base + '/php/api' : '../../php/api';

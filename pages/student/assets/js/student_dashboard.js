@@ -124,9 +124,10 @@ function updateProfileDisplay(data) {
     
     // Set default profile picture (Herons.png)
     if (navAvatar) {
-        navAvatar.src = data.profile_picture || '../../../images/Herons.png';
+        const profilePic = data.profile_picture ? '../../' + data.profile_picture : '../../images/Herons.png';
+        navAvatar.src = profilePic;
         navAvatar.onerror = function() {
-            this.src = '../../../images/Herons.png';
+            this.src = '../../images/Herons.png';
         };
     }
     
@@ -142,7 +143,8 @@ function updateProfileDisplay(data) {
     
     // Set default profile picture in dropdown
     if (dropdownAvatar) {
-        dropdownAvatar.src = data.profile_picture || '../../../images/Herons.png';
+        const profilePic = data.profile_picture ? '../../' + data.profile_picture : '../../images/Herons.png';
+        dropdownAvatar.src = profilePic;
         dropdownAvatar.onerror = function() {
             this.src = '../../../images/Herons.png';
         };
@@ -167,9 +169,10 @@ function updateProfileTabContent(data) {
     
     // Large profile picture
     if (profileAvatarLargeImg) {
-        profileAvatarLargeImg.src = data.profile_picture || '../../../images/Herons.png';
+        const profilePic = data.profile_picture ? '../../' + data.profile_picture : '../../images/Herons.png';
+        profileAvatarLargeImg.src = profilePic;
         profileAvatarLargeImg.onerror = function() {
-            this.src = '../../../images/Herons.png';
+            this.src = '../../images/Herons.png';
         };
     }
     

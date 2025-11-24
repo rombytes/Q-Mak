@@ -67,11 +67,12 @@ try {
         exit;
     }
     
-    // Format profile picture path to full URL
+    // Format profile picture path - keep as relative path for flexibility
+    // Front-end will handle the base URL based on environment
     if (!empty($studentData['profile_picture'])) {
-        // If it's a relative path, convert to full path
-        if (strpos($studentData['profile_picture'], '/Q-Mak/') !== 0) {
-            $studentData['profile_picture'] = '/Q-Mak/' . $studentData['profile_picture'];
+        // Ensure path starts with uploads/
+        if (strpos($studentData['profile_picture'], 'uploads/') !== 0) {
+            $studentData['profile_picture'] = 'uploads/' . ltrim($studentData['profile_picture'], '/');
         }
     }
     
@@ -81,18 +82,24 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    error_log("Get Profile PDO Error: " . $e->getMessage());
+    error_log("Get Profile PDO Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Database error occurred'
+        'message' => 'Database error occurred',
+        'error' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
     ]);
 } catch (Exception $e) {
-    error_log("Get Profile Error: " . $e->getMessage());
+    error_log("Get Profile Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Server error occurred'
+        'message' => 'Server error occurred',
+        'error' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
     ]);
 }
 ?>
