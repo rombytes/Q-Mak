@@ -34,7 +34,7 @@ try {
             CAST(SUBSTRING(o.queue_number, LOCATE('-', o.queue_number) + 1) AS UNSIGNED) as queue_position
         FROM orders o
         WHERE o.queue_date = CURDATE()
-        ORDER BY queue_position ASC
+        ORDER BY o.created_at ASC
     ");
     $stmt->execute();
     $orders = $stmt->fetchAll();
