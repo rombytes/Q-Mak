@@ -219,12 +219,25 @@ try {
         // Ignore if last_login column doesn't exist
     }
     
-    // Set session variables
+    // CRITICAL: Clear any existing student session data to prevent conflicts
+    $studentKeys = ['user_id', 'email', 'first_name', 'last_name', 'student_id', 
+                   'student_email', 'student_name', 'phone', 'college', 'program', 
+                   'year', 'section', 'student_logged_in', 'middle_initial'];
+    
+    foreach ($studentKeys as $key) {
+        if (isset($_SESSION[$key])) {
+            unset($_SESSION[$key]);
+        }
+    }
+    
+    // Set admin session variables
     $_SESSION['admin_id'] = $admin['admin_id'];
     $_SESSION['admin_email'] = $admin['email'];
     $_SESSION['admin_name'] = $admin['full_name'];
     $_SESSION['admin_username'] = $admin['username'];
     $_SESSION['is_super_admin'] = (int)$admin['is_super_admin'];
+    $_SESSION['user_type'] = 'admin';
+    $_SESSION['admin_logged_in'] = 1;
     
     // Clean output buffer and send response
     ob_end_clean();
