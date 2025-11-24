@@ -50,13 +50,24 @@ if (isLocalhost()) {
 // Common database settings
 define('DB_CHARSET', 'utf8mb4');
 
-// Email configuration (for sending OTP and receipts)
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'your-email@gmail.com');  // ⚠️ Update with your email
-define('SMTP_PASSWORD', 'your-app-password-here');  // ⚠️ Use Gmail App Password (16 chars)
-define('SMTP_FROM_EMAIL', 'your-email@gmail.com');
-define('SMTP_FROM_NAME', 'UMak COOP Order Hub');
+// Email configuration (environment-specific)
+if (isLocalhost()) {
+    // LOCALHOST - Gmail for testing
+    define('SMTP_HOST', 'smtp.gmail.com');
+    define('SMTP_PORT', 587);
+    define('SMTP_USERNAME', 'your-test-email@gmail.com');  // ⚠️ Your Gmail for testing
+    define('SMTP_PASSWORD', 'your-gmail-app-password');  // ⚠️ Gmail App Password (16 chars)
+    define('SMTP_FROM_EMAIL', 'your-test-email@gmail.com');
+    define('SMTP_FROM_NAME', 'UMak COOP [DEV]');
+} else {
+    // PRODUCTION - Hostinger email
+    define('SMTP_HOST', 'smtp.hostinger.com');
+    define('SMTP_PORT', 587);  // Use 587 for TLS or 465 for SSL
+    define('SMTP_USERNAME', 'noreply@yourdomain.com');  // ⚠️ REPLACE: Your full Hostinger email
+    define('SMTP_PASSWORD', 'YOUR_HOSTINGER_EMAIL_PASSWORD');  // ⚠️ REPLACE: Email password from hPanel
+    define('SMTP_FROM_EMAIL', 'noreply@yourdomain.com');
+    define('SMTP_FROM_NAME', 'UMak COOP Order Hub');
+}
 
 // Application settings
 define('OTP_EXPIRY_MINUTES', 10);
