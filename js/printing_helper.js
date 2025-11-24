@@ -5,12 +5,12 @@
  */
 
 // Use global API_BASE if available, otherwise create getApiBase function
-const getApiBase = () => {
+function getApiBase() {
     if (typeof API_BASE !== 'undefined') return API_BASE;
     const path = window.location.pathname;
     const base = path.substring(0, path.indexOf('/pages/'));
     return base ? base + '/php/api' : '../../php/api';
-};
+}
 
 // Printing prices (will be loaded from settings)
 let printingPrices = {
