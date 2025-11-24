@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/session_config.php';
 
 // GET - Retrieve inventory items
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Start session to check authentication
-    session_start();
+    // Session already started by session_config.php
     
     // Check if admin is logged in for full inventory access
     $isAdmin = isset($_SESSION['admin_id']);
@@ -104,10 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 // All other methods require admin authentication
-// Note: session_start() already called at line 24 for GET requests
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Note: session already started by session_config.php (uses QMAK_SESSION cookie)
 
 // Debug logging
 error_log("Inventory API Auth Check - Method: " . $_SERVER['REQUEST_METHOD']);
