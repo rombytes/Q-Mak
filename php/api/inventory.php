@@ -5,7 +5,18 @@
  */
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
+
+// CORS headers - must specify exact origin when using credentials
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+} else {
+    // Fallback to same-origin if no origin header
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    header('Access-Control-Allow-Origin: ' . $protocol . '://' . $host);
+}
+
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Credentials: true');
@@ -98,9 +109,25 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Debug logging
+error_log("Inventory API Auth Check - Method: " . $_SERVER['REQUEST_METHOD']);
+error_log("Session ID: " . session_id());
+error_log("Session Data: " . print_r($_SESSION, true));
+error_log("Admin ID isset: " . (isset($_SESSION['admin_id']) ? 'YES' : 'NO'));
+error_log("Cookies: " . print_r($_COOKIE, true));
+
 if (!isset($_SESSION['admin_id'])) {
+    error_log("INVENTORY API: 401 - No admin_id in session");
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized. Admin access required.']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Unauthorized. Admin access required.',
+        'debug' => [
+            'session_id' => session_id(),
+            'has_session' => !empty(session_id()),
+            'session_data' => $_SESSION
+        ]
+    ]);
     exit;
 }
 
