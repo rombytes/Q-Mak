@@ -20,7 +20,7 @@ const CACHE_DURATION = 30000; // 30 seconds
  * @param {boolean} forceRefresh - Force refresh even if cache is valid
  * @returns {Promise<Array>} Array of inventory items
  */
-async function fetchInventory(forceRefresh = false) {
+async function fetchInventory(forceRefresh = false, availableOnly = false) {
     const now = Date.now();
     
     // Use cache if available and not expired
@@ -30,7 +30,9 @@ async function fetchInventory(forceRefresh = false) {
     }
     
     try {
-        const apiUrl = `${getApiBase()}/inventory.php`;
+        // Add available_only parameter if needed
+        const params = availableOnly ? '?available_only=true' : '';
+        const apiUrl = `${getApiBase()}/inventory.php${params}`;
         console.log('Fetching inventory from:', apiUrl);
         const response = await fetch(apiUrl);
         
@@ -100,7 +102,7 @@ function isItemAvailable(item) {
  * @param {string} selectId - ID of the select element
  * @param {boolean} showOutOfStock - Whether to show out of stock items (disabled)
  */
-async function populateInventorySelect(selectId, showOutOfStock = false) {
+async function populateInventorySelect(selectId, showOutOfStock = true) {
     const selectElement = document.getElementById(selectId);
     if (!selectElement) {
         console.error(`Select element ${selectId} not found`);
@@ -108,7 +110,8 @@ async function populateInventorySelect(selectId, showOutOfStock = false) {
     }
     
     console.log(`Populating select ${selectId}...`);
-    const items = await fetchInventory();
+    // Fetch all items (not just available ones) so we can show them as disabled
+    const items = await fetchInventory(false, false);
     console.log(`Retrieved ${items.length} items for ${selectId}`);
     
     if (items.length === 0) {
@@ -133,24 +136,31 @@ async function populateInventorySelect(selectId, showOutOfStock = false) {
     items.forEach(item => {
         const isAvailable = isItemAvailable(item);
         
-        // Skip out of stock items if not showing them
-        if (!showOutOfStock && !isAvailable) {
-            console.log(`Skipping unavailable item: ${item.item_name}`);
-            return;
-        }
+        // Debug: Log item details
+        console.log(`Item: ${item.item_name} - is_available: ${item.is_available}, is_active: ${item.is_active}, stock_quantity: ${item.stock_quantity}, isAvailable: ${isAvailable}`);
         
         const option = document.createElement('option');
         option.value = item.item_name.toLowerCase();
         
         // Add stock indicator to option text
         let optionText = item.item_name;
-        if (!isAvailable || item.stock_quantity === 0) {
-            optionText += ' - OUT OF STOCK';
+        
+        if (!isAvailable) {
+            // Item is not available - show why
+            if (item.stock_quantity === 0 || item.stock_quantity === null) {
+                optionText += ' - OUT OF STOCK';
+            } else if (item.is_available == 0) {
+                optionText += ' - UNAVAILABLE';
+            } else if (item.is_active == 0) {
+                optionText += ' - INACTIVE';
+            }
             option.disabled = true;
             option.style.color = '#999';
+            option.style.fontStyle = 'italic';
         } else if (item.stock_quantity <= item.low_stock_threshold) {
             optionText += ` - Low Stock (${item.stock_quantity} left)`;
             option.style.color = '#f59e0b';
+            option.style.fontWeight = 'bold';
         }
         
         option.textContent = optionText;
@@ -162,7 +172,7 @@ async function populateInventorySelect(selectId, showOutOfStock = false) {
         addedCount++;
     });
     
-    console.log(`Added ${addedCount} items to ${selectId}`);
+    console.log(`Added ${addedCount} items to ${selectId} (including ${items.length - addedCount} unavailable)`);
 }
 
 /**

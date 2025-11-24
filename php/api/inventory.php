@@ -93,7 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 // All other methods require admin authentication
-session_start();
+// Note: session_start() already called at line 24 for GET requests
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if (!isset($_SESSION['admin_id'])) {
     http_response_code(401);
