@@ -215,12 +215,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $updateStmt = $db->prepare("
             UPDATE orders
             SET status = ?,
-                updated_at = NOW(),
-                ready_time = CASE WHEN ? = 'ready' THEN NOW() ELSE ready_time END,
-                completed_time = CASE WHEN ? = 'completed' THEN NOW() ELSE completed_time END
+                updated_at = NOW()
             WHERE order_id = ?
         ");
-        $updateStmt->execute([$newStatus, $newStatus, $newStatus, $orderId]);
+        $updateStmt->execute([$newStatus, $orderId]);
         
         // Send status update email
         $statusMessages = [
