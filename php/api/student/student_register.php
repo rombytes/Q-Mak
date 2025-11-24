@@ -4,10 +4,11 @@
  * Handles student account creation with email verification
  */
 
-// Enable error display for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+// Disable error display for production - log errors instead
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
+ini_set('log_errors', 1);
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');

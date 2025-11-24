@@ -440,6 +440,14 @@ document.getElementById('registrationForm').addEventListener('submit', async fun
             body: JSON.stringify(formData)
         });
 
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text);
+            throw new Error('Server error: Invalid response format');
+        }
+
         const result = await response.json();
 
         if (result.success) {
@@ -456,7 +464,7 @@ document.getElementById('registrationForm').addEventListener('submit', async fun
         }
     } catch (error) {
         console.error('Registration error:', error);
-        notificationManager.error('An error occurred. Please try again.');
+        notificationManager.error(error.message || 'An error occurred. Please try again.');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Create Account';
