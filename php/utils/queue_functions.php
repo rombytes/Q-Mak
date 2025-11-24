@@ -150,14 +150,24 @@ function calculateWaitTime($db, $itemsOrdered) {
     $queuePosition = (int)$posStmt->fetchColumn();
     
     // 7. Calculate wait time
-    // Base time = (pending orders * average processing time) + current item time
-    $baseWaitTime = ($pendingCount * $avgProcessingTime) + $totalItemTime;
-    
-    // Add buffer for safety
-    $estimatedWaitTime = ceil($baseWaitTime * (1 + $bufferPercent / 100));
-    
-    // Ensure within min/max bounds
-    $estimatedWaitTime = max($minWaitTime, min($maxWaitTime, $estimatedWaitTime));
+    // Distinguish between queue wait time and prep time
+    if ($pendingCount > 0) {
+        // There are orders ahead - calculate queue wait + prep time
+        $queueWaitTime = $pendingCount * $avgProcessingTime;
+        $baseWaitTime = $queueWaitTime + $totalItemTime;
+        
+        // Add buffer for safety
+        $estimatedWaitTime = ceil($baseWaitTime * (1 + $bufferPercent / 100));
+        
+        // Apply min/max bounds only when there's a queue
+        $estimatedWaitTime = max($minWaitTime, min($maxWaitTime, $estimatedWaitTime));
+    } else {
+        // Queue is empty - only use prep time, no minimum wait time
+        $estimatedWaitTime = ceil($totalItemTime * (1 + $bufferPercent / 100));
+        
+        // Only enforce max bound, not minimum
+        $estimatedWaitTime = min($maxWaitTime, $estimatedWaitTime);
+    }
     
     return [
         'estimated_minutes' => $estimatedWaitTime,
@@ -198,7 +208,17 @@ function getOrderQueuePosition($db, $queueNumber, $queueDate) {
         $avgProcessingTime = (float)$value;
     }
     
-    $estimatedMinutes = max(5, $ordersAhead * $avgProcessingTime);
+    // Get item prep time (default 3 minutes if not found)
+    $prepTime = 3;
+    
+    // Distinguish between queue wait time and prep time
+    if ($ordersAhead > 0) {
+        // There are orders ahead - calculate queue wait + prep time
+        $estimatedMinutes = ($ordersAhead * $avgProcessingTime) + $prepTime;
+    } else {
+        // No orders ahead - only prep time, no artificial minimum
+        $estimatedMinutes = $prepTime;
+    }
     
     return [
         'queue_position' => $position,

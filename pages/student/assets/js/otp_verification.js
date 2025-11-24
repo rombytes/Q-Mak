@@ -63,13 +63,14 @@ document.getElementById('otpForm').addEventListener('submit', async function(e) 
                 if (result.data && result.data.order_id) {
                     // Store all enhanced queue system data
                     sessionStorage.setItem('orderId', result.data.order_id);
-                    sessionStorage.setItem('queueNum', result.data.queue_number);
+                    sessionStorage.setItem('queueNum', result.data.queue_number || ''); // Can be null for scheduled orders
                     sessionStorage.setItem('referenceNum', result.data.reference_number || '');
                     sessionStorage.setItem('waitTime', result.data.wait_time);
                     sessionStorage.setItem('waitTimeDetails', JSON.stringify(result.data.wait_time_details || {}));
                     sessionStorage.setItem('queuePosition', result.data.queue_position || '1');
                     sessionStorage.setItem('queueDate', result.data.queue_date || new Date().toISOString().split('T')[0]);
                     sessionStorage.setItem('orderType', result.data.order_type || 'immediate');
+                    sessionStorage.setItem('orderStatus', result.data.status || 'pending'); // Store order status
                     sessionStorage.setItem('coopStatus', JSON.stringify(result.data.coop_status || {}));
                     sessionStorage.setItem('qrCode', result.data.qr_code || '');
                     sessionStorage.setItem('qrCodeData', result.data.qr_code_data || '');

@@ -187,45 +187,45 @@ try {
         logMessage("→ Processing Order #{$order['order_id']} - {$order['queue_number']}");
         
         try {
-            // Generate new queue number for next day
-            $newQueueNumber = generateQueueNumberForDate($db, $nextBusinessDay);
+            // Phase 5: Check-In System - Do NOT generate queue number
+            // Orders are set to 'scheduled' status and require check-in when student arrives
             
-            // Update order
+            // Update order to scheduled status
             $updateStmt = $db->prepare("
                 UPDATE orders 
-                SET queue_date = ?,
-                    queue_number = ?,
-                    order_type = 'pre-order',
+                SET queue_number = NULL,
+                    status = 'scheduled',
+                    queue_date = ?,
                     scheduled_date = ?,
-                    status = 'pending',
+                    order_type = 'pre-order',
                     updated_at = NOW()
                 WHERE order_id = ?
             ");
             $updateStmt->execute([
                 $nextBusinessDay,
-                $newQueueNumber,
                 $nextBusinessDay,
                 $order['order_id']
             ]);
             
-            logMessage("  ✓ Moved to {$nextBusinessDay} as {$newQueueNumber}");
+            logMessage("  ✓ Moved to {$nextBusinessDay} as SCHEDULED (requires check-in)");
             
-            // Send notification email
+            // Send notification email with check-in instructions
             if ($order['email']) {
                 try {
                     $emailData = [
                         'student_name' => $order['first_name'] . ' ' . $order['last_name'],
                         'old_queue_number' => $order['queue_number'],
-                        'new_queue_number' => $newQueueNumber,
                         'reference_number' => $order['reference_number'],
                         'original_date' => date('l, F j, Y', strtotime($today)),
                         'new_date' => date('l, F j, Y', strtotime($nextBusinessDay)),
                         'item_ordered' => $order['item_ordered'],
-                        'reason' => 'COOP closing time reached'
+                        'reason' => 'COOP closing time reached',
+                        'is_scheduled' => true, // Flag for email template
+                        'check_in_required' => true // Indicates check-in is needed
                     ];
                     
                     EmailService::sendOrderMovedNotification($order['email'], $emailData);
-                    logMessage("  ✓ Email sent to {$order['email']}");
+                    logMessage("  ✓ Check-in email sent to {$order['email']}");
                 } catch (Exception $e) {
                     logMessage("  ⚠ Email failed: " . $e->getMessage());
                 }
@@ -262,28 +262,6 @@ try {
     exit(1);
 }
 
-/**
- * Generate queue number for specific date
- */
-function generateQueueNumberForDate($db, $date) {
-    $stmt = $db->prepare("
-        SELECT queue_number 
-        FROM orders 
-        WHERE queue_date = ? 
-        ORDER BY CAST(SUBSTRING(queue_number, LOCATE('-', queue_number) + 1) AS UNSIGNED) DESC 
-        LIMIT 1
-    ");
-    $stmt->execute([$date]);
-    $lastQueue = $stmt->fetch();
-    
-    if ($lastQueue) {
-        preg_match('/Q-(\d+)/', $lastQueue['queue_number'], $matches);
-        $lastNum = isset($matches[1]) ? (int)$matches[1] : 0;
-        $nextNum = $lastNum + 1;
-    } else {
-        $nextNum = 1;
-    }
-    
-    return 'Q-' . $nextNum;
-}
+// Phase 5: generateQueueNumberForDate() function removed
+// Queue numbers are now generated only when students check in via activate_scheduled_order.php
 ?>

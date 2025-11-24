@@ -211,20 +211,23 @@ try {
                     throw new Exception("Unable to process order. No available business days found.");
                 }
                 
-                // Create as pre-order
+                // Create as scheduled order (Option C: No queue number, 'scheduled' status)
                 $orderType = 'pre-order';
                 $queueDate = $nextBusinessDay;
                 $orderedOutsideHours = 1;
                 
-                // Generate queue number for next business day
-                $queueNum = generateQueueNumber($db, $nextBusinessDay);
-                $response['message'] = "COOP is currently closed. Your order has been scheduled for " . date('l, F j', strtotime($nextBusinessDay)) . ".";
+                // Do NOT generate queue number - set to null for scheduled orders
+                $queueNum = null;
+                $finalStatus = 'scheduled'; // Will be used in INSERT statement
+                
+                $response['message'] = "Order Scheduled. Please check in when you arrive on " . date('l, F j', strtotime($nextBusinessDay));
             } else {
                 throw new Exception("COOP is currently closed. Reason: " . $coopStatus['reason'] . ". Please place your order during operating hours.");
             }
         } else {
             // Generate sequential queue number for today
             $queueNum = generateQueueNumber($db);
+            $finalStatus = 'pending'; // Normal status for immediate orders
         }
         
         // Generate unique reference number
@@ -315,7 +318,7 @@ try {
         }
         if (isset($ordersColsMap['status'])) { 
             $cols[] = 'status'; 
-            $values[] = 'pending'; 
+            $values[] = $finalStatus ?? 'pending'; // Use finalStatus (scheduled or pending)
             $placeholders[] = '?'; 
         }
         
@@ -405,6 +408,7 @@ try {
             'queue_position' => $waitTimeData['queue_position'],
             'queue_date' => $queueDate,
             'order_type' => $orderType,
+            'status' => $finalStatus ?? 'pending', // Include status in response
             'qr_expiry' => $qrExpiry,
             'qr_code' => $qrCodeUri,
             'qr_code_data' => $qrData,

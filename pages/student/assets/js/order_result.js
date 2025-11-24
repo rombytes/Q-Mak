@@ -23,11 +23,13 @@ const orderData = {
     queuePosition: sessionStorage.getItem('queuePosition'),
     queueDate: sessionStorage.getItem('queueDate'),
     orderType: sessionStorage.getItem('orderType'),
+    orderStatus: sessionStorage.getItem('orderStatus') || 'pending',
     coopStatus: JSON.parse(sessionStorage.getItem('coopStatus') || '{}'),
     userEmail: sessionStorage.getItem('userEmail')
 };
 
-if (!orderData.queueNum || !orderData.waitTime) {
+// Allow proceeding if status is 'scheduled' even if queueNum is null
+if (orderData.orderStatus !== 'scheduled' && (!orderData.queueNum || !orderData.waitTime)) {
     showAlert('Session expired. Please start again.', 'warning').then(() => {
         window.location.href = '../index.html';
     });
@@ -38,16 +40,123 @@ if (!orderData.queueNum || !orderData.waitTime) {
     // Generate QR Code
     generateQRCode();
     
-    // Start real-time wait time updates
-    startWaitTimePolling();
+    // Start real-time wait time updates (skip for scheduled orders)
+    if (orderData.orderStatus !== 'scheduled') {
+        startWaitTimePolling();
+    }
     
     // Show success notification
     if (window.notificationManager) {
-        window.notificationManager.orderSuccess(orderData.queueNum);
+        if (orderData.orderStatus === 'scheduled') {
+            window.notificationManager.showInAppNotification('Order scheduled successfully!', 'success');
+        } else {
+            window.notificationManager.orderSuccess(orderData.queueNum);
+        }
     }
 }
 
 function displayOrderDetails() {
+    // Phase 4: Inject cancel button for cancellable orders
+    const cancelContainer = document.getElementById('cancel-container');
+    if (cancelContainer && (orderData.orderStatus === 'pending' || orderData.orderStatus === 'scheduled')) {
+        cancelContainer.innerHTML = `
+            <div class="bg-gradient-to-r from-gray-50 to-red-50 rounded-xl p-5 border border-red-200 shadow-sm">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="font-bold text-gray-900 mb-1">Need to Cancel?</h4>
+                            <p class="text-sm text-gray-600">Your reserved item will be released back to inventory</p>
+                        </div>
+                    </div>
+                    <button 
+                        onclick="cancelOrder()" 
+                        id="cancelOrderButton"
+                        class="bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 px-6 py-3 rounded-xl font-bold transition-all hover:shadow-lg flex items-center gap-2 min-w-[180px] justify-center">
+                        <i class="fas fa-ban text-lg"></i>
+                        <span>Cancel Order</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Check if this is a scheduled order
+    if (orderData.orderStatus === 'scheduled') {
+        // Inject "I'm Here" Check-In Button
+        const actionContainer = document.getElementById('scheduled-action-container');
+        if (actionContainer) {
+            actionContainer.innerHTML = `
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-6 shadow-2xl text-white">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-hand-pointer text-white text-3xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="text-2xl font-bold mb-1">Ready to Check In?</h3>
+                                <p class="text-purple-100 text-sm">Click the button to join the queue and receive your number</p>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="activateOrder()" 
+                            id="checkInButton"
+                            class="bg-white text-purple-600 hover:bg-purple-50 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-2xl hover:scale-105 flex items-center gap-3 min-w-[200px] justify-center group">
+                            <i class="fas fa-check-circle text-2xl group-hover:scale-110 transition-transform"></i>
+                            <span>I'M HERE</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Queue Number Box - Show "SCHEDULED" instead of queue number
+        const queueNumDiv = document.getElementById('queueNum');
+        queueNumDiv.innerHTML = '<i class="fas fa-calendar-check text-purple-600"></i> SCHEDULED';
+        queueNumDiv.className = 'text-2xl font-extrabold text-purple-600 flex items-center gap-2';
+        
+        // Wait Time Box - Show "Check In Required" instead of wait time
+        const waitDiv = document.getElementById('waitTime');
+        waitDiv.innerHTML = `
+            <span class="text-lg font-bold text-purple-600">Check In Required</span>
+            <span class="text-sm block text-gray-600 mt-1">
+                <i class="fas fa-info-circle"></i> No queue number yet
+            </span>
+        `;
+        
+        // Change color theme for scheduled orders
+        const queueCard = document.getElementById('queueNum').closest('.bg-white');
+        if (queueCard) {
+            queueCard.classList.remove('border-blue-100');
+            queueCard.classList.add('border-purple-100');
+            queueCard.querySelector('.bg-blue-100')?.classList.replace('bg-blue-100', 'bg-purple-100');
+            queueCard.querySelector('.text-blue-600')?.classList.replace('text-blue-600', 'text-purple-600');
+        }
+        
+        const waitCard = document.getElementById('waitTime').closest('.bg-white');
+        if (waitCard) {
+            waitCard.classList.remove('border-orange-100');
+            waitCard.classList.add('border-purple-100');
+            waitCard.querySelector('.bg-orange-100')?.classList.replace('bg-orange-100', 'bg-purple-100');
+            waitCard.querySelector('.text-orange-600')?.classList.replace('text-orange-600', 'text-purple-600');
+        }
+        
+        // Show scheduled instructions div and hide regular instructions
+        const scheduledInstructions = document.getElementById('scheduledInstructions');
+        const regularInstructions = document.getElementById('regularInstructions');
+        if (scheduledInstructions) {
+            scheduledInstructions.classList.remove('hidden');
+        }
+        if (regularInstructions) {
+            regularInstructions.classList.add('hidden');
+        }
+        
+        return;
+    }
+    
+    // Normal order display (existing logic)
     // Queue number (sequential format)
     document.getElementById('queueNum').textContent = orderData.queueNum;
     
@@ -289,7 +398,12 @@ if (orderData.referenceNum) {
 // Display order type information
 function updateOrderInfo() {
     const orderInfo = document.getElementById('orderInfo');
-    if (orderData.orderType === 'pre-order') {
+    
+    if (orderData.orderStatus === 'scheduled') {
+        // Scheduled order display
+        orderInfo.innerHTML = `<strong>Scheduled Order</strong> for ${new Date(orderData.queueDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
+        document.getElementById('orderTypeInfo').className = 'bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 shadow-md text-white';
+    } else if (orderData.orderType === 'pre-order') {
         orderInfo.innerHTML = `<strong>Pre-Order</strong> scheduled for ${new Date(orderData.queueDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
         document.getElementById('orderTypeInfo').className = 'bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 shadow-md text-white';
     } else {
@@ -368,6 +482,195 @@ async function updateWaitTime() {
         }
     } catch (error) {
         console.error('Failed to update wait time:', error);
+    }
+}
+
+/**
+ * Cancel an order and restock inventory - Phase 4
+ */
+async function cancelOrder() {
+    // Confirmation dialog
+    const confirmed = confirm(
+        '⚠️ Are you sure you want to cancel this order?\n\n' +
+        'This action will:\n' +
+        '• Cancel your order immediately\n' +
+        '• Release your reserved item back to inventory\n' +
+        '• Remove you from the queue (if applicable)\n\n' +
+        'This cannot be undone.'
+    );
+    
+    if (!confirmed) {
+        return; // User cancelled the cancellation
+    }
+    
+    const cancelButton = document.getElementById('cancelOrderButton');
+    
+    // Disable button and show loading state
+    if (cancelButton) {
+        cancelButton.disabled = true;
+        cancelButton.innerHTML = '<i class="fas fa-spinner fa-spin text-lg"></i> <span>Cancelling...</span>';
+        cancelButton.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+    
+    try {
+        const response = await fetch(`${getApiBase()}/student/cancel_order.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reference_number: orderData.referenceNum
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            if (window.notificationManager) {
+                window.notificationManager.showInAppNotification(
+                    'Order cancelled successfully. Your reserved item has been released.',
+                    'success'
+                );
+            } else {
+                alert('✓ Order cancelled successfully!\n\nYour reserved item has been released back to inventory.');
+            }
+            
+            // Clear session data
+            sessionStorage.clear();
+            
+            // Redirect to homepage after short delay
+            setTimeout(() => {
+                window.location.href = '../index.html';
+            }, 2000);
+            
+        } else {
+            // Handle errors
+            const errorMessage = result.message || 'Failed to cancel order. Please try again.';
+            
+            if (window.notificationManager) {
+                window.notificationManager.error(errorMessage);
+            } else {
+                alert('✗ ' + errorMessage);
+            }
+            
+            // Re-enable button
+            if (cancelButton) {
+                cancelButton.disabled = false;
+                cancelButton.innerHTML = '<i class="fas fa-ban text-lg"></i> <span>Cancel Order</span>';
+                cancelButton.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Cancel order error:', error);
+        
+        const errorMessage = 'Network error. Please check your connection and try again.';
+        
+        if (window.notificationManager) {
+            window.notificationManager.error(errorMessage);
+        } else {
+            alert('✗ ' + errorMessage);
+        }
+        
+        // Re-enable button
+        if (cancelButton) {
+            cancelButton.disabled = false;
+            cancelButton.innerHTML = '<i class="fas fa-ban text-lg"></i> <span>Cancel Order</span>';
+            cancelButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+    }
+}
+
+/**
+ * Activate a scheduled order - Convert to active queue order
+ * Phase 3: Check-In System
+ */
+async function activateOrder() {
+    const checkInButton = document.getElementById('checkInButton');
+    
+    // Disable button and show loading state
+    if (checkInButton) {
+        checkInButton.disabled = true;
+        checkInButton.innerHTML = '<i class="fas fa-spinner fa-spin text-2xl"></i> <span>Checking In...</span>';
+        checkInButton.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+    
+    try {
+        const response = await fetch(`${getApiBase()}/student/activate_scheduled_order.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reference_number: orderData.referenceNum
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update sessionStorage with new active order data
+            sessionStorage.setItem('queueNum', result.data.queue_number);
+            sessionStorage.setItem('orderStatus', result.data.status);
+            sessionStorage.setItem('waitTime', result.data.wait_time);
+            sessionStorage.setItem('queueDate', result.data.queue_date);
+            
+            if (result.data.wait_time_details) {
+                sessionStorage.setItem('waitTimeDetails', JSON.stringify(result.data.wait_time_details));
+                sessionStorage.setItem('queuePosition', result.data.queue_position || '1');
+            }
+            
+            // Show success notification
+            if (window.notificationManager) {
+                window.notificationManager.showInAppNotification(
+                    `Successfully checked in! Your queue number is ${result.data.queue_number}`,
+                    'success'
+                );
+            } else {
+                alert(`✓ Successfully checked in!\n\nYour queue number: ${result.data.queue_number}\nEstimated wait time: ${result.data.wait_time} minutes`);
+            }
+            
+            // Reload the page to show active order UI
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+            
+        } else {
+            // Handle errors
+            const errorMessage = result.message || 'Failed to check in. Please try again.';
+            
+            if (window.notificationManager) {
+                window.notificationManager.error(errorMessage);
+            } else {
+                alert('✗ ' + errorMessage);
+            }
+            
+            // Re-enable button
+            if (checkInButton) {
+                checkInButton.disabled = false;
+                checkInButton.innerHTML = '<i class="fas fa-check-circle text-2xl"></i> <span>I\'M HERE</span>';
+                checkInButton.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Check-in error:', error);
+        
+        const errorMessage = 'Network error. Please check your connection and try again.';
+        
+        if (window.notificationManager) {
+            window.notificationManager.error(errorMessage);
+        } else {
+            alert('✗ ' + errorMessage);
+        }
+        
+        // Re-enable button
+        if (checkInButton) {
+            checkInButton.disabled = false;
+            checkInButton.innerHTML = '<i class="fas fa-check-circle text-2xl"></i> <span>I\'M HERE</span>';
+            checkInButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
     }
 }
 

@@ -101,8 +101,47 @@
             </div>
         </div>
 
-        <!-- Instructions -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-200 shadow-md">
+        <!-- Check-In Button Container (For Scheduled Orders) -->
+        <div id="scheduled-action-container" class="mb-6"></div>
+
+        <!-- Cancel Order Button Container (For cancellable orders) -->
+        <div id="cancel-container" class="mb-6"></div>
+
+        <!-- Scheduled Order Instructions (Hidden by default, shown only for scheduled orders) -->
+        <div id="scheduledInstructions" class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 mb-6 border border-purple-200 shadow-md hidden">
+            <div class="flex items-start gap-3 mb-4">
+                <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-calendar-check text-white"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-purple-900 text-lg mb-2">Your Order is Scheduled!</h4>
+                    <p class="text-purple-800 mb-3">You do not have a queue number yet. Your order is secured and will be processed when you arrive.</p>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                            <div class="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-purple-600 font-bold text-sm">1</span>
+                            </div>
+                            <p class="text-gray-700 flex-1">Arrive at the school on your scheduled date</p>
+                        </div>
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                            <div class="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-purple-600 font-bold text-sm">2</span>
+                            </div>
+                            <p class="text-gray-700 flex-1">Open your dashboard and click <strong>"I'm Here"</strong> or visit the kiosk to check in</p>
+                        </div>
+                        <div class="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                            <div class="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-purple-600 font-bold text-sm">3</span>
+                            </div>
+                            <p class="text-gray-700 flex-1">You will receive your queue number and join the active queue</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regular Order Instructions (Default) -->
+        <div id="regularInstructions" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-200 shadow-md">
             <div class="flex items-start gap-3 mb-4">
                 <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-list-check text-white"></i>

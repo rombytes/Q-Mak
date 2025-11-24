@@ -157,9 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare("
             INSERT INTO orders (
                 student_id, queue_number, queue_date, reference_number,
-                item_ordered, item_name, quantity, status, order_status,
+                item_ordered, item_name, quantity, status,
                 order_type, estimated_wait_time, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', 'online', 15, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'online', 15, NOW())
         ");
         
         $stmt->execute([

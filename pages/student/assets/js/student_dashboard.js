@@ -256,20 +256,79 @@ function displayCurrentOrder(order) {
     const statusColors = {
         pending: 'bg-warning-100 text-warning-800 border-warning-300',
         processing: 'bg-accent-100 text-accent-800 border-accent-300',
-        ready: 'bg-success-100 text-success-800 border-success-300'
+        ready: 'bg-success-100 text-success-800 border-success-300',
+        scheduled: 'bg-purple-100 text-purple-800 border-purple-300'
     };
     
-    const statusColor = statusColors[order.order_status] || 'bg-gray-100 text-gray-800 border-gray-300';
+    const statusColor = statusColors[order.status] || 'bg-gray-100 text-gray-800 border-gray-300';
+    
+    // Phase 3: Check-in button for scheduled orders
+    let checkInButtonHTML = '';
+    if (order.status === 'scheduled') {
+        checkInButtonHTML = `
+            <div class="mb-6">
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-6 shadow-2xl text-white">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-hand-pointer text-white text-3xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="text-2xl font-bold mb-1">Ready to Check In?</h3>
+                                <p class="text-purple-100 text-sm">Click the button to join the queue and receive your number</p>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="activateOrderDashboard()" 
+                            id="dashboardCheckInButton"
+                            class="bg-white text-purple-600 hover:bg-purple-50 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-2xl hover:scale-105 flex items-center gap-3 min-w-[200px] justify-center">
+                            <i class="bi bi-check-circle-fill text-2xl"></i>
+                            <span>I'M HERE</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Phase 4: Cancel button for cancellable orders (pending/scheduled)
+    let cancelButtonHTML = '';
+    if (order.status === 'pending' || order.status === 'scheduled') {
+        cancelButtonHTML = `
+            <div class="mb-6">
+                <div class="bg-gradient-to-r from-gray-50 to-red-50 rounded-xl p-5 border border-red-200 shadow-md">
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-exclamation-triangle-fill text-red-600 text-xl"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-lg font-bold text-gray-800">Need to Cancel?</h4>
+                                <p class="text-gray-600 text-sm">Your reserved item will be released back to inventory</p>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="cancelOrderDashboard()" 
+                            id="dashboardCancelButton"
+                            class="bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 px-6 py-3 rounded-lg font-bold transition-all hover:shadow-lg flex items-center gap-2">
+                            <i class="bi bi-x-circle-fill text-xl"></i>
+                            <span>Cancel Order</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
     
     // Progress steps - New flow: Confirmed → Waiting → Processing → Completed
     const steps = [
         { name: 'Confirmed', status: 'completed', icon: 'bi-check-circle-fill' },
-        { name: 'Waiting', status: order.order_status === 'pending' ? 'active' : 'completed', icon: 'bi-hourglass-split' },
-        { name: 'Processing', status: order.order_status === 'processing' ? 'active' : (order.order_status === 'completed' ? 'completed' : 'pending'), icon: 'bi-bell-fill' },
-        { name: 'Completed', status: order.order_status === 'completed' ? 'completed' : 'pending', icon: 'bi-hand-thumbs-up-fill' }
+        { name: 'Waiting', status: order.status === 'pending' || order.status === 'scheduled' ? 'active' : 'completed', icon: 'bi-hourglass-split' },
+        { name: 'Processing', status: order.status === 'processing' ? 'active' : (order.status === 'completed' ? 'completed' : 'pending'), icon: 'bi-bell-fill' },
+        { name: 'Completed', status: order.status === 'completed' ? 'completed' : 'pending', icon: 'bi-hand-thumbs-up-fill' }
     ];
     
-    heroSection.innerHTML = `
+    heroSection.innerHTML = checkInButtonHTML + cancelButtonHTML + `
         <div class="bg-gradient-to-r from-accent-600 to-accent-500 rounded-2xl p-8 shadow-2xl text-white" style="background: linear-gradient(to right, #2563eb, #3b82f6); color: #ffffff !important;">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
@@ -351,7 +410,7 @@ function displayCurrentOrder(order) {
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-semibold text-gray-600">Queue Number</h4>
-                                    <p class="text-2xl font-extrabold bg-gradient-to-r from-blue-900 to-blue-700" style="background: linear-gradient(to right, #1e3a8a, #1d4ed8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${order.queue_number}</p>
+                                    <p class="text-2xl font-extrabold ${order.status === 'scheduled' ? 'text-purple-600' : 'bg-gradient-to-r from-blue-900 to-blue-700'}" style="${order.status === 'scheduled' ? 'color: #a855f7;' : 'background: linear-gradient(to right, #1e3a8a, #1d4ed8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'}">${order.status === 'scheduled' ? 'SCHEDULED' : order.queue_number}</p>
                                 </div>
                             </div>
                         </div>
@@ -390,8 +449,13 @@ function displayCurrentOrder(order) {
                                 </div>
                                 <div>
                                     <h4 class="text-xs font-semibold text-gray-600">Estimated Wait Time</h4>
-                                    <p class="text-base font-bold text-orange-600">${order.estimated_minutes || order.estimated_wait_time} minutes</p>
-                                    ${order.orders_ahead !== undefined ? `<p class="text-xs text-gray-500 mt-1">${order.orders_ahead === 0 ? "You're next!" : order.orders_ahead + ' order' + (order.orders_ahead > 1 ? 's' : '') + ' ahead'}</p>` : ''}
+                                    ${order.status === 'scheduled' ? `
+                                        <p class="text-base font-bold text-purple-600">Check In Required</p>
+                                        <p class="text-xs text-gray-500 mt-1"><i class="bi bi-info-circle"></i> No queue number yet</p>
+                                    ` : `
+                                        <p class="text-base font-bold text-orange-600">${order.estimated_minutes || order.estimated_wait_time} minutes</p>
+                                        ${order.orders_ahead !== undefined ? `<p class="text-xs text-gray-500 mt-1">${order.orders_ahead === 0 ? "You're next!" : order.orders_ahead + ' order' + (order.orders_ahead > 1 ? 's' : '') + ' ahead'}</p>` : ''}
+                                    `}
                                 </div>
                             </div>
                         </div>
@@ -435,6 +499,151 @@ function displayCurrentOrder(order) {
     setTimeout(() => {
         generateActiveOrderQR(order);
     }, 100);
+}
+
+/**
+ * Activate a scheduled order from dashboard - Phase 3: Check-In System
+ */
+// Phase 4: Cancel Order Function
+async function cancelOrderDashboard() {
+    const cancelButton = document.getElementById('dashboardCancelButton');
+    
+    if (!currentActiveOrder || !currentActiveOrder.reference_number) {
+        showToast('Error: Order information not found', 'error');
+        return;
+    }
+    
+    // Show confirmation dialog
+    const confirmed = confirm(
+        '⚠️ Are you sure you want to cancel this order?\n\n' +
+        'This action will:\n' +
+        '• Cancel your order immediately\n' +
+        '• Release your reserved item back to inventory\n' +
+        '• Remove you from the queue (if applicable)\n\n' +
+        'This cannot be undone.'
+    );
+    
+    if (!confirmed) {
+        return; // User cancelled the confirmation
+    }
+    
+    // Disable button and show loading state
+    if (cancelButton) {
+        cancelButton.disabled = true;
+        cancelButton.innerHTML = '<i class="bi bi-arrow-repeat spin text-xl"></i> <span>Cancelling...</span>';
+        cancelButton.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/student/cancel_order.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reference_number: currentActiveOrder.reference_number
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success toast
+            showToast('Order cancelled successfully. Your reserved item has been released.', 'success');
+            
+            // Reload current order to clear display
+            setTimeout(() => {
+                loadCurrentOrder();
+                loadOrderHistory(); // Refresh history to show cancelled status
+            }, 1500);
+            
+        } else {
+            // Handle errors
+            const errorMessage = result.message || 'Failed to cancel order. Please try again.';
+            showToast(errorMessage, 'error');
+            
+            // Re-enable button
+            if (cancelButton) {
+                cancelButton.disabled = false;
+                cancelButton.innerHTML = '<i class="bi bi-x-circle-fill text-xl"></i> <span>Cancel Order</span>';
+                cancelButton.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Cancel order error:', error);
+        showToast('Network error. Please check your connection and try again.', 'error');
+        
+        // Re-enable button
+        if (cancelButton) {
+            cancelButton.disabled = false;
+            cancelButton.innerHTML = '<i class="bi bi-x-circle-fill text-xl"></i> <span>Cancel Order</span>';
+            cancelButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+    }
+}
+
+async function activateOrderDashboard() {
+    const checkInButton = document.getElementById('dashboardCheckInButton');
+    
+    if (!currentActiveOrder || !currentActiveOrder.reference_number) {
+        showToast('Error: Order information not found', 'error');
+        return;
+    }
+    
+    // Disable button and show loading state
+    if (checkInButton) {
+        checkInButton.disabled = true;
+        checkInButton.innerHTML = '<i class="bi bi-arrow-repeat spin text-2xl"></i> <span>Checking In...</span>';
+        checkInButton.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/student/activate_scheduled_order.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reference_number: currentActiveOrder.reference_number
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success toast
+            showToast(`Successfully checked in! Your queue number is ${result.data.queue_number}`, 'success');
+            
+            // Reload current order to show updated status
+            setTimeout(() => {
+                loadCurrentOrder();
+            }, 1500);
+            
+        } else {
+            // Handle errors
+            const errorMessage = result.message || 'Failed to check in. Please try again.';
+            showToast(errorMessage, 'error');
+            
+            // Re-enable button
+            if (checkInButton) {
+                checkInButton.disabled = false;
+                checkInButton.innerHTML = '<i class="bi bi-check-circle-fill text-2xl"></i> <span>I\'M HERE</span>';
+                checkInButton.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Check-in error:', error);
+        showToast('Network error. Please check your connection and try again.', 'error');
+        
+        // Re-enable button
+        if (checkInButton) {
+            checkInButton.disabled = false;
+            checkInButton.innerHTML = '<i class="bi bi-check-circle-fill text-2xl"></i> <span>I\'M HERE</span>';
+            checkInButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+    }
 }
 
 // Generate QR Code for active order - standardized format matching order_result.html

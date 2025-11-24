@@ -111,7 +111,7 @@ try {
             item_ordered,
             quantity,
             notes,
-            order_status,
+            status,
             order_type,
             scheduled_date,
             ordered_outside_hours,

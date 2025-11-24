@@ -45,11 +45,11 @@ try {
     // Build query based on filter (simpler approach)
     $statusCondition = '';
     if ($status === 'completed') {
-        $statusCondition = " AND o.order_status = 'completed'";
+        $statusCondition = " AND o.status = 'completed'";
     } elseif ($status === 'cancelled') {
-        $statusCondition = " AND o.order_status = 'cancelled'";
+        $statusCondition = " AND o.status = 'cancelled'";
     } elseif ($status === 'active') {
-        $statusCondition = " AND o.order_status IN ('pending', 'processing', 'ready')";
+        $statusCondition = " AND o.status IN ('pending', 'processing', 'ready', 'scheduled')";
     }
     // 'all' returns everything
     
@@ -66,7 +66,7 @@ try {
             o.queue_number,
             o.student_id,
             o.item_ordered,
-            o.order_status,
+            o.status,
             o.estimated_wait_time,
             o.created_at,
             o.updated_at

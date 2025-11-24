@@ -54,7 +54,7 @@ try {
             s.created_at,
             s.last_login,
             COUNT(DISTINCT o.order_id) as total_orders,
-            COUNT(DISTINCT CASE WHEN o.order_status = 'completed' THEN o.order_id END) as completed_orders";
+            COUNT(DISTINCT CASE WHEN o.status = 'completed' THEN o.order_id END) as completed_orders";
     
     // Get student profile data
     $stmt = $db->prepare("

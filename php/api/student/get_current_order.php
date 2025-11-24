@@ -65,7 +65,7 @@ try {
             o.item_ordered,
             o.quantity,
             o.notes,
-            o.order_status,
+            o.status,
             o.order_type,
             o.scheduled_date,
             o.estimated_wait_time,
@@ -80,7 +80,7 @@ try {
         FROM orders o
         JOIN students s ON o.student_id = s.student_id
         WHERE o.student_id = ?
-          AND o.order_status IN ('pending', 'processing', 'ready')
+          AND o.status IN ('pending', 'processing', 'ready', 'scheduled')
         ORDER BY o.created_at DESC
         LIMIT 1
     ");
@@ -90,7 +90,7 @@ try {
     
     if ($orderData) {
         // Get accurate queue position based on queue_number if status is pending or processing
-        if (in_array($orderData['order_status'], ['pending', 'processing']) && !empty($orderData['queue_number'])) {
+        if (in_array($orderData['status'], ['pending', 'processing']) && !empty($orderData['queue_number'])) {
             $positionData = getOrderQueuePosition($db, $orderData['queue_number'], $orderData['queue_date']);
             $orderData['queue_position'] = $positionData['queue_position'];
             $orderData['orders_ahead'] = $positionData['orders_ahead'];

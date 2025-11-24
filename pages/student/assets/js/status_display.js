@@ -15,27 +15,38 @@ const statusConfig = {
     'pending': { 
         text: 'PENDING', 
         desc: 'Your order is currently being processed by the COOP staff.',
-        color: 'bg-orange-500 text-white'
+        color: 'bg-orange-500 text-white',
+        icon: 'fas fa-clock'
     },
     'processing': { 
         text: 'PROCESSING', 
         desc: 'Your items are being picked and prepared.',
-        color: 'bg-blue-500 text-white'
+        color: 'bg-blue-500 text-white',
+        icon: 'fas fa-cog fa-spin'
+    },
+    'scheduled': { 
+        text: 'SCHEDULED', 
+        desc: 'Your order is scheduled. Please check in when you arrive to receive your queue number.',
+        color: 'bg-purple-500 text-white',
+        icon: 'fas fa-calendar-check'
     },
     'ready': { 
         text: 'READY FOR PICK-UP', 
         desc: 'Your order is ready! Please proceed to the COOP pickup counter.',
-        color: 'bg-indigo-600 text-white'
+        color: 'bg-indigo-600 text-white',
+        icon: 'fas fa-box-open'
     },
     'completed': { 
         text: 'COMPLETED', 
         desc: 'Order completed and successfully picked up.',
-        color: 'bg-green-600 text-white'
+        color: 'bg-green-600 text-white',
+        icon: 'fas fa-check-circle'
     },
     'cancelled': { 
         text: 'CANCELLED', 
         desc: 'This order has been cancelled. Please contact COOP for details.',
-        color: 'bg-red-600 text-white'
+        color: 'bg-red-600 text-white',
+        icon: 'fas fa-times-circle'
     }
 };
 
@@ -86,11 +97,63 @@ async function loadOrderStatus() {
                 status: order.order_status
             };
             
-            document.getElementById('orderId').innerHTML = `
+            // Phase 3: Check-in button for scheduled orders
+            let checkInButtonHTML = '';
+            if (order.order_status === 'scheduled') {
+                checkInButtonHTML = `
+                    <div class="mb-6 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-6 shadow-xl">
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center gap-3 text-white">
+                                <i class="fas fa-hand-pointer text-3xl"></i>
+                                <div>
+                                    <h4 class="font-bold text-lg">Ready to Check In?</h4>
+                                    <p class="text-sm text-purple-100">Click to join the queue and receive your number</p>
+                                </div>
+                            </div>
+                            <button 
+                                onclick="activateOrderStatus()" 
+                                id="statusCheckInButton"
+                                class="bg-white text-purple-600 hover:bg-purple-50 px-6 py-3 rounded-lg font-bold transition-all hover:shadow-xl flex items-center gap-2">
+                                <i class="fas fa-check-circle text-xl"></i>
+                                <span>I'M HERE</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Phase 4: Cancel button for cancellable orders (pending/scheduled)
+            let cancelButtonHTML = '';
+            if (order.order_status === 'pending' || order.order_status === 'scheduled') {
+                cancelButtonHTML = `
+                    <div class="mb-6 bg-gradient-to-r from-gray-50 to-red-50 rounded-xl p-5 border border-red-200 shadow-md">
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Need to Cancel?</h4>
+                                    <p class="text-gray-600 text-sm">Your reserved item will be released back to inventory</p>
+                                </div>
+                            </div>
+                            <button 
+                                onclick="cancelOrderStatus()" 
+                                id="statusCancelButton"
+                                class="bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 px-5 py-2.5 rounded-lg font-bold transition-all hover:shadow-lg flex items-center gap-2">
+                                <i class="fas fa-ban text-lg"></i>
+                                <span>Cancel Order</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('orderId').innerHTML = checkInButtonHTML + cancelButtonHTML + `
                 <div class="flex items-center gap-2 mb-2">
-                    <i class="fas fa-hashtag text-blue-500 text-sm"></i>
+                    <i class="fas fa-hashtag ${order.order_status === 'scheduled' ? 'text-purple-500' : 'text-blue-500'} text-sm"></i>
                     <span class="text-sm text-gray-600">Queue Number:</span>
-                    <strong class="text-blue-900 text-lg">${order.queue_number}</strong>
+                    <strong class="${order.order_status === 'scheduled' ? 'text-purple-600' : 'text-blue-900'} text-lg">${order.order_status === 'scheduled' ? 'SCHEDULED' : order.queue_number}</strong>
                 </div>
                 <div class="flex items-center gap-2 mb-2">
                     <i class="fas fa-barcode text-purple-500 text-sm"></i>
@@ -103,9 +166,15 @@ async function loadOrderStatus() {
                     <span class="text-gray-900">${itemDisplay}</span>
                 </div>
                 <div class="flex items-center gap-2 mb-2" id="waitTimeDisplay">
-                    <i class="fas fa-clock text-orange-500 text-sm"></i>
-                    <span class="text-sm text-gray-600">Estimated Wait:</span>
-                    <strong class="text-orange-900">${waitTimeRange}</strong>
+                    ${order.order_status === 'scheduled' ? `
+                        <i class="fas fa-calendar-check text-purple-500 text-sm"></i>
+                        <span class="text-sm text-gray-600">Status:</span>
+                        <strong class="text-purple-600">Check In Required</strong>
+                    ` : `
+                        <i class="fas fa-clock text-orange-500 text-sm"></i>
+                        <span class="text-sm text-gray-600">Estimated Wait:</span>
+                        <strong class="text-orange-900">${waitTimeRange}</strong>
+                    `}
                 </div>
                 <div class="flex items-center gap-2 mb-2">
                     <i class="fas fa-calendar-day text-indigo-500 text-sm"></i>
@@ -136,7 +205,7 @@ async function loadOrderStatus() {
             }
             
             // Update position data if order is active
-            if (order.order_status === 'pending' || order.order_status === 'processing') {
+            if (order.status === 'pending' || order.status === 'processing' || order.status === 'scheduled') {
                 await updatePositionData(order.queue_number, refNumber);
                 
                 // Poll every 30 seconds for updates
@@ -167,7 +236,7 @@ async function loadOrderStatus() {
                                 <p class="text-sm text-gray-600">${oItemDisplay}</p>
                             </div>
                         </div>
-                        <span class="text-xs px-3 py-1 rounded-full ${statusConfig[o.order_status].color}">${statusConfig[o.order_status].text}</span>
+                        <span class="text-xs px-3 py-1 rounded-full ${statusConfig[o.status].color}">${statusConfig[o.status].text}</span>
                     </div>
                 `}).join('');
                 
@@ -200,7 +269,7 @@ async function loadOrderStatus() {
 function generateStatusQRCode(order, email) {
     // Only show QR code for active orders
     const activeStatus = ['pending', 'processing', 'ready'];
-    if (!activeStatus.includes(order.order_status)) {
+    if (!activeStatus.includes(order.status)) {
         return; // Do not show QR for completed or cancelled orders
     }
 
@@ -338,6 +407,194 @@ async function updatePositionData(queueNumber, referenceNumber) {
         }
     } catch (error) {
         console.error('Failed to update position:', error);
+    }
+}
+
+/**
+ * Activate a scheduled order from status page - Phase 3: Check-In System
+ */
+// Phase 4: Cancel Order Function
+async function cancelOrderStatus() {
+    const cancelButton = document.getElementById('statusCancelButton');
+    
+    if (!window.currentOrder || !window.currentOrder.reference_number) {
+        if (window.notificationManager) {
+            window.notificationManager.error('Order information not found');
+        } else {
+            alert('Error: Order information not found');
+        }
+        return;
+    }
+    
+    // Show confirmation dialog
+    const confirmed = confirm(
+        '⚠️ Are you sure you want to cancel this order?\n\n' +
+        'This action will:\n' +
+        '• Cancel your order immediately\n' +
+        '• Release your reserved item back to inventory\n' +
+        '• Remove you from the queue (if applicable)\n\n' +
+        'This cannot be undone.'
+    );
+    
+    if (!confirmed) {
+        return; // User cancelled the confirmation
+    }
+    
+    // Disable button and show loading state
+    if (cancelButton) {
+        cancelButton.disabled = true;
+        cancelButton.innerHTML = '<i class="fas fa-spinner fa-spin text-lg"></i> <span>Cancelling...</span>';
+        cancelButton.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/student/cancel_order.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reference_number: window.currentOrder.reference_number
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success notification
+            if (window.notificationManager) {
+                window.notificationManager.showInAppNotification(
+                    'Order cancelled successfully. Your reserved item has been released.',
+                    'success'
+                );
+            } else {
+                alert('✓ Order cancelled successfully!\n\nYour reserved item has been released back to inventory.');
+            }
+            
+            // Redirect to homepage after 2 seconds
+            setTimeout(() => {
+                sessionStorage.removeItem('checkStatusEmail');
+                window.location.href = '../index.html';
+            }, 2000);
+            
+        } else {
+            // Handle errors
+            const errorMessage = result.message || 'Failed to cancel order. Please try again.';
+            if (window.notificationManager) {
+                window.notificationManager.error(errorMessage);
+            } else {
+                alert('✗ Error: ' + errorMessage);
+            }
+            
+            // Re-enable button
+            if (cancelButton) {
+                cancelButton.disabled = false;
+                cancelButton.innerHTML = '<i class="fas fa-ban text-lg"></i> <span>Cancel Order</span>';
+                cancelButton.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Cancel order error:', error);
+        const errorMsg = 'Network error. Please check your connection and try again.';
+        if (window.notificationManager) {
+            window.notificationManager.error(errorMsg);
+        } else {
+            alert('✗ ' + errorMsg);
+        }
+        
+        // Re-enable button
+        if (cancelButton) {
+            cancelButton.disabled = false;
+            cancelButton.innerHTML = '<i class="fas fa-ban text-lg"></i> <span>Cancel Order</span>';
+            cancelButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+    }
+}
+
+async function activateOrderStatus() {
+    const checkInButton = document.getElementById('statusCheckInButton');
+    
+    if (!window.currentOrder || !window.currentOrder.reference_number) {
+        if (window.notificationManager) {
+            window.notificationManager.error('Order information not found');
+        } else {
+            alert('Error: Order information not found');
+        }
+        return;
+    }
+    
+    // Disable button and show loading state
+    if (checkInButton) {
+        checkInButton.disabled = true;
+        checkInButton.innerHTML = '<i class="fas fa-spinner fa-spin text-xl"></i> <span>Checking In...</span>';
+        checkInButton.classList.add('opacity-75', 'cursor-not-allowed');
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/student/activate_scheduled_order.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reference_number: window.currentOrder.reference_number
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success notification
+            if (window.notificationManager) {
+                window.notificationManager.showInAppNotification(
+                    `Successfully checked in! Your queue number is ${result.data.queue_number}`,
+                    'success'
+                );
+            } else {
+                alert(`✓ Successfully checked in!\n\nYour queue number: ${result.data.queue_number}\nEstimated wait time: ${result.data.wait_time} minutes`);
+            }
+            
+            // Reload order status to show updated information
+            setTimeout(() => {
+                loadOrderStatus();
+            }, 1500);
+            
+        } else {
+            // Handle errors
+            const errorMessage = result.message || 'Failed to check in. Please try again.';
+            
+            if (window.notificationManager) {
+                window.notificationManager.error(errorMessage);
+            } else {
+                alert('✗ ' + errorMessage);
+            }
+            
+            // Re-enable button
+            if (checkInButton) {
+                checkInButton.disabled = false;
+                checkInButton.innerHTML = '<i class="fas fa-check-circle text-xl"></i> <span>I\'M HERE</span>';
+                checkInButton.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Check-in error:', error);
+        
+        const errorMessage = 'Network error. Please check your connection and try again.';
+        
+        if (window.notificationManager) {
+            window.notificationManager.error(errorMessage);
+        } else {
+            alert('✗ ' + errorMessage);
+        }
+        
+        // Re-enable button
+        if (checkInButton) {
+            checkInButton.disabled = false;
+            checkInButton.innerHTML = '<i class="fas fa-check-circle text-xl"></i> <span>I\'M HERE</span>';
+            checkInButton.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
     }
 }
 
