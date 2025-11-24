@@ -194,7 +194,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         // Get order details
         $orderStmt = $db->prepare("
-            SELECT o.*, s.email, s.first_name, s.last_name
+            SELECT o.*, 
+                   COALESCE(o.item_ordered, o.item_name, 'N/A') as item_display,
+                   s.email, 
+                   s.first_name, 
+                   s.last_name
             FROM orders o
             JOIN students s ON o.student_id = s.student_id
             WHERE o.order_id = ?
@@ -230,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $emailData = [
             'queue_number' => $order['queue_number'],
             'student_name' => $order['first_name'] . ' ' . $order['last_name'],
-            'item_ordered' => $order['item_name'],
+            'item_ordered' => $order['item_display'],
             'status' => strtoupper($newStatus),
             'message' => $statusMessages[$newStatus]
         ];

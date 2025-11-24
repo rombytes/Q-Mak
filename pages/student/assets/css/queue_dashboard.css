@@ -1,43 +1,495 @@
 /**
  * Queue Dashboard Page Styles
- * Q-Mak Queue Management System
+ * Q-Mak Queue Management System - Enhanced UI/UX
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-body { 
-    font-family: 'Inter', sans-serif; 
+/* ====================================
+   BASE STYLES
+   ==================================== */
+* {
+    -webkit-tap-highlight-color: transparent;
 }
 
+body { 
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ====================================
+   GLASS MORPHISM EFFECTS
+   ==================================== */
 .glass-effect {
     background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* ====================================
+   ANIMATIONS
+   ==================================== */
+@keyframes pulse-glow {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    50% { 
+        transform: scale(1.05); 
+        opacity: 0.9; 
+        box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+    }
 }
 
 @keyframes pulse {
     0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.05); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 0.7; }
 }
 
+@keyframes slide-up {
+    from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes slide-in-right {
+    from { 
+        opacity: 0; 
+        transform: translateX(50px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateX(0); 
+    }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scale-in {
+    from { 
+        transform: scale(0.9); 
+        opacity: 0; 
+    }
+    to { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ====================================
+   ANIMATION CLASSES
+   ==================================== */
 .pulse-animation {
     animation: pulse 2s ease-in-out infinite;
 }
 
-@keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.pulse-glow-animation {
+    animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .slide-up {
-    animation: slide-up 0.5s ease-out;
+    animation: slide-up 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.slide-in-right {
+    animation: slide-in-right 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-in {
+    animation: fade-in 0.5s ease-out;
+}
+
+.scale-in {
+    animation: scale-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.float-animation {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* ====================================
+   QUEUE CARD STYLES
+   ==================================== */
 .queue-card {
-    transition: all 0.3s ease;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.queue-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.3), 
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.queue-card:hover::before {
+    left: 100%;
 }
 
 .queue-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+.queue-card.processing {
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.queue-card.completed {
+    opacity: 0.7;
+}
+
+/* ====================================
+   CURRENT SERVING DISPLAY
+   ==================================== */
+#currentServing {
+    text-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+    letter-spacing: -0.02em;
+    transition: all 0.3s ease;
+}
+
+#currentServing:hover {
+    transform: scale(1.05);
+}
+
+.now-serving-badge {
+    position: relative;
+    overflow: hidden;
+}
+
+.now-serving-badge::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    animation: pulse-ring 2s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        width: 100%;
+        height: 100%;
+        opacity: 1;
+    }
+    100% {
+        width: 300%;
+        height: 300%;
+        opacity: 0;
+    }
+}
+
+/* ====================================
+   STATUS BADGES
+   ==================================== */
+.status-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.status-badge i {
+    font-size: 1rem;
+}
+
+.status-badge.processing i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ====================================
+   STAT CARDS
+   ==================================== */
+.stat-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 70%
+    );
+    transform: rotate(45deg);
+    transition: all 0.6s ease;
+}
+
+.stat-card:hover::after {
+    top: -100%;
+    right: -100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ====================================
+   RESPONSIVE MOBILE STYLES
+   ==================================== */
+@media (max-width: 768px) {
+    /* Mobile Navigation */
+    nav .container {
+        padding: 1rem;
+    }
+    
+    nav h1 {
+        font-size: 1.25rem;
+    }
+    
+    nav p {
+        font-size: 0.75rem;
+    }
+    
+    nav button {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    nav button span {
+        display: none;
+    }
+    
+    nav .w-10 {
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    /* Mobile Container */
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Mobile Grid */
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Mobile Cards */
+    .rounded-3xl {
+        border-radius: 1.5rem;
+    }
+    
+    .p-8 {
+        padding: 1.5rem;
+    }
+    
+    /* Mobile Current Serving */
+    #currentServing {
+        font-size: 3rem;
+    }
+    
+    /* Mobile Stats */
+    .grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    /* Mobile Queue Cards */
+    .queue-card {
+        padding: 1rem;
+    }
+    
+    .queue-card .text-2xl {
+        font-size: 1.5rem;
+    }
+    
+    /* Mobile Status Counts */
+    .flex.items-center.gap-3 {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .flex.items-center.gap-3 > div {
+        width: 100%;
+        justify-content: center;
+        display: flex;
+    }
+    
+    /* Mobile Floating Button */
+    .fixed.bottom-8.right-8 {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+    }
+    
+    .fixed.bottom-8.right-8 button {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+    }
+}
+
+/* ====================================
+   TABLET STYLES
+   ==================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .lg\\:grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .lg\\:col-span-2 {
+        grid-column: span 1;
+    }
+}
+
+/* ====================================
+   LOADING STATES
+   ==================================== */
+.skeleton {
+    background: linear-gradient(90deg, 
+        #f0f0f0 25%, 
+        #e0e0e0 50%, 
+        #f0f0f0 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 0.5rem;
+}
+
+.loading-spinner {
+    border: 3px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ====================================
+   SCROLL BEHAVIOR
+   ==================================== */
+html {
+    scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.5);
+}
+
+/* ====================================
+   ACCESSIBILITY
+   ==================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+}
+
+/* ====================================
+   PRINT STYLES
+   ==================================== */
+@media print {
+    .fixed,
+    nav,
+    button {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+    }
+    
+    .glass-card,
+    .glass-effect {
+        background: white !important;
+        box-shadow: none !important;
+    }
 }
