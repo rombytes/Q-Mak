@@ -13,6 +13,7 @@
     <meta name="theme-color" content="#1e3a8a">
     <meta name="msapplication-navbutton-color" content="#1e3a8a">
     <meta name="msapplication-TileColor" content="#1e3a8a">
+    <link rel="icon" type="image/svg+xml" href="../../images/logo-files/favicon-32x32-blue.svg">
     
     <!-- Tailwind CSS - Using CDN for rapid development -->
     <!-- TODO: For production optimization, consider using Tailwind CLI: https://tailwindcss.com/docs/installation -->
@@ -55,10 +56,21 @@
     <!-- Retractable Sidebar -->
     <div class="sidebar bg-blue-900 text-white flex flex-col fixed h-full z-100 shadow-2xl" id="sidebar">
         <div class="sidebar-content">
+            <!-- Logo Section -->
+            <div class="border-b border-blue-700/50">
+                <div class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 flex items-center justify-center gap-3">
+                    <img src="../../images/logo-files/logo-wo-text-orange.svg" alt="Q-Mak Logo" class="h-8 w-8 flex-shrink-0 object-contain">
+                    <div class="menu-text flex-1 min-w-0">
+                        <h3 class="text-base font-bold text-white">Q-Mak</h3>
+                        <p class="text-xs text-blue-200">Admin Panel</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Profile Section -->
-            <div class="p-4 border-b border-blue-700/50">
-                <div class="flex items-center gap-3">
-                    <div class="profile-avatar" id="profileAvatar">
+            <div class="border-b border-blue-700/50">
+                <div class="group mx-2 px-3 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 flex items-center gap-3">
+                    <div class="profile-avatar flex-shrink-0" id="profileAvatar">
                         <img src="../../images/Herons.png" alt="Profile Picture">
                     </div>
                     <div class="menu-text flex-1 min-w-0">

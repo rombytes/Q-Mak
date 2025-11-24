@@ -26,8 +26,18 @@ try {
     
     $db = getDB();
     
-    // Get the order
-    if (!empty($queueNumber)) {
+    // CHANGED LOGIC START: Prioritize Reference Number (Unique) over Queue Number
+    if (!empty($referenceNumber)) {
+        // Search by Reference Number (Unique across all dates)
+        $stmt = $db->prepare("
+            SELECT o.*, s.email, s.first_name, s.last_name
+            FROM orders o
+            LEFT JOIN students s ON o.student_id = s.student_id
+            WHERE o.reference_number = ?
+        ");
+        $stmt->execute([$referenceNumber]);
+    } else {
+        // Fallback: Search by Queue Number (Only looks for TODAY'S active queues)
         $stmt = $db->prepare("
             SELECT o.*, s.email, s.first_name, s.last_name
             FROM orders o
@@ -36,15 +46,8 @@ try {
               AND o.queue_date = CURDATE()
         ");
         $stmt->execute([$queueNumber]);
-    } else {
-        $stmt = $db->prepare("
-            SELECT o.*, s.email, s.first_name, s.last_name
-            FROM orders o
-            LEFT JOIN students s ON o.student_id = s.student_id
-            WHERE o.reference_number = ?
-        ");
-        $stmt->execute([$referenceNumber]);
     }
+    // CHANGED LOGIC END
     
     $order = $stmt->fetch();
     

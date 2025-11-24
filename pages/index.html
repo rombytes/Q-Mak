@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1e3a8a">
     <title>UMak COOP - Order Hub</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo-files/favicon-32x32-blue.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -55,10 +56,10 @@
         <div class="max-w-7xl mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <img src="../images/UMAK COOP.png" alt="UMAK COOP Logo" class="h-12 md:h-16 logo-hover">
-                    <div class="hidden md:block">
-                        <div class="text-base font-bold">University of Makati</div>
-                        <div class="text-sm text-gray-300">Cooperative Order Hub</div>
+                    <img src="../images/logo-files/logo-wo-text-orange.svg" alt="Q-Mak Logo" class="h-12 md:h-16 logo-hover">
+                    <div>
+                        <div class="text-2xl md:text-3xl font-extrabold tracking-tight">Q-MAK</div>
+                        <div class="text-xs md:text-sm text-gray-300">UMak COOP Order Hub</div>
                     </div>
                 </div>
                 
@@ -104,7 +105,7 @@
 
     <div class="pt-20">
         <!-- Hero Section with UMak Background -->
-        <div class="relative text-white pt-24 pb-16 px-4 min-h-[400px] md:min-h-[600px] flex items-center overflow-hidden">
+        <div class="relative text-white pt-16 pb-12 px-4 min-h-[300px] md:min-h-[450px] flex items-center overflow-hidden">
             <!-- Background Image - Full brightness -->
             <div class="absolute inset-0">
                 <img src="../images/UMak-Facade-Admin-2024.jpg" alt="UMak Facade" class="w-full h-full object-cover">
@@ -116,35 +117,61 @@
             <!-- Additional bottom gradient for better button visibility -->
             <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-primary-900/60"></div>
             
-            <div class="max-w-7xl mx-auto text-center relative z-10">
+            <div class="max-w-6xl mx-auto text-center relative z-10">
                 <!-- Content Box with lower opacity - lets the UMak building show through -->
-                <div class="bg-primary-900/40 backdrop-blur-lg rounded-3xl p-6 md:p-12 mb-0 shadow-2xl border border-white/30 animate-fade-in">
-                    <h1 class="text-4xl md:text-7xl font-extrabold mb-4 md:mb-6 leading-tight" style="text-shadow: 2px 4px 12px rgba(0,0,0,0.8);">
-                        Q-Mak: <span class="text-warning-400">Queue Smarter.</span>
-                    </h1>
-                    <p class="text-lg md:text-2xl mb-6 md:mb-8 text-white font-light max-w-3xl mx-auto" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">
-                        Pre-order from UMak COOP and skip the line.
+                <div class="bg-primary-900/40 backdrop-blur-lg rounded-2xl p-4 md:p-8 mb-0 shadow-2xl border border-white/30 animate-fade-in">
+                    <!-- Small tagline above main headline -->
+                    <p class="text-warning-400 text-sm md:text-base font-semibold mb-2 md:mb-3 tracking-wider uppercase" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">
+                        Official UMak COOP Pre-Order System
                     </p>
                     
+                    <h1 class="text-3xl md:text-5xl font-extrabold mb-3 md:mb-4 leading-tight" style="text-shadow: 2px 4px 12px rgba(0,0,0,0.8);">
+                        Queue Smarter,<br>
+                        <span class="text-warning-400">Not Harder</span>
+                    </h1>
+                    <p class="text-base md:text-xl mb-4 md:mb-5 text-white font-light max-w-2xl mx-auto" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">
+                        Order your school supplies from UMak COOP. Get real-time updates and know exactly when to pick up.
+                    </p>
+                    
+                    <!-- Statistics Row -->
+                    <div class="flex flex-wrap justify-center gap-3 md:gap-6 mb-4 md:mb-6 text-center">
+                        <div class="bg-primary-900/60 backdrop-blur-md px-3 py-2 md:px-4 md:py-3 rounded-lg border border-warning-400/50 shadow-lg">
+                            <div class="text-xl md:text-3xl font-bold text-warning-400" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">15min+</div>
+                            <div class="text-xs md:text-sm text-white/90 font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Time Saved</div>
+                        </div>
+                        <div class="bg-primary-900/60 backdrop-blur-md px-3 py-2 md:px-4 md:py-3 rounded-lg border border-warning-400/50 shadow-lg">
+                            <div class="text-xl md:text-3xl font-bold text-warning-400" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">500+</div>
+                            <div class="text-xs md:text-sm text-white/90 font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Students Served</div>
+                        </div>
+                        <div class="bg-primary-900/60 backdrop-blur-md px-3 py-2 md:px-4 md:py-3 rounded-lg border border-warning-400/50 shadow-lg">
+                            <div class="text-xl md:text-3xl font-bold text-warning-400" style="text-shadow: 2px 3px 8px rgba(0,0,0,0.8);">No Lines</div>
+                            <div class="text-xs md:text-sm text-white/90 font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Skip the Wait</div>
+                        </div>
+                    </div>
+                    
                     <!-- Trust Badges with lower opacity -->
-                    <div class="flex flex-wrap justify-center gap-3 md:gap-6 mb-8 md:mb-10 text-xs md:text-base">
+                    <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-5 md:mb-6 text-xs md:text-sm">
                         <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-white/40 shadow-lg">
-                            <i class="bi bi-shield-check-fill text-success-400"></i>
-                            <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Secure Ordering</span>
+                            <i class="bi bi-lightning-charge-fill text-warning-400"></i>
+                            <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Order in 30 Seconds</span>
                         </div>
                         <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-white/40 shadow-lg">
-                            <i class="bi bi-clock-history text-accent-400"></i>
-                            <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Real-Time Updates</span>
+                            <i class="bi bi-bell-fill text-accent-400"></i>
+                            <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">Get Notified When Ready</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-primary-900/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-white/40 shadow-lg">
+                            <i class="bi bi-shield-check-fill text-success-400"></i>
+                            <span class="text-white font-medium" style="text-shadow: 1px 2px 4px rgba(0,0,0,0.7);">100% Secure</span>
                         </div>
                     </div>
                     
                     <!-- CTA Buttons with better visibility -->
-                    <div class="flex gap-3 md:gap-4 justify-center flex-wrap">
-                        <button onclick="showOrderModal()" class="bg-warning-500 hover:bg-warning-600 active:bg-warning-700 text-white px-8 py-3 md:px-12 md:py-5 rounded-xl text-lg md:text-xl font-bold transition-all duration-300 shadow-2xl hover:shadow-warning-500/50 btn-hover transform hover:-translate-y-1 flex items-center gap-2 md:gap-3 touch-feedback" aria-label="Open order menu">
-                            <i class="bi bi-cart-plus-fill text-xl md:text-2xl" aria-hidden="true"></i>
+                    <div class="flex gap-2 md:gap-3 justify-center flex-wrap">
+                        <button onclick="showOrderModal()" class="bg-warning-500 hover:bg-warning-600 active:bg-warning-700 text-white px-6 py-2.5 md:px-10 md:py-4 rounded-xl text-base md:text-lg font-bold transition-all duration-300 shadow-2xl hover:shadow-warning-500/50 btn-hover transform hover:-translate-y-1 flex items-center gap-2 touch-feedback" aria-label="Open order menu">
+                            <i class="bi bi-cart-plus-fill text-lg md:text-xl" aria-hidden="true"></i>
                             Order Now
                         </button>
-                        <a href="student/queue_dashboard.html" class="bg-accent-600 hover:bg-accent-700 active:bg-accent-800 text-white px-6 py-3 md:px-10 md:py-5 rounded-xl text-base md:text-lg font-bold transition-all duration-300 shadow-2xl hover:shadow-accent-500/50 btn-hover flex items-center gap-1 md:gap-2 transform hover:-translate-y-1 touch-feedback" aria-label="View queue dashboard">
+                        <a href="student/queue_dashboard.html" class="bg-accent-600 hover:bg-accent-700 active:bg-accent-800 text-white px-5 py-2.5 md:px-8 md:py-4 rounded-xl text-sm md:text-base font-bold transition-all duration-300 shadow-2xl hover:shadow-accent-500/50 btn-hover flex items-center gap-1.5 transform hover:-translate-y-1 touch-feedback" aria-label="View queue dashboard">
                             <i class="bi bi-speedometer2" aria-hidden="true"></i>
                             Dashboard
                         </a>
@@ -154,26 +181,26 @@
         </div>
 
         <!-- Features Banner Section -->
-        <div class="bg-primary-900 py-10 border-t-4 border-warning-500 relative z-10">
-            <div class="max-w-7xl mx-auto px-8">
-                <div class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+        <div class="bg-primary-900 py-5 md:py-6 border-t-4 border-warning-500 relative z-10">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
                     <div class="text-center">
-                        <p class="text-gray-300 text-base mb-2 uppercase tracking-wide font-semibold">Powered by</p>
-                        <p class="text-white font-bold text-2xl">Smart Queue Technology</p>
+                        <p class="text-gray-300 text-xs md:text-sm mb-1 uppercase tracking-wide font-semibold">Powered by</p>
+                        <p class="text-white font-bold text-base md:text-xl">Smart Queue Technology</p>
                     </div>
-                    <div class="hidden md:block w-px h-16 bg-gray-600"></div>
-                    <div class="flex flex-wrap justify-center gap-8 md:gap-10">
-                        <div class="flex items-center gap-3 text-white">
-                            <i class="bi bi-lightning-fill text-warning-500 text-2xl"></i>
-                            <span class="font-semibold text-lg">Fast Processing</span>
+                    <div class="hidden md:block w-px h-12 bg-gray-600"></div>
+                    <div class="flex flex-wrap justify-center gap-4 md:gap-6">
+                        <div class="flex items-center gap-2 text-white">
+                            <i class="bi bi-lightning-fill text-warning-500 text-lg md:text-xl"></i>
+                            <span class="font-semibold text-sm md:text-base">Fast Processing</span>
                         </div>
-                        <div class="flex items-center gap-3 text-white">
-                            <i class="bi bi-shield-lock-fill text-success-500 text-2xl"></i>
-                            <span class="font-semibold text-lg">Secure</span>
+                        <div class="flex items-center gap-2 text-white">
+                            <i class="bi bi-shield-lock-fill text-success-500 text-lg md:text-xl"></i>
+                            <span class="font-semibold text-sm md:text-base">Secure</span>
                         </div>
-                        <div class="flex items-center gap-3 text-white">
-                            <i class="bi bi-phone-fill text-accent-500 text-2xl"></i>
-                            <span class="font-semibold text-lg">Mobile Friendly</span>
+                        <div class="flex items-center gap-2 text-white">
+                            <i class="bi bi-phone-fill text-accent-500 text-lg md:text-xl"></i>
+                            <span class="font-semibold text-sm md:text-base">Mobile Friendly</span>
                         </div>
                     </div>
                 </div>
