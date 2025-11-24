@@ -1480,8 +1480,23 @@ async function viewOrderDetails(orderId) {
         const printResponse = await fetch(`${API_BASE}/admin/printing_jobs.php?order_id=${orderId}`, {
             credentials: 'include'
         });
-        const printResult = await printResponse.json();
-        if (printResult.success && printResult.data.is_printing) {
+        
+        console.log('Printing Job Response Status:', printResponse.status);
+        
+        const responseText = await printResponse.text();
+        console.log('Printing Job Raw Response:', responseText);
+        
+        let printResult;
+        try {
+            printResult = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('Failed to parse printing job response:', parseError);
+            console.error('Response text:', responseText);
+            // Continue without printing job data
+            printResult = { success: false };
+        }
+        
+        if (printResult.success && printResult.data && printResult.data.is_printing) {
             printingJob = printResult.data.job;
         }
     } catch (error) {

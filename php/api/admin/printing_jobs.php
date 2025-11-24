@@ -5,27 +5,25 @@
  */
 
 header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Origin: http://localhost');
 
-require_once '../../config/session.php';
-
-// Check if admin is logged in
-if (!isset($_SESSION['admin_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
     exit;
 }
 
-function getDB() {
-    try {
-        $db = new PDO('mysql:host=localhost;dbname=qmak_db', 'root', '');
-        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $db;
-    } catch (PDOException $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw new Exception("Database connection failed");
-    }
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/session_config.php';
+
+// Check admin authentication
+if (!isset($_SESSION['admin_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized. Please login.']);
+    exit;
 }
 
 // GET: Fetch printing job details for an order
@@ -78,10 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
     } catch (Exception $e) {
         error_log("Fetch printing job error: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'message' => 'Error fetching printing job details'
+            'message' => 'Error fetching printing job details: ' . $e->getMessage(),
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
         ]);
     }
     exit;
