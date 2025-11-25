@@ -354,6 +354,7 @@ ON DUPLICATE KEY UPDATE
   estimated_time = VALUES(estimated_time);
 
 -- Phase 8: Remove 'Printing Services' from inventory (it's now a service, not inventory)
+-- This ensures it won't appear in item selection dropdowns
 DELETE FROM `inventory_items` WHERE `item_name` = 'Printing Services';
 
 -- --------------------------------------------------------

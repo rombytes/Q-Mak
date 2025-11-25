@@ -32,7 +32,12 @@ async function fetchInventory(forceRefresh = false, availableOnly = false) {
     try {
         // Add available_only parameter if needed
         const params = availableOnly ? '?available_only=true' : '';
-        const apiUrl = `${getApiBase()}/inventory.php${params}`;
+        
+        // Create unique timestamp to prevent caching (Cache Buster)
+        const timestamp = Date.now();
+        const separator = params ? '&' : '?';
+        const apiUrl = `${getApiBase()}/inventory.php${params}${separator}_t=${timestamp}`;
+        
         console.log('Fetching inventory from:', apiUrl);
         const response = await fetch(apiUrl);
         
