@@ -213,9 +213,9 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto bg-gray-50 main-content-adjusted" style="margin-left: 256px;">
+    <div class="flex-1 overflow-y-auto bg-gray-50 main-content-adjusted" style="margin-left: 80px;">
         <!-- Top Bar -->
-        <div class="bg-white/80 backdrop-blur-md shadow-lg sticky top-0 z-40 px-8 py-5 border-b border-blue-100">
+        <div class="bg-white/80 backdrop-blur-md shadow-lg sticky top-0 z-40 px-8 py-3 border-b border-blue-100">
             <div class="flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-blue-900">
                     Welcome, <span id="adminName" class="text-orange-500"></span>! 
@@ -261,7 +261,7 @@
             </div>
         </div>
 
-        <div class="p-8">
+        <div class="p-6">
             <!-- Queue Management Tab -->
             <div id="content-queue-management" class="tab-content">
                 <!-- Page Header -->
@@ -2121,6 +2121,35 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Phase 8: Services Management Tab -->
+            <div id="content-services" class="tab-content hidden" style="margin-left: 30px;">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                        <span>/</span>
+                        <span class="text-gray-900 font-medium">Services Management</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-3">
+                            <i class="bi bi-toggles2 text-blue-600" style="font-size: 28px;"></i>
+                            Services Management
+                        </h2>
+                        <p class="text-gray-600 text-sm">Enable or disable services for students</p>
+                    </div>
+                </div>
+
+                <!-- Services Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="servicesGrid">
+                    <!-- Services will be loaded here dynamically -->
+                    <div class="col-span-full text-center py-12">
+                        <i class="bi bi-hourglass-split text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-500">Loading services...</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2227,35 +2256,6 @@
                     <i class="fas fa-times mr-2"></i>
                     Close Scanner
                 </button>
-                </div>
-            </div>
-            
-            <!-- Phase 8: Services Management Section -->
-            <div id="content-services" class="tab-content hidden">
-                <!-- Page Header -->
-                <div class="mb-8">
-                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                        <i class="bi bi-speedometer2"></i>
-                        <span>Dashboard</span>
-                        <span>/</span>
-                        <span class="text-gray-900 font-medium">Services Management</span>
-                    </div>
-                    <div>
-                        <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                            <i class="bi bi-toggles2 text-blue-600" style="font-size: 32px;"></i>
-                            Services Management
-                        </h2>
-                        <p class="text-gray-600">Enable or disable services for students</p>
-                    </div>
-                </div>
-
-                <!-- Services Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="servicesGrid">
-                    <!-- Services will be loaded here -->
-                    <div class="text-center py-12">
-                        <i class="bi bi-hourglass-split text-4xl text-gray-400 mb-3"></i>
-                        <p class="text-gray-500">Loading services...</p>
-                    </div>
                 </div>
             </div>
         </div>

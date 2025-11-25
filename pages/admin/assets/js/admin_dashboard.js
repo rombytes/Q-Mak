@@ -5834,10 +5834,16 @@ async function updateAutoRescheduleTimeDisplay() {
     try {
         const response = await fetch(`${API_BASE}/admin/get_cron_status.php`);
         
+        // Silently handle errors for optional feature
+        if (!response.ok) {
+            console.log('Cron status not available (this is optional)');
+            return;
+        }
+        
         // Check if response has content
         const text = await response.text();
         if (!text || text.trim() === '') {
-            console.warn('Empty response from get_cron_status.php');
+            console.log('Cron status endpoint returned empty response');
             return;
         }
         
@@ -6033,21 +6039,30 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================
 
 async function loadServices() {
+    console.log('Loading services...');
     try {
         const response = await fetch(`${API_BASE}/student/get_services.php`);
+        console.log('Services API response status:', response.status);
         const result = await response.json();
+        console.log('Services API result:', result);
         
         if (result.success && result.data) {
+            console.log('Displaying', result.data.length, 'services');
             displayServices(result.data);
         } else {
-            throw new Error('Failed to load services');
+            console.error('Services API returned no data:', result);
+            throw new Error(result.message || 'Failed to load services');
         }
     } catch (error) {
         console.error('Error loading services:', error);
         document.getElementById('servicesGrid').innerHTML = `
             <div class="col-span-full text-center py-12">
                 <i class="bi bi-exclamation-triangle text-4xl text-red-500 mb-3"></i>
-                <p class="text-red-600">Failed to load services</p>
+                <p class="text-red-600 font-semibold">Failed to load services</p>
+                <p class="text-gray-500 text-sm mt-2">${error.message}</p>
+                <button onclick="loadServices()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Retry
+                </button>
             </div>
         `;
     }
@@ -6055,8 +6070,11 @@ async function loadServices() {
 
 function displayServices(services) {
     const grid = document.getElementById('servicesGrid');
+    console.log('displayServices called with:', services);
+    console.log('Grid element:', grid);
     
     if (!services || services.length === 0) {
+        console.warn('No services to display');
         grid.innerHTML = `
             <div class="col-span-full text-center py-12">
                 <i class="bi bi-inbox text-4xl text-gray-400 mb-3"></i>
@@ -6066,13 +6084,15 @@ function displayServices(services) {
         return;
     }
     
-    grid.innerHTML = services.map(service => {
+    const html = services.map(service => {
         const isActive = service.is_active == 1;
         const statusColor = isActive ? 'green' : 'red';
         const statusText = isActive ? 'Active' : 'Disabled';
         const iconClass = service.service_name.includes('School Items') 
             ? 'bi-bag-check-fill' 
             : 'bi-printer-fill';
+        
+        console.log(`Rendering service: ${service.service_name}, isActive: ${isActive}`);
         
         return `
             <div class="bg-white rounded-xl shadow-md border-2 ${isActive ? 'border-green-200' : 'border-red-200'} p-6 hover:shadow-xl transition-all duration-200">
@@ -6107,6 +6127,10 @@ function displayServices(services) {
             </div>
         `;
     }).join('');
+    
+    console.log('Generated HTML length:', html.length);
+    grid.innerHTML = html;
+    console.log('Grid innerHTML set, children count:', grid.children.length);
 }
 
 async function toggleService(serviceId, isActive) {
