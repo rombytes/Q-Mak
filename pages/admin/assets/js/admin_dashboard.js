@@ -123,12 +123,17 @@ function showTab(tabName) {
         console.log('Hidden tab:', tab.id);
     });
     
-    // Remove active class from all menu items
-    document.querySelectorAll('nav li').forEach(item => {
+    // Remove active class from all menu items (only target clickable menu items, not nav-groups)
+    document.querySelectorAll('nav li[id^="tab-"]').forEach(item => {
         // Remove all orange/active styling
         item.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'bg-gradient-to-r', 'from-orange-500', 'to-orange-600', 'border-orange-300', 'shadow-lg');
-        // Add default styling (inactive tabs have no shadow by default)
-        item.classList.add('border-transparent', 'hover:bg-blue-700/60', 'hover:shadow-md', 'hover:border-orange-400');
+        // For submenu items, reset to default submenu styling
+        if (item.closest('.nav-submenu')) {
+            item.classList.add('hover:bg-blue-700/40');
+        } else {
+            // For top-level items, add default styling
+            item.classList.add('border-transparent', 'hover:bg-blue-700/60', 'hover:shadow-md', 'hover:border-orange-400');
+        }
         // Update font weight for inactive tabs
         const span = item.querySelector('.menu-text');
         if (span) {
@@ -155,9 +160,13 @@ function showTab(tabName) {
     const activeItem = document.getElementById('tab-' + tabName);
     if (activeItem) {
         // Remove default styling
-        activeItem.classList.remove('border-transparent', 'hover:bg-blue-700/60', 'hover:shadow-md', 'hover:border-orange-400');
+        activeItem.classList.remove('border-transparent', 'hover:bg-blue-700/60', 'hover:shadow-md', 'hover:border-orange-400', 'hover:bg-blue-700/40');
         // Add active styling
-        activeItem.classList.add('bg-orange-500', 'hover:bg-orange-600', 'border-orange-300', 'shadow-lg');
+        activeItem.classList.add('bg-orange-500', 'hover:bg-orange-600', 'shadow-lg');
+        // For submenu items, also add border styling
+        if (!activeItem.closest('.nav-submenu')) {
+            activeItem.classList.add('border-orange-300');
+        }
         // Update font weight for active tab
         const span = activeItem.querySelector('.menu-text');
         if (span) {
@@ -181,6 +190,9 @@ function showTab(tabName) {
         fetchEmailLogs();
     } else if (tabName === 'service-config') {
         loadInventory();
+    } else if (tabName === 'services') {
+        // Phase 8: Load services management
+        loadServices();
     } else if (tabName === 'admin-management') {
         switchAdminTab('accounts');
         fetchAdminAccounts();
@@ -5986,6 +5998,161 @@ function showPasswordMessage(message, type) {
 
 // ============================================
 // END PASSWORD CHANGE FUNCTIONALITY
+// ============================================
+
+// ============================================
+// PHASE 8: COLLAPSIBLE NAVIGATION
+// ============================================
+
+function toggleNavGroup(groupName) {
+    const submenu = document.getElementById(`${groupName}-submenu`);
+    const chevron = document.getElementById(`${groupName}-chevron`);
+    
+    if (submenu && chevron) {
+        const isHidden = submenu.classList.contains('hidden') || !submenu.classList.contains('show');
+        
+        if (isHidden) {
+            submenu.classList.remove('hidden');
+            submenu.classList.add('show');
+        } else {
+            submenu.classList.remove('show');
+            submenu.classList.add('hidden');
+        }
+        chevron.classList.toggle('rotate');
+    }
+}
+
+// Auto-expand navigation groups on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Default: Expand Operations group (since dashboard is default tab)
+    toggleNavGroup('operations');
+});
+
+// ============================================
+// PHASE 8: SERVICES MANAGEMENT
+// ============================================
+
+async function loadServices() {
+    try {
+        const response = await fetch(`${API_BASE}/student/get_services.php`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            displayServices(result.data);
+        } else {
+            throw new Error('Failed to load services');
+        }
+    } catch (error) {
+        console.error('Error loading services:', error);
+        document.getElementById('servicesGrid').innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="bi bi-exclamation-triangle text-4xl text-red-500 mb-3"></i>
+                <p class="text-red-600">Failed to load services</p>
+            </div>
+        `;
+    }
+}
+
+function displayServices(services) {
+    const grid = document.getElementById('servicesGrid');
+    
+    if (!services || services.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="bi bi-inbox text-4xl text-gray-400 mb-3"></i>
+                <p class="text-gray-500">No services found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = services.map(service => {
+        const isActive = service.is_active == 1;
+        const statusColor = isActive ? 'green' : 'red';
+        const statusText = isActive ? 'Active' : 'Disabled';
+        const iconClass = service.service_name.includes('School Items') 
+            ? 'bi-bag-check-fill' 
+            : 'bi-printer-fill';
+        
+        return `
+            <div class="bg-white rounded-xl shadow-md border-2 ${isActive ? 'border-green-200' : 'border-red-200'} p-6 hover:shadow-xl transition-all duration-200">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl flex items-center justify-center ${isActive ? 'bg-green-100' : 'bg-red-100'}">
+                            <i class="bi ${iconClass} text-3xl ${isActive ? 'text-green-600' : 'text-red-600'}"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">${service.service_name}</h3>
+                            <p class="text-sm text-gray-600 mt-1">${service.description || 'No description'}</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${statusText}
+                    </span>
+                </div>
+                
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div class="text-sm text-gray-600">
+                        <i class="bi bi-clock-history mr-1"></i>
+                        Updated: ${new Date(service.updated_at || service.created_at).toLocaleDateString()}
+                    </div>
+                    <label class="service-toggle">
+                        <input type="checkbox" 
+                               ${isActive ? 'checked' : ''} 
+                               onchange="toggleService(${service.service_id}, this.checked)"
+                               id="toggle-${service.service_id}">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function toggleService(serviceId, isActive) {
+    const toggle = document.getElementById(`toggle-${serviceId}`);
+    const originalState = toggle.checked;
+    
+    try {
+        // Disable toggle during request
+        toggle.disabled = true;
+        
+        const response = await fetch(`${API_BASE}/admin/toggle_service.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                service_id: serviceId,
+                is_active: isActive ? 1 : 0
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(
+                `${result.data.service_name} ${isActive ? 'enabled' : 'disabled'} successfully`,
+                'success'
+            );
+            // Reload services to update UI
+            await loadServices();
+        } else {
+            throw new Error(result.message || 'Failed to toggle service');
+        }
+    } catch (error) {
+        console.error('Error toggling service:', error);
+        showNotification('Failed to update service status', 'error');
+        // Revert toggle state
+        toggle.checked = !originalState;
+    } finally {
+        toggle.disabled = false;
+    }
+}
+
+// ============================================
+// END PHASE 8
 // ============================================
 
 // Start the dashboard

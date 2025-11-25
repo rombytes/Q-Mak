@@ -55,9 +55,9 @@
     
     <!-- Retractable Sidebar -->
     <div class="sidebar bg-blue-900 text-white flex flex-col fixed h-full z-100 shadow-2xl" id="sidebar">
-        <div class="sidebar-content">
+        <div class="sidebar-content flex flex-col h-full">
             <!-- Logo Section -->
-            <div class="border-b border-blue-700/50">
+            <div class="border-b border-blue-700/50 flex-shrink-0">
                 <div class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 flex items-center justify-center gap-3">
                     <img src="../../images/logo-files/logo-wo-text-orange.svg" alt="Q-Mak Logo" class="h-8 w-8 flex-shrink-0 object-contain">
                     <div class="menu-text flex-1 min-w-0">
@@ -68,7 +68,7 @@
             </div>
             
             <!-- Profile Section -->
-            <div class="border-b border-blue-700/50">
+            <div class="border-b border-blue-700/50 flex-shrink-0">
                 <div class="group mx-2 px-3 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 flex items-center gap-3">
                     <div class="profile-avatar flex-shrink-0" id="profileAvatar">
                         <img src="../../images/Herons.png" alt="Profile Picture">
@@ -81,102 +81,139 @@
             </div>
 
             <!-- Navigation Menu -->
-            <nav class="flex-1 py-4">
-                <ul class="space-y-1 py-2">
-                    <li onclick="showTab('queue-management')" id="tab-queue-management" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl bg-orange-500 hover:bg-orange-600 border-l-4 border-orange-300 shadow-lg hover:shadow-xl transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="16" x2="16" y2="12"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="16" x2="8" y2="8"/>
-                            </svg>
-                            <span class="menu-text font-semibold">Queue & Orders</span>
+            <nav class="flex-1 py-2 overflow-y-auto custom-scrollbar">
+                <ul class="space-y-0.5 py-1">
+                    <!-- Dashboard (Single Link) -->
+                    <li onclick="showTab('queue-management')" id="tab-queue-management" class="group mx-2 px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-lg bg-orange-500 hover:bg-orange-600 border-l-4 border-orange-300 shadow-lg hover:shadow-xl transform hover:translate-x-1">
+                        <div class="flex items-center gap-2.5">
+                            <i class="bi bi-speedometer2 menu-icon flex-shrink-0" style="font-size: 18px;"></i>
+                            <span class="menu-text font-semibold text-sm">Dashboard</span>
                         </div>
                     </li>
-                    <li onclick="showTab('queue-history')" id="tab-queue-history" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/>
-                            </svg>
-                            <span class="menu-text font-medium">Queue History</span>
+                    
+                    <!-- Operations (Collapsible Group) -->
+                    <li class="nav-group">
+                        <div onclick="toggleNavGroup('operations')" class="group mx-2 px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md">
+                            <div class="flex items-center gap-2.5 justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-gear-fill menu-icon flex-shrink-0" style="font-size: 18px;"></i>
+                                    <span class="menu-text font-semibold text-sm">Operations</span>
+                                </div>
+                                <i class="bi bi-chevron-down menu-text transition-transform duration-200 text-sm" id="operations-chevron"></i>
+                            </div>
                         </div>
+                        <ul class="nav-submenu hidden" id="operations-submenu">
+                            <li onclick="showTab('queue-management')" id="tab-queue-management-sub" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-list-ol menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Orders</span>
+                                </div>
+                            </li>
+                            <li onclick="showTab('queue-history')" id="tab-queue-history" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-printer-fill menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Printing Jobs</span>
+                                </div>
+                            </li>
+                            <li onclick="showTab('service-config')" id="tab-service-config" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-box-seam menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Inventory</span>
+                                </div>
+                            </li>
+                            <li onclick="showTab('services')" id="tab-services" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-toggle-on menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Services</span>
+                                </div>
+                            </li>
+                        </ul>
                     </li>
-                    <li onclick="showTab('student-records')" id="tab-student-records" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                            </svg>
-                            <span class="menu-text font-medium">Student Records</span>
+                    
+                    <!-- User Management (Collapsible Group) -->
+                    <li class="nav-group">
+                        <div onclick="toggleNavGroup('users')" class="group mx-2 px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md">
+                            <div class="flex items-center gap-2.5 justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-people-fill menu-icon flex-shrink-0" style="font-size: 18px;"></i>
+                                    <span class="menu-text font-semibold text-sm">User Management</span>
+                                </div>
+                                <i class="bi bi-chevron-down menu-text transition-transform duration-200 text-sm" id="users-chevron"></i>
+                            </div>
                         </div>
+                        <ul class="nav-submenu hidden" id="users-submenu">
+                            <li onclick="showTab('student-records')" id="tab-student-records" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-person-badge menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Students</span>
+                                </div>
+                            </li>
+                            <li onclick="showTab('admin-management')" id="tab-admin-management" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-shield-fill-check menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Admins</span>
+                                </div>
+                            </li>
+                        </ul>
                     </li>
-                    <li onclick="showTab('analytics')" id="tab-analytics" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 3v18h18"/><path d="M18.7 8a2.3 2.3 0 0 0-3.4 0l-4.6 4.6a2.3 2.3 0 0 0 0 3.4l1.6 1.6a2.3 2.3 0 0 0 3.4 0l4.6-4.6a2.3 2.3 0 0 0 0-3.4Z"/><path d="M12 12 1.4 1.4"/><path d="M7.7 3H5v2.7Z"/>
-                            </svg>
-                            <span class="menu-text font-medium">Analytics</span>
+                    
+                    <!-- System (Collapsible Group) -->
+                    <li class="nav-group">
+                        <div onclick="toggleNavGroup('system')" class="group mx-2 px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md">
+                            <div class="flex items-center gap-2.5 justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-cpu-fill menu-icon flex-shrink-0" style="font-size: 18px;"></i>
+                                    <span class="menu-text font-semibold text-sm">System</span>
+                                </div>
+                                <i class="bi bi-chevron-down menu-text transition-transform duration-200 text-sm" id="system-chevron"></i>
+                            </div>
                         </div>
-                    </li>
-                    <li onclick="showTab('service-config')" id="tab-service-config" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-                            </svg>
-                            <span class="menu-text font-medium">Inventory</span>
-                        </div>
-                    </li>
-                    <li onclick="showTab('email-logs')" id="tab-email-logs" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                            </svg>
-                            <span class="menu-text font-medium">Email Logs</span>
-                        </div>
-                    </li>
-                    <li onclick="showTab('admin-settings')" id="tab-admin-settings" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m5.2-14.2 4.3-4.3M2.5 2.5l4.2 4.2m0 10.6-4.2 4.2m17-17-4.3 4.3M1 12h6m6 0h6"/>
-                            </svg>
-                            <span class="menu-text font-medium">Settings</span>
-                        </div>
-                    </li>
-                    <li onclick="window.location.href='security_dashboard.html'" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            </svg>
-                            <span class="menu-text font-medium">Security</span>
-                        </div>
-                    </li>
-                    <li onclick="showTab('admin-management')" id="tab-admin-management" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 border-l-4 border-transparent hover:border-orange-400 hover:shadow-md transform hover:translate-x-1 hidden">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>
-                            </svg>
-                            <span class="menu-text font-medium">Admin Management</span>
-                        </div>
+                        <ul class="nav-submenu hidden" id="system-submenu">
+                            <li onclick="showTab('analytics')" id="tab-analytics" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-graph-up menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Reports & Analytics</span>
+                                </div>
+                            </li>
+                            <li onclick="showTab('email-logs')" id="tab-email-logs" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-journal-text menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Activity Logs</span>
+                                </div>
+                            </li>
+                            <li onclick="window.location.href='security_dashboard.html'" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-shield-lock menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Security</span>
+                                </div>
+                            </li>
+                            <li onclick="showTab('admin-settings')" id="tab-admin-settings" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                                <div class="flex items-center gap-2.5">
+                                    <i class="bi bi-sliders menu-icon flex-shrink-0" style="font-size: 14px;"></i>
+                                    <span class="menu-text text-sm">Settings</span>
+                                </div>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </nav>
 
-            <!-- Bottom Section -->
-            <div class="border-t border-blue-700/50 pt-4 mt-auto">
-                <!-- Logout Button -->
-                <ul class="space-y-1">
-                    <li onclick="logout()" class="group mx-2 px-4 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-red-500/20 border-l-4 border-transparent hover:border-red-400 hover:shadow-md transform hover:translate-x-1">
-                        <div class="flex items-center gap-3">
-                            <svg class="menu-icon text-red-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            <span class="menu-text font-medium text-red-400 group-hover:font-semibold">Logout</span>
-                        </div>
-                    </li>
-                </ul>
+            <!-- Logout Button (Fixed at Bottom) -->
+            <div class="border-t border-blue-700/50 p-2.5 flex-shrink-0">
+                <button onclick="logout()" class="w-full group px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-lg hover:bg-red-500/20 border-l-4 border-transparent hover:border-red-400 hover:shadow-md">
+                    <div class="flex items-center gap-2.5">
+                        <svg class="menu-icon text-red-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        <span class="menu-text text-sm font-medium text-red-400 group-hover:font-semibold">Logout</span>
+                    </div>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 overflow-y-auto bg-gray-50 main-content-adjusted" style="margin-left: 80px;">
+    <div class="flex-1 overflow-y-auto bg-gray-50 main-content-adjusted" style="margin-left: 256px;">
         <!-- Top Bar -->
         <div class="bg-white/80 backdrop-blur-md shadow-lg sticky top-0 z-40 px-8 py-5 border-b border-blue-100">
             <div class="flex justify-between items-center">
@@ -2190,6 +2227,35 @@
                     <i class="fas fa-times mr-2"></i>
                     Close Scanner
                 </button>
+                </div>
+            </div>
+            
+            <!-- Phase 8: Services Management Section -->
+            <div id="content-services" class="tab-content hidden">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                        <span>/</span>
+                        <span class="text-gray-900 font-medium">Services Management</span>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                            <i class="bi bi-toggles2 text-blue-600" style="font-size: 32px;"></i>
+                            Services Management
+                        </h2>
+                        <p class="text-gray-600">Enable or disable services for students</p>
+                    </div>
+                </div>
+
+                <!-- Services Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="servicesGrid">
+                    <!-- Services will be loaded here -->
+                    <div class="text-center py-12">
+                        <i class="bi bi-hourglass-split text-4xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-500">Loading services...</p>
+                    </div>
                 </div>
             </div>
         </div>

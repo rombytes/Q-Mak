@@ -19,6 +19,12 @@ let currentSearch = '';
 // Make studentData globally accessible
 window.studentData = null;
 
+// Phase 8: Store service status globally
+let servicesStatus = {
+    'School Items': true,
+    'Printing Services': true
+};
+
 // Check session on page load
 async function checkSession() {
     if (!sessionStorage.getItem('studentLoggedIn')) {
@@ -67,6 +73,8 @@ async function initDashboard() {
         fetchInventoryStatus();
         // Phase 7: Check active orders and disable buttons if needed
         await checkActiveOrdersAndDisableButtons();
+        // Phase 8: Check service status and update UI
+        await checkServicesStatusAndUpdate();
     } catch (error) {
         console.error('Dashboard initialization error:', error);
         showToast('error', 'Error', 'Failed to load dashboard data');
@@ -1125,6 +1133,17 @@ function showQuickOrder() {
 
 // Switch order type in modal (items vs printing)
 function switchOrderTypeModal(type) {
+    // Phase 8: Check if the service is globally disabled
+    if (type === 'items' && !servicesStatus['School Items']) {
+        showToast('error', 'Service Unavailable', 'School Items service is currently unavailable. Please try again later.');
+        return;
+    }
+    
+    if (type === 'printing' && !servicesStatus['Printing Services']) {
+        showToast('error', 'Service Unavailable', 'Printing Services is currently unavailable. Please try again later.');
+        return;
+    }
+    
     // Phase 7: Check if the service type is disabled due to active order
     if (type === 'items' && activeOrdersStatus.items) {
         showToast('warning', 'Cannot Order Items', 'You already have a pending Items/Merchandise order. Please complete or cancel it first.');
@@ -2380,3 +2399,103 @@ setInterval(() => {
         loadCurrentOrder();
     }
 }, 30000);
+
+// Phase 8: Check services status and update UI accordingly
+async function checkServicesStatusAndUpdate() {
+    try {
+        const response = await fetch(`${API_BASE}/student/get_services.php`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // Update servicesStatus object
+            result.data.forEach(service => {
+                if (service.service_name === 'School Items') {
+                    servicesStatus['School Items'] = (service.is_active == 1);
+                } else if (service.service_name === 'Printing Services') {
+                    servicesStatus['Printing Services'] = (service.is_active == 1);
+                }
+            });
+            
+            // Update UI to reflect service status
+            updateServiceStatusUI();
+        }
+    } catch (error) {
+        console.error('Failed to check services status:', error);
+        // Default to available if fetch fails
+        servicesStatus['School Items'] = true;
+        servicesStatus['Printing Services'] = true;
+    }
+}
+
+// Phase 8: Update UI to show disabled services
+function updateServiceStatusUI() {
+    // Update Quick Order buttons on dashboard
+    const itemsQuickBtn = document.querySelector('[onclick*="showCreateOrderModal"][onclick*="items"]');
+    const printingQuickBtn = document.querySelector('[onclick*="showCreateOrderModal"][onclick*="printing"]');
+    
+    // Handle School Items service
+    if (!servicesStatus['School Items']) {
+        if (itemsQuickBtn) {
+            itemsQuickBtn.disabled = true;
+            itemsQuickBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            itemsQuickBtn.title = 'School Items service is currently unavailable';
+        }
+        
+        // Add badge to items tab in modal
+        const itemsTab = document.getElementById('modalOrderTypeItems');
+        if (itemsTab && !itemsTab.querySelector('.service-unavailable-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'service-unavailable-badge ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full';
+            badge.textContent = 'Unavailable';
+            itemsTab.appendChild(badge);
+        }
+    } else {
+        if (itemsQuickBtn) {
+            itemsQuickBtn.disabled = false;
+            itemsQuickBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            itemsQuickBtn.title = 'Create quick order for School Items';
+        }
+        
+        // Remove badge if exists
+        const itemsTab = document.getElementById('modalOrderTypeItems');
+        const existingBadge = itemsTab?.querySelector('.service-unavailable-badge');
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+    }
+    
+    // Handle Printing Services
+    if (!servicesStatus['Printing Services']) {
+        if (printingQuickBtn) {
+            printingQuickBtn.disabled = true;
+            printingQuickBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            printingQuickBtn.title = 'Printing Services is currently unavailable';
+        }
+        
+        // Add badge to printing tab in modal
+        const printingTab = document.getElementById('modalOrderTypePrinting');
+        if (printingTab && !printingTab.querySelector('.service-unavailable-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'service-unavailable-badge ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full';
+            badge.textContent = 'Unavailable';
+            printingTab.appendChild(badge);
+        }
+    } else {
+        if (printingQuickBtn) {
+            printingQuickBtn.disabled = false;
+            printingQuickBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            printingQuickBtn.title = 'Create quick order for Printing Services';
+        }
+        
+        // Remove badge if exists
+        const printingTab = document.getElementById('modalOrderTypePrinting');
+        const existingBadge = printingTab?.querySelector('.service-unavailable-badge');
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+    }
+}

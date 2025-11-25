@@ -172,6 +172,23 @@ try {
     
     $db->beginTransaction();
     
+    // Phase 8: Check if the requested service is active
+    $serviceName = ($serviceType === 'items') ? 'School Items' : 'Printing Services';
+    $checkService = $db->prepare("SELECT is_active FROM services WHERE service_name = ?");
+    $checkService->execute([$serviceName]);
+    $service = $checkService->fetch();
+    
+    if (!$service || $service['is_active'] != 1) {
+        $db->rollBack();
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode([
+            'success' => false,
+            'message' => "Sorry, {$serviceName} is currently unavailable.",
+            'error_code' => 'SERVICE_UNAVAILABLE'
+        ]);
+        exit;
+    }
+    
     // Phase 7: Check if student already has an active order for this service type
     // Only check pending/processing orders (NOT scheduled orders)
     $checkActiveOrder = $db->prepare("

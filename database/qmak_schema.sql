@@ -285,6 +285,13 @@ CREATE TABLE IF NOT EXISTS `services` (
   INDEX `idx_is_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Phase 8: Service Management Migration (November 25, 2025)
+-- Populate services table for global service switches
+TRUNCATE TABLE `services`;
+INSERT INTO `services` (`service_name`, `description`, `is_active`) VALUES
+('School Items', 'Merchandise like Uniforms, ID Laces, and Books', 1),
+('Printing Services', 'Document printing and photocopying', 1);
+
 -- --------------------------------------------------------
 -- Table structure for table `admin_logs`
 -- --------------------------------------------------------
@@ -338,7 +345,6 @@ VALUES
 ('Coffee & Drinks', 'Hot and cold beverages', 150, 20, 5, 1, 1),
 ('Snacks & Food', 'Light meals and snacks', 200, 20, 10, 1, 1),
 ('School Supplies', 'Notebooks, pens, stationery', 180, 20, 8, 1, 1),
-('Printing Services', 'Document printing and copying', 500, 50, 5, 1, 1),
 ('Books & References', 'Academic books and materials', 75, 20, 12, 1, 1),
 ('ID Lace', 'Student ID accessories', 15, 20, 5, 1, 1),
 ('School Uniform', 'Complete uniform sets', 30, 20, 10, 1, 1),
@@ -346,6 +352,9 @@ VALUES
 ON DUPLICATE KEY UPDATE 
   description = VALUES(description),
   estimated_time = VALUES(estimated_time);
+
+-- Phase 8: Remove 'Printing Services' from inventory (it's now a service, not inventory)
+DELETE FROM `inventory_items` WHERE `item_name` = 'Printing Services';
 
 -- --------------------------------------------------------
 -- Triggers for inventory_items
