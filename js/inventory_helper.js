@@ -99,9 +99,10 @@ function getStockStatusClass(quantity, threshold) {
  * @returns {boolean} True if item can be ordered
  */
 function isItemAvailable(item) {
-    // Convert to numbers to handle string values from API
-    const isAvailable = parseInt(item.is_available) === 1;
-    const isActive = parseInt(item.is_active) === 1;
+    // If fields are missing (e.g. from student view), assume true 
+    // because the API only returns available items for students anyway.
+    const isAvailable = item.is_available !== undefined ? parseInt(item.is_available) === 1 : true;
+    const isActive = item.is_active !== undefined ? parseInt(item.is_active) === 1 : true;
     const hasStock = parseInt(item.stock_quantity) > 0;
     
     return isAvailable && isActive && hasStock;

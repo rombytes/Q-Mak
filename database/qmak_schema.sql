@@ -506,7 +506,9 @@ SELECT
     WHEN stock_quantity <= low_stock_threshold THEN 'Low Stock'
     ELSE 'In Stock'
   END as stock_status,
-  estimated_time
+  estimated_time,
+  is_available,  -- Added: Frontend needs this for availability checks
+  is_active      -- Added: Frontend needs this for availability checks
 FROM inventory_items
 WHERE is_available = 1 
   AND is_active = 1
