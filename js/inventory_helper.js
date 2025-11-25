@@ -99,7 +99,12 @@ function getStockStatusClass(quantity, threshold) {
  * @returns {boolean} True if item can be ordered
  */
 function isItemAvailable(item) {
-    return item.is_available == 1 && item.is_active == 1 && item.stock_quantity > 0;
+    // Convert to numbers to handle string values from API
+    const isAvailable = parseInt(item.is_available) === 1;
+    const isActive = parseInt(item.is_active) === 1;
+    const hasStock = parseInt(item.stock_quantity) > 0;
+    
+    return isAvailable && isActive && hasStock;
 }
 
 /**
