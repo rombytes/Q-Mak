@@ -346,7 +346,7 @@ function displayCurrentOrder(order) {
                     <p class="text-accent-100" style="color: #dbeafe !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">Placed at ${new Date(order.created_at).toLocaleTimeString()}</p>
                 </div>
                 <span class="px-6 py-3 ${statusColor} rounded-xl font-bold text-sm border-2 shadow-lg">
-                    ${(order.order_status || order.status).toUpperCase()}
+                    ${(order.order_status || order.status || 'pending').toUpperCase()}
                 </span>
             </div>
             
@@ -372,15 +372,15 @@ function displayCurrentOrder(order) {
                 </div>
                 <div class="h-2 bg-white bg-opacity-30 rounded-full" style="background-color: rgba(255,255,255,0.3);">
                     <div class="h-full bg-success-500 rounded-full transition-all duration-500" style="width: ${
-                        (order.order_status || order.status) === 'pending' ? '33%' :
-                        (order.order_status || order.status) === 'processing' ? '66%' :
-                        (order.order_status || order.status) === 'completed' ? '100%' : '33%'
+                        (order.order_status || order.status || 'pending') === 'pending' ? '33%' :
+                        (order.order_status || order.status || 'pending') === 'processing' ? '66%' :
+                        (order.order_status || order.status || 'pending') === 'completed' ? '100%' : '33%'
                     }; background-color: #22c55e;"></div>
                 </div>
             </div>
             
             <!-- Processing Alert -->
-            ${(order.order_status || order.status) === 'processing' ? `
+            ${(order.order_status || order.status || 'pending') === 'processing' ? `
                 <div class="bg-orange-500 text-white rounded-xl p-4 mb-6 shadow-lg animate-pulse" style="background-color: #f97316;">
                     <div class="flex items-center gap-3">
                         <i class="bi bi-bell-fill text-3xl"></i>
@@ -789,8 +789,20 @@ function displayOrderHistory(orders) {
     const mobileList = document.getElementById('ordersListMobile');
     const mobilePlaceholder = document.getElementById('ordersMobilePlaceholder');
 
-    if (!tbody || !mobileList || !mobilePlaceholder) {
-        console.error('Order display containers not found');
+    // Detailed error logging for missing elements
+    if (!tbody) {
+        console.error('Order display container missing: ordersTableBody');
+    }
+    if (!mobileList) {
+        console.error('Order display container missing: ordersListMobile');
+    }
+    if (!mobilePlaceholder) {
+        console.warn('Order display container missing: ordersMobilePlaceholder (non-critical)');
+    }
+    
+    // Allow partial rendering if at least one container exists
+    if (!tbody && !mobileList) {
+        console.error('Critical: Both desktop and mobile order containers are missing');
         return;
     }
 
@@ -804,16 +816,17 @@ function displayOrderHistory(orders) {
                 </button>
             </div>
         `;
-        tbody.innerHTML = `<tr><td colspan="5">${emptyStateHTML}</td></tr>`;
-        mobileList.innerHTML = emptyStateHTML;
-        mobilePlaceholder.classList.add('hidden');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5">${emptyStateHTML}</td></tr>`;
+        if (mobileList) mobileList.innerHTML = emptyStateHTML;
+        if (mobilePlaceholder) mobilePlaceholder.classList.add('hidden');
         return;
     }
 
-    mobilePlaceholder.classList.add('hidden');
+    if (mobilePlaceholder) mobilePlaceholder.classList.add('hidden');
 
     // Populate Desktop Table
-    tbody.innerHTML = orders.map(order => {
+    if (tbody) {
+        tbody.innerHTML = orders.map(order => {
         const statusColors = {
             completed: 'bg-success-100 text-success-800',
             cancelled: 'bg-danger-100 text-danger-800',
@@ -822,7 +835,8 @@ function displayOrderHistory(orders) {
             ready: 'bg-info-100 text-info-800'
         };
         
-        const statusColor = statusColors[(order.order_status || order.status)] || 'bg-gray-100 text-gray-800';
+        const orderStatus = order.order_status || order.status || 'pending';
+        const statusColor = statusColors[orderStatus] || 'bg-gray-100 text-gray-800';
         const orderDate = new Date(order.created_at);
         
         return `
@@ -831,7 +845,7 @@ function displayOrderHistory(orders) {
                 <td class="px-6 py-4">${order.item_name || order.item_ordered}</td>
                 <td class="px-6 py-4">
                     <span class="${statusColor} px-3 py-1 rounded-full text-xs font-bold uppercase">
-                        ${(order.order_status || order.status)}
+                        ${orderStatus}
                     </span>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-600">
@@ -844,10 +858,12 @@ function displayOrderHistory(orders) {
                 </td>
             </tr>
         `;
-    }).join('');
+        }).join('');
+    }
 
     // Populate Mobile Card List
-    mobileList.innerHTML = orders.map(order => {
+    if (mobileList) {
+        mobileList.innerHTML = orders.map(order => {
         const statusColors = {
             completed: { bg: 'bg-success-100', text: 'text-success-800', icon: 'bi-check-circle-fill' },
             cancelled: { bg: 'bg-danger-100', text: 'text-danger-800', icon: 'bi-x-circle-fill' },
@@ -855,7 +871,8 @@ function displayOrderHistory(orders) {
             processing: { bg: 'bg-accent-100', text: 'text-accent-800', icon: 'bi-arrow-repeat' },
             ready: { bg: 'bg-info-100', text: 'text-info-800', icon: 'bi-check2-circle' }
         };
-        const status = statusColors[(order.order_status || order.status)] || statusColors.pending;
+        const orderStatus = order.order_status || order.status || 'pending';
+        const status = statusColors[orderStatus] || statusColors.pending;
         const orderDate = new Date(order.created_at);
 
         return `
@@ -867,7 +884,7 @@ function displayOrderHistory(orders) {
                     </div>
                     <span class="${status.bg} ${status.text} px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-1">
                         <i class="bi ${status.icon}"></i>
-                        ${(order.order_status || order.status)}
+                        ${orderStatus}
                     </span>
                 </div>
                 <div class="text-xs text-gray-500">
@@ -875,7 +892,8 @@ function displayOrderHistory(orders) {
                 </div>
             </div>
         `;
-    }).join('');
+        }).join('');
+    }
 }
 
 // Display empty order history
@@ -967,14 +985,15 @@ function displayRecentActivity(recentOrders) {
                         ready: { icon: 'bi-bell-fill', color: 'text-info-600' }
                     };
                     
-                    const status = statusIcons[(order.order_status || order.status)] || statusIcons.pending;
+                    const orderStatus = order.order_status || order.status || 'pending';
+                    const status = statusIcons[orderStatus] || statusIcons.pending;
                     const time = new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
                     return `
                         <div class="flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-all">
                             <i class="bi ${status.icon} ${status.color} text-xl mt-1"></i>
                             <div class="flex-1">
-                                <div class="font-semibold text-gray-900">${order.queue_number} - ${(order.order_status || order.status)}</div>
+                                <div class="font-semibold text-gray-900">${order.queue_number} - ${orderStatus}</div>
                                 <div class="text-sm text-gray-600">${order.item_name || order.item_ordered}</div>
                                 <div class="text-xs text-gray-500 mt-1">${time}</div>
                             </div>
@@ -994,9 +1013,9 @@ function calculateOrderStats() {
     if (!orderHistory) return;
     
     orderStats.total = orderHistory.length;
-    orderStats.completed = orderHistory.filter(o => (o.order_status || o.status) === 'completed').length;
-    orderStats.pending = orderHistory.filter(o => (o.order_status || o.status) === 'pending').length;
-    orderStats.cancelled = orderHistory.filter(o => (o.order_status || o.status) === 'cancelled').length;
+    orderStats.completed = orderHistory.filter(o => (o.order_status || o.status || 'pending') === 'completed').length;
+    orderStats.pending = orderHistory.filter(o => (o.order_status || o.status || 'pending') === 'pending').length;
+    orderStats.cancelled = orderHistory.filter(o => (o.order_status || o.status || 'pending') === 'cancelled').length;
 }
 
 // Update dashboard stats cards
@@ -1741,7 +1760,8 @@ function displayOrderDetailsContent(order) {
         ready: { bg: 'bg-info-100', text: 'text-info-800', icon: 'bi-check2-circle' }
     };
     
-    const status = statusColors[order.order_status] || statusColors.pending;
+    const orderStatus = order.order_status || order.status || 'pending';
+    const status = statusColors[orderStatus] || statusColors.pending;
     const orderDate = new Date(order.created_at);
     const updatedDate = new Date(order.updated_at);
     const completedDate = order.completed_at ? new Date(order.completed_at) : null;
@@ -1754,7 +1774,7 @@ function displayOrderDetailsContent(order) {
                     <i class="bi ${status.icon} text-2xl ${status.text}"></i>
                     <div>
                         <p class="text-sm font-semibold ${status.text} uppercase">Order Status</p>
-                        <p class="text-lg font-bold ${status.text} capitalize">${(order.order_status || order.status)}</p>
+                        <p class="text-lg font-bold ${status.text} capitalize">${orderStatus}</p>
                     </div>
                 </div>
                 <div class="text-right">
@@ -1849,7 +1869,7 @@ function displayOrderDetailsContent(order) {
             
             <!-- Actions -->
             <div class="flex gap-3">
-                ${(order.order_status || order.status) === 'pending' || (order.order_status || order.status) === 'processing' ? `
+                ${orderStatus === 'pending' || orderStatus === 'processing' ? `
                 <button onclick="viewQRCode('${order.queue_number}')" class="flex-1 bg-accent-600 hover:bg-accent-700 text-white py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2" style="background-color: #2563eb; color: #ffffff;">
                     <i class="bi bi-qr-code"></i>
                     View QR Code
