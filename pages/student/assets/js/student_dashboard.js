@@ -770,11 +770,8 @@ async function loadOrderHistory(status = 'all', page = 1) {
             displayOrderHistory(orderHistory);
             updatePagination(result.data.pagination);
             
-            // Update recent activity on dashboard (check if currentTab is defined)
-            const activeTab = typeof currentTab !== 'undefined' ? currentTab : 'dashboard';
-            if (activeTab === 'dashboard') {
-                displayRecentActivity(orderHistory.slice(0, 3));
-            }
+            // Always update recent activity on dashboard with first 3 orders
+            displayRecentActivity(orderHistory.slice(0, 3));
         } else {
             displayEmptyOrderHistory();
         }
@@ -797,9 +794,7 @@ function displayOrderHistory(orders) {
     if (!mobileList) {
         console.error('Order display container missing: ordersListMobile');
     }
-    if (!mobilePlaceholder) {
-        console.warn('Order display container missing: ordersMobilePlaceholder (non-critical)');
-    }
+    // mobilePlaceholder is optional - no warning needed
     
     // Allow partial rendering if at least one container exists
     if (!tbody && !mobileList) {
@@ -953,6 +948,11 @@ function updatePagination(pagination) {
 // Display recent activity timeline
 function displayRecentActivity(recentOrders) {
     const timeline = document.getElementById('recentActivityTimeline');
+    
+    if (!timeline) {
+        console.warn('Recent activity timeline element not found');
+        return;
+    }
     
     if (!recentOrders || recentOrders.length === 0) {
         timeline.innerHTML = `
@@ -1676,30 +1676,19 @@ function selectQuantity(qty) {
     
     container.innerHTML = '';
     
-    // Base options - will be enhanced by inventory helper if available
-    const itemOptions = `
-        <option value="">Select Item</option>
-        <option value="id lace">ID Lace</option>
-        <option value="school uniform">School Uniform</option>
-        <option value="pe uniform">PE Uniform</option>
-        <option value="nstp shirt">NSTP Shirt</option>
-        <option value="book">Book</option>
-        <option value="printing services">Printing Services</option>
-    `;
-    
     for (let i = 1; i <= qty; i++) {
         const div = document.createElement('div');
         div.innerHTML = `
             <label class="block text-sm font-semibold text-gray-700 mb-2">Item ${i} <span class="text-red-500">*</span></label>
             <select id="item${i}" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" required>
-                ${itemOptions}
+                <option value="">Select Item</option>
             </select>
         `;
         container.appendChild(div);
         
-        // Populate with real inventory if helper is available
+        // Populate with real inventory from inventory_helper.js
         if (typeof populateInventorySelect === 'function') {
-            populateInventorySelect(`item${i}`, false); // Don't show out of stock
+            populateInventorySelect(`item${i}`, false); // Don't show out of stock items
         }
     }
     

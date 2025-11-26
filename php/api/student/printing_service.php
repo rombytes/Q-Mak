@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../../config/database.php';
 require_once '../../config/session.php';
 require_once '../../utils/queue_functions.php';
-require_once '../../utils/email_sender.php';
+require_once '../../utils/email.php';
 
 // Student ID will be set only for authenticated requests
 $studentId = $_SESSION['student_id'] ?? null;

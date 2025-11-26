@@ -31,8 +31,8 @@ register_shutdown_function(function(){
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../config/constants.php';
 
-// Load new email sender
-require_once __DIR__ . '/../../utils/email_sender.php';
+// Load EmailService for sending OTP
+require_once __DIR__ . '/../../utils/email.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -57,6 +57,23 @@ try {
     
     // Determine service type
     $serviceType = $input['order_type_service'] ?? 'items';
+    
+    // Validate that the requested service is active
+    $db = getDB();
+    
+    $serviceName = ($serviceType === 'printing') ? 'Printing Services' : 'School Items';
+    $checkServiceStmt = $db->prepare("SELECT is_active FROM services WHERE service_name = ? LIMIT 1");
+    $checkServiceStmt->execute([$serviceName]);
+    $serviceRow = $checkServiceStmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$serviceRow || $serviceRow['is_active'] != 1) {
+        if (ob_get_level()) { ob_clean(); }
+        echo json_encode([
+            'success' => false, 
+            'message' => "Sorry, $serviceName is currently unavailable."
+        ]);
+        exit;
+    }
     
     // Validate required fields based on service type
     $required = ['studentId', 'fname', 'lname', 'email', 'college', 'program', 'year'];
@@ -276,16 +293,15 @@ try {
     
     $db->commit();
     
-    // Send OTP email using new EmailSender
+    // Send OTP email using EmailService
     try {
         error_log("Attempting to send OTP email to: $email");
-        $emailResult = EmailSender::sendOTP($email, $otp, $fname);
+        $emailResult = EmailService::sendOTP($email, $otp, $fname);
         
         if ($emailResult['success']) {
             error_log("✓ OTP email sent successfully to $email");
         } else {
             error_log("✗ Failed to send OTP email to $email: " . ($emailResult['error'] ?? 'Unknown error'));
-            error_log("Check detailed log at: " . EmailSender::getLogFilePath());
         }
         // Continue anyway - OTP is in response for development
     } catch (Exception $emailError) {

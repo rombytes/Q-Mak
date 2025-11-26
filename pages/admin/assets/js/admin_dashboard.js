@@ -893,7 +893,7 @@ function displayHistoryTable(orders) {
     tbody.innerHTML = '';
 
     if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No order history found for these filters.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No order history found for these filters.</td></tr>';
         return;
     }
 
@@ -913,6 +913,15 @@ function displayHistoryTable(orders) {
         // Check if this is a printing service order
         const isPrintingOrder = order.order_type_service === 'printing' || order.item_name === 'Printing Services';
         
+        // Service type badge for history table
+        const serviceTypeBadge = isPrintingOrder
+            ? `<span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                <i class="bi bi-printer-fill"></i> Printing
+               </span>`
+            : `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                <i class="bi bi-bag-fill"></i> Items
+               </span>`;
+        
         const itemDisplay = isPrintingOrder
             ? `<div class="flex items-center gap-2">
                 <span>${capitalizeWords(order.item_name || 'Printing Services')}</span>
@@ -928,6 +937,7 @@ function displayHistoryTable(orders) {
         row.innerHTML = `
             <td class="px-6 py-4">${order.queue_number}</td>
             <td class="px-6 py-4">${order.first_name} ${order.last_name} (${order.student_id})</td>
+            <td class="px-6 py-4">${serviceTypeBadge}</td>
             <td class="px-6 py-4">${itemDisplay}</td>
             <td class="px-6 py-4">${createdDate}</td>
             <td class="px-6 py-4">
@@ -1354,7 +1364,7 @@ function displayQueueTable(filteredOrders = null) {
             
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="px-6 py-12 text-center">
+                <td colspan="7" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center gap-3">
                         <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1396,6 +1406,15 @@ function displayQueueTable(filteredOrders = null) {
         // Check if this is a printing service order
         const isPrintingOrder = order.order_type_service === 'printing' || displayName === 'Printing Services';
         
+        // Service type badge
+        const serviceTypeBadge = isPrintingOrder
+            ? `<span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                <i class="bi bi-printer-fill"></i> Printing
+               </span>`
+            : `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                <i class="bi bi-bag-fill"></i> Items
+               </span>`;
+        
         const itemDisplay = isPrintingOrder
             ? `<div class="flex items-center gap-2">
                 <span class="text-gray-700">${capitalizeWords(displayName)}</span>
@@ -1420,6 +1439,9 @@ function displayQueueTable(filteredOrders = null) {
             </td>
             <td class="px-6 py-4">
                 <span class="font-medium text-gray-700">${order.student_id}</span>
+            </td>
+            <td class="px-6 py-4">
+                ${serviceTypeBadge}
             </td>
             <td class="px-6 py-4">
                 ${itemDisplay}

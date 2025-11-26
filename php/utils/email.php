@@ -67,6 +67,27 @@ class EmailService {
     }
     
     /**
+     * Alias for sendReceipt - for backward compatibility
+     * Can be used when order data format differs from sendReceipt expectations
+     */
+    public static function sendOrderConfirmation($email, $orderData, $studentName = '') {
+        // Map orderData to the format expected by sendReceipt
+        $receiptData = [
+            'queue_number' => $orderData['queue_number'] ?? 'N/A',
+            'reference_number' => $orderData['reference_number'] ?? 'N/A',
+            'student_name' => $studentName ?: ($orderData['student_name'] ?? 'Student'),
+            'student_id' => $orderData['student_id'] ?? '',
+            'item_ordered' => $orderData['items'] ?? $orderData['item_ordered'] ?? 'N/A',
+            'order_date' => date('F d, Y g:i A'),
+            'wait_time' => $orderData['estimated_wait_time'] ?? 10,
+            'order_type' => $orderData['order_type'] ?? 'immediate',
+            'queue_date' => $orderData['scheduled_date'] ?? date('Y-m-d')
+        ];
+        
+        return self::sendReceipt($email, $receiptData);
+    }
+    
+    /**
      * Send order status update email
      */
     public static function sendStatusUpdate($email, $orderData) {

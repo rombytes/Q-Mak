@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../utils/email_sender.php';
+require_once __DIR__ . '/../../utils/email.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -62,8 +62,8 @@ try {
     $_SESSION['forgot_password_student_id'] = $student['student_id'];
     $_SESSION['forgot_password_expiry'] = time() + (10 * 60); // 10 minutes
     
-    // Send OTP via email using EmailSender class
-    $emailResult = EmailSender::sendOTP($email, $otpCode, $student['first_name']);
+    // Send OTP via email using EmailService class
+    $emailResult = EmailService::sendOTP($email, $otpCode, $student['first_name']);
     
     if (!$emailResult['success']) {
         http_response_code(500);

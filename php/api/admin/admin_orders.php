@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 o.updated_at,
                 o.queue_date,
                 o.order_type,
+                COALESCE(o.order_type_service, 'items') as order_type_service,
                 s.student_id,
                 s.first_name,
                 s.last_name,

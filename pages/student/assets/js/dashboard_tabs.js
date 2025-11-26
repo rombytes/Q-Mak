@@ -150,7 +150,7 @@ async function loadProfileTab() {
         
         // Max 10 retries (5 seconds total)
         if (window.profileLoadRetries < 10) {
-            console.warn(`Student data not available yet (attempt ${window.profileLoadRetries}/10). Retrying...`);
+            // Silent retry - no console spam
             setTimeout(loadProfileTab, 500);
         } else {
             console.error('Failed to load student data after 10 attempts. Please refresh the page.');
@@ -182,6 +182,10 @@ async function loadProfileTab() {
 function refreshDashboardData() {
     if (typeof loadCurrentOrder === 'function') {
         loadCurrentOrder();
+    }
+    // Also refresh recent activity
+    if (typeof loadOrderHistory === 'function') {
+        loadOrderHistory();
     }
 }
 

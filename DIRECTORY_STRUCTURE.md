@@ -100,8 +100,7 @@ Q-Mak/
 │   │   └── security_config.example.php # Security template
 │   └── utils/             # Utility functions
 │       ├── brute_force_protection.php # Security and authentication
-│       ├── email.php                  # Email handler with QR generation
-│       └── email_sender.php           # Simplified OTP email sender
+│       └── email.php                  # Unified email service with QR generation
 │
 ├── scripts/                # Setup and utility scripts
 │   ├── add_archive_columns.php
