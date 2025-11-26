@@ -99,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 o.reference_number,
                 o.item_name as item_ordered,
                 o.status as order_status,
+                o.estimated_wait_time,
                 o.qr_code,
                 o.qr_expiry,
                 o.created_at,

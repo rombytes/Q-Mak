@@ -5,87 +5,170 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Status - UMak COOP</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="../../js/notifications.js"></script>
-    <script src="../../js/modal_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/status_display.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0fdfa; }
+        
+        /* Pulse animation for the active step */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .step-active-pulse { animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+    </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-    <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-2xl w-full border border-blue-100 animate-fade-in">
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-clipboard-check text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">Order Status</h3>
-                    <p class="text-sm text-gray-600">Track your order in real-time</p>
-                </div>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-gradient-to-b from-blue-50 to-white">
+
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 relative animate-fade-in">
+        
+        <!-- Top accent bar -->
+        <div class="h-2 bg-gradient-to-r from-blue-600 to-blue-400 w-full"></div>
+
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100">
+            <div class="flex items-center gap-2 text-blue-900 font-bold">
+                <i class="bi bi-shop text-blue-600"></i> Q-Mak Status
             </div>
-            <button onclick="goHome()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all" title="Back to Homepage">
-                <i class="fas fa-times text-xl"></i>
+            <button onclick="goHome()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-50 transition-all">
+                <i class="bi bi-x-lg"></i>
             </button>
         </div>
-        <!-- Order Details Card -->
-        <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border border-blue-100">
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-blue-500"></i>
-                        Order Information
-                    </h4>
-                    <div id="orderId" class="space-y-2 text-gray-700"></div>
+
+        <!-- Main Content -->
+        <div class="p-8 text-center">
+            
+            <!-- Hero Queue Number -->
+            <div class="mb-8">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Your Queue Number</p>
+                <h1 id="displayQueueNum" class="text-7xl font-black text-blue-900 tracking-tighter mb-2">--</h1>
+                <div id="displayStatusBadge" class="inline-block px-4 py-1.5 rounded-full bg-gray-100 text-gray-500 text-sm font-bold uppercase">
+                    Loading...
                 </div>
-                <div id="qrCodeWrapper" class="hidden flex flex-col items-center justify-center">
-                    <div class="bg-white p-4 rounded-xl shadow-md">
-                        <canvas id="qrcode" class="mx-auto"></canvas>
+            </div>
+
+            <!-- 4-Step Progress Stepper -->
+            <div class="mb-10">
+                <div class="flex justify-between items-start mb-3 relative z-10">
+                    
+                    <!-- Step 0: Confirmed -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div id="step-icon-0" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-green-100 text-green-600 transition-all duration-300 border-2 border-white shadow-sm">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Confirmed</span>
                     </div>
-                    <p class="text-xs text-center text-gray-500 mt-2 flex items-center gap-1">
-                        <i class="fas fa-qrcode"></i>
-                        Scan to verify
-                    </p>
+
+                    <!-- Step 1: Waiting -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div id="step-icon-1" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Waiting</span>
+                    </div>
+
+                    <!-- Step 2: Processing -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div id="step-icon-2" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
+                            <i class="bi bi-bell-fill"></i>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Processing</span>
+                    </div>
+
+                    <!-- Step 3: Completed -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div id="step-icon-3" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
+                            <i class="bi bi-hand-thumbs-up-fill"></i>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Completed</span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="relative h-2 bg-gray-100 rounded-full mx-4 -mt-8 z-0">
+                    <div id="progressBarFill" class="absolute top-0 left-0 h-full bg-blue-600 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Status Badge -->
-        <div class="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-100">
-            <h4 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
-                <i class="fas fa-clock text-orange-500"></i>
-                Current Status
-            </h4>
-            <div class="text-center">
-                <p id="statusBadge" class="px-6 py-3 rounded-xl inline-block font-bold text-lg shadow-md"></p>
-            </div>
-        </div>
-        
-        <!-- Status Description -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
-            <div class="flex items-start gap-3">
-                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-info text-white"></i>
-                </div>
-                <div class="flex-1">
-                    <h4 class="font-semibold text-blue-900 mb-2">What's happening?</h4>
-                    <p id="statusDesc" class="text-gray-700 leading-relaxed"></p>
+
+            <!-- Order Details Card -->
+            <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 text-left mb-6">
+                <div class="grid grid-cols-2 gap-y-4 gap-x-4">
+                    
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase font-semibold">Reference</p>
+                        <p id="displayRefNum" class="font-mono font-bold text-gray-700 text-sm">...</p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase font-semibold">Est. Wait</p>
+                        <p id="displayWaitTime" class="font-bold text-orange-600 text-sm">...</p>
+                    </div>
+
+                    <div class="col-span-2 pt-2 border-t border-gray-200">
+                        <p class="text-xs text-gray-400 uppercase font-semibold mb-1">Item(s)</p>
+                        <p id="displayItems" class="font-medium text-gray-800 text-sm">Loading...</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="flex gap-4">
-            <button onclick="goHome()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2">
-                <i class="fas fa-home"></i>
-                Back to Home
-            </button>
+
+            <!-- QR Code Section -->
+            <div id="qrCodeWrapper" class="hidden mb-6">
+                <div class="bg-white p-3 rounded-xl border-2 border-blue-100 inline-block shadow-sm">
+                    <canvas id="qrcode" class="w-32 h-32"></canvas>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Scan at Counter</p>
+            </div>
+
+            <!-- Check-In Button for Scheduled Orders -->
+            <div id="checkInSection" class="hidden mb-6">
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-5 shadow-lg">
+                    <div class="flex flex-col items-center gap-3 text-white">
+                        <i class="bi bi-geo-alt-fill text-3xl"></i>
+                        <div class="text-center">
+                            <h4 class="font-bold text-lg">Ready to Check In?</h4>
+                            <p class="text-sm text-purple-100">Tap to join the queue</p>
+                        </div>
+                        <button onclick="activateOrderStatus()" id="statusCheckInButton"
+                            class="bg-white text-purple-600 hover:bg-purple-50 px-6 py-3 rounded-lg font-bold transition-all hover:shadow-xl flex items-center gap-2 mt-2">
+                            <i class="bi bi-check-circle-fill text-xl"></i>
+                            <span>I'M HERE</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cancel Button for Active Orders -->
+            <div id="cancelSection" class="hidden mb-6">
+                <button onclick="cancelOrderStatus()" id="statusCancelButton"
+                    class="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel Order
+                </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button onclick="goHome()" class="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all text-sm">
+                    <i class="bi bi-house-door mr-1"></i> Home
+                </button>
+                <button onclick="location.reload()" class="flex-1 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-200 transition-all text-sm">
+                    <i class="bi bi-arrow-clockwise mr-1"></i> Refresh
+                </button>
+            </div>
+
         </div>
     </div>
 
-    <!-- Inline JavaScript removed - now in assets/js/status_display.js -->
-    
-    <!-- External JavaScript -->
     <script src="assets/js/status_display.js"></script>
+</body>
 </html>
