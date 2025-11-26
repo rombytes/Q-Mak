@@ -2249,7 +2249,7 @@ async function resetToDefault() {
         
         if (result.success) {
             // Reset to Herons.png
-            const defaultImage = '/Q-Mak/images/Herons.png';
+            const defaultImage = '../../images/Herons.png';
             document.getElementById('previewProfilePicture').src = defaultImage;
             
             // Update all profile pictures

@@ -10,18 +10,17 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 
-require_once '../../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 try {
-    $db = new Database();
-    $conn = $db->getConnection();
+    $db = getDB();
     
     // Fetch printing prices from settings
     $query = "SELECT setting_key, setting_value 
               FROM settings 
               WHERE setting_key LIKE 'printing_price_%'";
     
-    $stmt = $conn->prepare($query);
+    $stmt = $db->prepare($query);
     $stmt->execute();
     
     $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
