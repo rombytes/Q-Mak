@@ -198,16 +198,37 @@
                 </ul>
             </nav>
 
-            <!-- Logout Button (Fixed at Bottom) -->
-            <div class="border-t border-blue-700/50 p-2.5 flex-shrink-0">
-                <button onclick="logout()" class="w-full group px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-lg hover:bg-red-500/20 border-l-4 border-transparent hover:border-red-400 hover:shadow-md">
-                    <div class="flex items-center gap-2.5">
-                        <svg class="menu-icon text-red-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                        </svg>
-                        <span class="menu-text text-sm font-medium text-red-400 group-hover:font-semibold">Logout</span>
+            <!-- Admin Profile Footer with Dropup Menu -->
+            <div class="border-t border-blue-700/50 flex-shrink-0 relative" id="adminProfileFooter">
+                <!-- Dropup Menu (Hidden by default) -->
+                <div id="adminDropupMenu" class="hidden absolute bottom-full left-0 w-full mb-2 px-2 transition-all duration-200">
+                    <div class="bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+                        <button onclick="showTab('admin-settings'); toggleAdminMenu();" class="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-all duration-200">
+                            <i class="bi bi-person-circle text-blue-600" style="font-size: 18px;"></i>
+                            <span class="menu-text text-sm font-medium">My Profile</span>
+                        </button>
+                        <div class="border-t border-gray-100"></div>
+                        <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-all duration-200">
+                            <i class="bi bi-box-arrow-right" style="font-size: 18px;"></i>
+                            <span class="menu-text text-sm font-medium">Logout</span>
+                        </button>
                     </div>
-                </button>
+                </div>
+                
+                <!-- Profile Footer Button -->
+                <div onclick="toggleAdminMenu()" class="group mx-2 my-2.5 px-3 py-3 cursor-pointer transition-all duration-300 rounded-xl hover:bg-blue-700/60 flex items-center gap-3">
+                    <!-- Avatar (Always visible) -->
+                    <div class="profile-avatar flex-shrink-0 w-10 h-10 rounded-full overflow-hidden border-2 border-orange-400 shadow-md" id="footerProfileAvatar">
+                        <img src="../../images/Herons.png" alt="Admin Avatar" class="w-full h-full object-cover">
+                    </div>
+                    <!-- Name/Role (Hidden when sidebar is collapsed) -->
+                    <div class="menu-text flex-1 min-w-0 transition-all duration-300">
+                        <h3 class="font-bold text-sm text-white truncate" id="footerAdminName">Admin User</h3>
+                        <p class="text-xs text-blue-200 truncate" id="footerAdminRole">Administrator</p>
+                    </div>
+                    <!-- Chevron (Hidden when sidebar is collapsed) -->
+                    <i class="bi bi-chevron-up menu-text text-blue-200 transition-transform duration-300" id="adminMenuChevron"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -2125,9 +2146,9 @@
             </div>
             
             <!-- Phase 8: Services Management Tab -->
-            <div id="content-services" class="tab-content hidden" style="margin-left: 30px;">
+            <div id="content-services" class="tab-content hidden p-8">
                 <!-- Page Header -->
-                <div class="mb-6">
+                <div class="mb-8">
                     <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
                         <i class="bi bi-speedometer2"></i>
                         <span>Dashboard</span>
@@ -2144,7 +2165,7 @@
                 </div>
 
                 <!-- Services Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="servicesGrid">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="servicesGrid">
                     <!-- Services will be loaded here dynamically -->
                     <div class="col-span-full text-center py-12">
                         <i class="bi bi-hourglass-split text-4xl text-gray-400 mb-3"></i>

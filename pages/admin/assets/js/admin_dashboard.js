@@ -2700,6 +2700,8 @@ async function initializeDashboard() {
             if (adminData.email) {
                 document.getElementById('sidebarAdminEmail').textContent = adminData.email;
             }
+            // Update admin profile footer
+            updateAdminProfileFooter();
             // Profile picture is now set to Herons.png by default in HTML
         }
         
@@ -6047,6 +6049,62 @@ function toggleNavGroup(groupName) {
             submenu.classList.add('hidden');
         }
         chevron.classList.toggle('rotate');
+    }
+}
+
+// ============================================
+// ADMIN PROFILE DROPUP MENU
+// ============================================
+
+let adminMenuOpen = false;
+
+function toggleAdminMenu() {
+    const dropupMenu = document.getElementById('adminDropupMenu');
+    const chevron = document.getElementById('adminMenuChevron');
+    
+    if (dropupMenu && chevron) {
+        adminMenuOpen = !adminMenuOpen;
+        
+        if (adminMenuOpen) {
+            dropupMenu.classList.remove('hidden');
+            dropupMenu.classList.add('animate-fade-in-up');
+            chevron.classList.add('rotate-180');
+        } else {
+            dropupMenu.classList.add('hidden');
+            dropupMenu.classList.remove('animate-fade-in-up');
+            chevron.classList.remove('rotate-180');
+        }
+    }
+}
+
+// Close dropup menu when clicking outside
+document.addEventListener('click', function(event) {
+    const profileFooter = document.getElementById('adminProfileFooter');
+    const dropupMenu = document.getElementById('adminDropupMenu');
+    
+    if (profileFooter && dropupMenu && adminMenuOpen) {
+        if (!profileFooter.contains(event.target)) {
+            adminMenuOpen = false;
+            dropupMenu.classList.add('hidden');
+            dropupMenu.classList.remove('animate-fade-in-up');
+            const chevron = document.getElementById('adminMenuChevron');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    }
+});
+
+// Update admin profile footer with session data
+function updateAdminProfileFooter() {
+    const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
+    const footerName = document.getElementById('footerAdminName');
+    const footerRole = document.getElementById('footerAdminRole');
+    
+    if (footerName) {
+        const fullName = adminData.full_name || adminData.username || 'Admin';
+        footerName.textContent = fullName;
+    }
+    if (footerRole) {
+        footerRole.textContent = adminData.is_super_admin == 1 ? 'Super Admin' : 'Administrator';
     }
 }
 
