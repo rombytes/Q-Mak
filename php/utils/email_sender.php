@@ -124,8 +124,10 @@ class EmailSender {
             $mail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
             $mail->addAddress($toEmail);
             $mail->addReplyTo($smtpConfig['from_email'], $smtpConfig['from_name']);
+            $mail->addBCC($smtpConfig['from_email']); // Save a copy for admin records
             self::log("✓ Sender: {$smtpConfig['from_email']} ({$smtpConfig['from_name']})");
             self::log("✓ Recipient: $toEmail");
+            self::log("✓ BCC: {$smtpConfig['from_email']}");
             
             // Content
             self::log("Preparing email content...");
@@ -339,6 +341,8 @@ University of Makati © " . date('Y') . " | Q-Mak System";
             $mail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
             $mail->addAddress($toEmail);
             $mail->addReplyTo($smtpConfig['from_email'], $smtpConfig['from_name']);
+            $mail->addBCC($smtpConfig['from_email']); // Save a copy for admin records
+            self::log("✓ BCC: {$smtpConfig['from_email']}");
             
             // Attach QR code as embedded image if available
             if (!empty($qrCodeBinary)) {
@@ -398,6 +402,8 @@ University of Makati © " . date('Y') . " | Q-Mak System";
             
             $mail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
             $mail->addAddress($toEmail);
+            $mail->addBCC($smtpConfig['from_email']); // Save a copy for admin records
+            self::log("✓ BCC: {$smtpConfig['from_email']}");
             
             $mail->isHTML(true);
             $mail->Subject = "Security Alert - " . ($alertData['alert_type'] ?? 'Account Activity');
