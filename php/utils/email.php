@@ -41,9 +41,26 @@ class EmailService {
      */
     public static function sendReceipt($email, $orderData) {
         $subject = "Order Confirmation - Queue #{$orderData['queue_number']} - Ref: {$orderData['reference_number']}";
+        
+        // Generate QR code binary data
+        $qrData = json_encode([
+            'queue_number' => $orderData['queue_number'],
+            'email' => $email,
+            'timestamp' => date('c'),
+            'type' => 'umak_coop_order'
+        ]);
+        $qrBinary = self::generateQRCodeBinary($qrData);
+        
+        // Get email body (no longer generates QR internally)
         $body = self::getReceiptEmailTemplate($email, $orderData);
         
-        $result = self::sendEmail($email, $subject, $body);
+        // Send email with embedded QR code
+        $embeddedImages = [];
+        if (!empty($qrBinary)) {
+            $embeddedImages['order_qr'] = $qrBinary;
+        }
+        
+        $result = self::sendEmail($email, $subject, $body, $embeddedImages);
         self::logEmail($email, 'receipt', $subject, $result['success'], $result['error'] ?? null);
         
         return $result;
@@ -54,9 +71,27 @@ class EmailService {
      */
     public static function sendStatusUpdate($email, $orderData) {
         $subject = "Order Status Update - Queue #{$orderData['queue_number']} - Ref: {$orderData['reference_number']}";
+        
+        // Generate QR code for active statuses
+        $embeddedImages = [];
+        $activeStatuses = ['pending', 'processing', 'ready'];
+        if (in_array(strtolower($orderData['status']), $activeStatuses) && !empty($orderData['queue_number'])) {
+            $qrData = json_encode([
+                'queue_number' => $orderData['queue_number'],
+                'email' => $email,
+                'timestamp' => date('c'),
+                'type' => 'umak_coop_order'
+            ]);
+            $qrBinary = self::generateQRCodeBinary($qrData);
+            if (!empty($qrBinary)) {
+                $embeddedImages['status_qr'] = $qrBinary;
+            }
+        }
+        
+        // Get email body
         $body = self::getStatusUpdateTemplate($orderData);
         
-        $result = self::sendEmail($email, $subject, $body);
+        $result = self::sendEmail($email, $subject, $body, $embeddedImages);
         self::logEmail($email, 'status_update', $subject, $result['success'], $result['error'] ?? null);
         
         return $result;
@@ -86,7 +121,7 @@ class EmailService {
     /**
      * Core email sending function
      */
-    public static function sendEmail($to, $subject, $htmlBody) {
+    public static function sendEmail($to, $subject, $htmlBody, $embeddedImages = []) {
         error_log("EmailService::sendEmail - Starting for: $to");
         error_log("EmailService::sendEmail - Subject: $subject");
         
@@ -116,6 +151,12 @@ class EmailService {
             $mail->addAddress($to);
             error_log("EmailService::sendEmail - From: " . SMTP_FROM_EMAIL . ", To: $to");
             
+            // Attach embedded images
+            foreach ($embeddedImages as $cid => $binaryData) {
+                $mail->addStringEmbeddedImage($binaryData, $cid, 'qr_code.png', 'base64', 'image/png');
+                error_log("EmailService::sendEmail - Attached embedded image: $cid");
+            }
+            
             // Content
             $mail->isHTML(true);
             $mail->Subject = $subject;
@@ -135,8 +176,79 @@ class EmailService {
     }
     
     /**
+     * Generate QR Code Binary Data for email embedding
+     * Returns raw PNG binary string (not base64)
+     */
+    public static function generateQRCodeBinary($dataString) {
+        try {
+            // Ensure data string is not empty
+            if (empty($dataString)) {
+                error_log("QR Code: Empty data string provided");
+                return '';
+            }
+
+            // Check if QrCode class is available
+            if (!class_exists('Endroid\\QrCode\\QrCode')) {
+                error_log("QR Code: Endroid library not found. Run: composer require endroid/qr-code");
+                return '';
+            }
+
+            // Try named parameters (PHP 8.0+, Endroid v6)
+            try {
+                $qrCode = new QrCode(
+                    data: $dataString,
+                    size: 200,
+                    margin: 10
+                );
+                
+                $writer = new PngWriter();
+                $result = $writer->write($qrCode);
+                $imageData = $result->getString();
+                
+                if (!empty($imageData)) {
+                    error_log("QR Code: ✓ Generated binary successfully (" . strlen($imageData) . " bytes)");
+                    return $imageData;
+                } else {
+                    error_log("QR Code: Generated image is empty");
+                    return '';
+                }
+            } catch (\Throwable $e) {
+                error_log("QR Code: Named params failed, trying fallback: " . $e->getMessage());
+                
+                // Fallback: Try QrCode::create() method (Endroid v5)
+                try {
+                    if (method_exists('Endroid\\QrCode\\QrCode', 'create')) {
+                        $qrCode = QrCode::create($dataString)
+                            ->setSize(200)
+                            ->setMargin(10);
+                        
+                        $writer = new PngWriter();
+                        $result = $writer->write($qrCode);
+                        $imageData = $result->getString();
+                        
+                        if (!empty($imageData)) {
+                            error_log("QR Code: ✓ Generated binary using fallback (" . strlen($imageData) . " bytes)");
+                            return $imageData;
+                        }
+                    }
+                } catch (\Throwable $e2) {
+                    error_log("QR Code: Fallback method also failed: " . $e2->getMessage());
+                }
+            }
+
+            error_log("QR Code: All generation methods failed");
+            return '';
+            
+        } catch (\Throwable $e) {
+            error_log("QR Code: ✗ Generation failed - " . $e->getMessage());
+            return '';
+        }
+    }
+
+    /**
      * Generate QR Code Data URI using Endroid QR Code library v6
      * Simple, reliable, and works offline
+     * @deprecated Use generateQRCodeBinary() for email embedding instead
      */
     public static function generateQRCodeDataUri($dataString) {
         try {
@@ -261,32 +373,14 @@ class EmailService {
     private static function getReceiptEmailTemplate($email, $data) {
         $qrExpiryMinutes = defined('QR_EXPIRY_MINUTES') ? QR_EXPIRY_MINUTES : 30; // Use constant or default
 
-        // Generate QR Code (Uses the existing function which now includes error handling)
-        $qrData = json_encode([
-            'queue_number' => $data['queue_number'],
-            'email' => $email,
-            'timestamp' => date('c'),
-            'type' => 'umak_coop_order'
-        ]);
-        $qrCodeUri = self::generateQRCodeDataUri($qrData);
-
-        // Build QR code HTML conditionally
-        $qrCodeHtml = '';
-        if (!empty($qrCodeUri)) {
-            $qrCodeHtml = "
-                <div style='text-align: center; margin: 30px 0; padding-top: 20px; border-top: 1px solid #e2e8f0;'>
-                    <img src='{$qrCodeUri}' alt='Order QR Code' style='width:180px; height:180px; margin: 0 auto; display: block; border: 1px solid #e2e8f0; padding: 5px;'>
-                    <p style='font-size: 13px; color: #475569; margin-top: 10px;'>Scan this code at the counter.</p>
-                    <p style='font-size: 12px; color: #64748b;'>Valid for $qrExpiryMinutes minutes.</p>
-                </div>";
-        } else {
-            // Provide alternative text if QR generation failed
-             $qrCodeHtml = "
-                <div style='text-align: center; margin: 30px 0; padding: 20px; border-top: 1px solid #e2e8f0; background-color: #fffbeb; border-left: 4px solid #f59e0b; color: #b45309;'>
-                    <p style='margin: 0; font-weight: 600;'>QR Code could not be generated</p>
-                    <p style='margin: 8px 0 0; font-size: 14px;'>Please use your Queue Number for verification at the counter.</p>
-                </div>";
-        }
+        // QR code will be embedded by sendReceipt method using cid:order_qr
+        // No need to generate it here - just reference the CID
+        $qrCodeHtml = "
+            <div style='text-align: center; margin: 30px 0; padding-top: 20px; border-top: 1px solid #e2e8f0;'>
+                <img src='cid:order_qr' alt='Order QR Code' style='width:180px; height:180px; margin: 0 auto; display: block; border: 1px solid #e2e8f0; padding: 5px;'>
+                <p style='font-size: 13px; color: #475569; margin-top: 10px;'>Scan this code at the counter.</p>
+                <p style='font-size: 12px; color: #64748b;'>Valid for $qrExpiryMinutes minutes.</p>
+            </div>";
 
         // Show different banner for pre-orders
         $orderTypeLabel = $data['order_type'] ?? 'immediate';
@@ -418,27 +512,18 @@ class EmailService {
 
         $statusInfo = $statusStyles[strtolower($data['status'])] ?? ['label' => strtoupper($data['status']), 'color' => '#64748b', 'bg' => '#f1f5f9', 'text' => '#374151'];
 
-        // Generate QR code for active orders
+        // Generate QR code HTML for active orders
+        // QR code will be embedded by sendStatusUpdate method using cid:status_qr
         $qrHtml = '';
         $activeStatuses = ['pending', 'processing', 'ready'];
         if (in_array(strtolower($data['status']), $activeStatuses) && !empty($data['queue_number'])) {
-            $qrData = json_encode([
-                'queue_number' => $data['queue_number'],
-                'email' => $data['email'] ?? '',
-                'timestamp' => date('c'),
-                'type' => 'umak_coop_order'
-            ]);
-            $qrCodeUri = self::generateQRCodeDataUri($qrData);
-            
-            if (!empty($qrCodeUri)) {
-                $qrHtml = "
-                    <div style='text-align: center; margin: 25px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;'>
-                        <h4 style='margin: 0 0 15px; color: #1e3a8a; font-size: 16px;'>Your Order QR Code</h4>
-                        <img src='{$qrCodeUri}' alt='Order QR Code' style='width:180px; height:180px; margin: 0 auto; display: block; border: 2px solid #e2e8f0; padding: 8px; border-radius: 8px;'>
-                        <p style='font-size: 13px; color: #475569; margin-top: 12px;'>Present this QR code at the COOP counter</p>
-                        <p style='font-size: 12px; color: #64748b; margin-top: 4px;'>Queue Number: {$data['queue_number']}</p>
-                    </div>";
-            }
+            $qrHtml = "
+                <div style='text-align: center; margin: 25px 0; padding: 20px; background-color: #f8fafc; border-radius: 8px;'>
+                    <h4 style='margin: 0 0 15px; color: #1e3a8a; font-size: 16px;'>Your Order QR Code</h4>
+                    <img src='cid:status_qr' alt='Order QR Code' style='width:180px; height:180px; margin: 0 auto; display: block; border: 2px solid #e2e8f0; padding: 8px; border-radius: 8px;'>
+                    <p style='font-size: 13px; color: #475569; margin-top: 12px;'>Present this QR code at the COOP counter</p>
+                    <p style='font-size: 12px; color: #64748b; margin-top: 4px;'>Queue Number: {$data['queue_number']}</p>
+                </div>";
         }
 
         // Build conditional content based on status

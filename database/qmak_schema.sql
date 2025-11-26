@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `status` ENUM('pending', 'processing', 'completed', 'cancelled', 'scheduled') NOT NULL DEFAULT 'pending',
   `cancellation_reason` TEXT NULL COMMENT 'Reason for cancellation (if status is cancelled)',
   `order_type` ENUM('walk-in', 'online', 'immediate', 'pre-order') NOT NULL DEFAULT 'online' COMMENT 'Order source type',
+  `order_type_service` ENUM('items', 'printing') NOT NULL DEFAULT 'items' COMMENT 'Service category: items or printing',
   `scheduled_date` DATE NULL COMMENT 'For pre-orders, the date customer wants to pick up the order',
   `moved_from_date` DATE NULL COMMENT 'Original date if order was auto-moved',
   `ordered_outside_hours` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Flag indicating order was placed outside operating hours',

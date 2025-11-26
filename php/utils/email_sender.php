@@ -311,8 +311,8 @@ University of Makati © " . date('Y') . " | Q-Mak System";
             return ['success' => false, 'error' => 'SMTP configuration not set'];
         }
         
-        // Generate QR Code
-        $qrCodeBase64 = self::generateQRCode($orderData);
+        // Generate QR Code binary data
+        $qrCodeBinary = self::generateQRCode($orderData);
         
         $mail = new PHPMailer(true);
         
@@ -340,10 +340,16 @@ University of Makati © " . date('Y') . " | Q-Mak System";
             $mail->addAddress($toEmail);
             $mail->addReplyTo($smtpConfig['from_email'], $smtpConfig['from_name']);
             
+            // Attach QR code as embedded image if available
+            if (!empty($qrCodeBinary)) {
+                $mail->addStringEmbeddedImage($qrCodeBinary, 'order_qr', 'qr_code.png', 'base64', 'image/png');
+                self::log("QR Code attached as embedded image with CID: order_qr");
+            }
+            
             // Content
             $mail->isHTML(true);
             $mail->Subject = "Order Confirmed - Queue {$orderData['queue_number']}";
-            $mail->Body = self::getOrderConfirmationHTML($orderData, $studentName, $qrCodeBase64);
+            $mail->Body = self::getOrderConfirmationHTML($orderData, $studentName, !empty($qrCodeBinary));
             $mail->AltBody = self::getOrderConfirmationPlainText($orderData, $studentName);
             
             // Send
@@ -412,7 +418,8 @@ University of Makati © " . date('Y') . " | Q-Mak System";
     }
     
     /**
-     * Generate QR Code using Endroid library (same as email.php)
+     * Generate QR Code Binary Data (returns raw PNG binary string)
+     * For embedding in emails using Content-ID
      */
     private static function generateQRCode($orderData) {
         try {
@@ -449,8 +456,8 @@ University of Makati © " . date('Y') . " | Q-Mak System";
                 $imageData = $result->getString();
                 
                 if (!empty($imageData)) {
-                    self::log("QR Code: Generated successfully (" . strlen($imageData) . " bytes)");
-                    return 'data:image/png;base64,' . base64_encode($imageData);
+                    self::log("QR Code: Generated binary successfully (" . strlen($imageData) . " bytes)");
+                    return $imageData; // Return raw binary data
                 } else {
                     self::log("QR Code: Generated image is empty");
                     return '';
@@ -470,8 +477,8 @@ University of Makati © " . date('Y') . " | Q-Mak System";
                         $imageData = $result->getString();
                         
                         if (!empty($imageData)) {
-                            self::log("QR Code: Generated successfully using fallback (" . strlen($imageData) . " bytes)");
-                            return 'data:image/png;base64,' . base64_encode($imageData);
+                            self::log("QR Code: Generated binary using fallback (" . strlen($imageData) . " bytes)");
+                            return $imageData; // Return raw binary data
                         }
                     }
                 } catch (\Throwable $e2) {
@@ -491,7 +498,7 @@ University of Makati © " . date('Y') . " | Q-Mak System";
     /**
      * Get Order Confirmation Email HTML
      */
-    private static function getOrderConfirmationHTML($orderData, $studentName, $qrCodeBase64) {
+    private static function getOrderConfirmationHTML($orderData, $studentName, $hasQrCode) {
         $greeting = $studentName ? "Hello $studentName," : "Hello,";
         $queueNumber = $orderData['queue_number'] ?? 'N/A';
         $referenceNumber = $orderData['reference_number'] ?? 'N/A';
@@ -500,7 +507,8 @@ University of Makati © " . date('Y') . " | Q-Mak System";
         $orderType = $orderData['order_type'] ?? 'immediate';
         $scheduledDate = $orderData['scheduled_date'] ?? '';
         
-        $qrImageHtml = $qrCodeBase64 ? "<img src='$qrCodeBase64' alt='QR Code' style='width: 200px; height: 200px; display: block; margin: 0 auto;' />" : "<p style='color: #64748b;'>QR Code will be available at pickup</p>";
+        // Use Content-ID reference for embedded QR code
+        $qrImageHtml = $hasQrCode ? "<img src='cid:order_qr' alt='QR Code' style='width: 200px; height: 200px; display: block; margin: 0 auto;' />" : "<p style='color: #64748b;'>QR Code will be available at pickup</p>";
         
         $orderTypeInfo = $orderType === 'pre-order' && $scheduledDate ? 
             "<p style='margin: 10px 0; font-size: 14px; color: #7c3aed;'><strong>Pre-Order for:</strong> " . date('F d, Y', strtotime($scheduledDate)) . "</p>" :
