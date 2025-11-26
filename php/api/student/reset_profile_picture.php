@@ -63,7 +63,7 @@ try {
         'success' => true,
         'message' => 'Profile picture reset to default successfully',
         'data' => [
-            'profile_picture_url' => '/Q-Mak/images/Herons.png'
+            'profile_picture_url' => '../../images/Herons.png'
         ]
     ]);
     

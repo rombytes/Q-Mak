@@ -519,7 +519,7 @@ async function cancelOrderDashboard() {
     const cancelButton = document.getElementById('dashboardCancelButton');
     
     if (!currentActiveOrder || !currentActiveOrder.reference_number) {
-        showToast('Error: Order information not found', 'error');
+        showToast('error', 'Error', 'Order information not found');
         return;
     }
     
@@ -550,6 +550,7 @@ async function cancelOrderDashboard() {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({
                 reference_number: currentActiveOrder.reference_number
             })
@@ -559,7 +560,7 @@ async function cancelOrderDashboard() {
         
         if (result.success) {
             // Show success toast
-            showToast('Order cancelled successfully. Your reserved item has been released.', 'success');
+            showToast('success', 'Order Cancelled', 'Your reserved item has been released.');
             
             // Reload current order to clear display
             setTimeout(async () => {
@@ -572,7 +573,7 @@ async function cancelOrderDashboard() {
         } else {
             // Handle errors
             const errorMessage = result.message || 'Failed to cancel order. Please try again.';
-            showToast(errorMessage, 'error');
+            showToast('error', 'Cancel Failed', errorMessage);
             
             // Re-enable button
             if (cancelButton) {
@@ -584,7 +585,7 @@ async function cancelOrderDashboard() {
         
     } catch (error) {
         console.error('Cancel order error:', error);
-        showToast('Network error. Please check your connection and try again.', 'error');
+        showToast('error', 'Network Error', 'Please check your connection and try again.');
         
         // Re-enable button
         if (cancelButton) {
@@ -599,7 +600,7 @@ async function activateOrderDashboard() {
     const checkInButton = document.getElementById('dashboardCheckInButton');
     
     if (!currentActiveOrder || !currentActiveOrder.reference_number) {
-        showToast('Error: Order information not found', 'error');
+        showToast('error', 'Error', 'Order information not found');
         return;
     }
     
@@ -625,7 +626,7 @@ async function activateOrderDashboard() {
         
         if (result.success) {
             // Show success toast
-            showToast(`Successfully checked in! Your queue number is ${result.data.queue_number}`, 'success');
+            showToast('success', 'Checked In!', `Your queue number is ${result.data.queue_number}`);
             
             // Reload current order to show updated status
             setTimeout(() => {
@@ -635,7 +636,7 @@ async function activateOrderDashboard() {
         } else {
             // Handle errors
             const errorMessage = result.message || 'Failed to check in. Please try again.';
-            showToast(errorMessage, 'error');
+            showToast('error', 'Check-in Failed', errorMessage);
             
             // Re-enable button
             if (checkInButton) {
@@ -647,7 +648,7 @@ async function activateOrderDashboard() {
         
     } catch (error) {
         console.error('Check-in error:', error);
-        showToast('Network error. Please check your connection and try again.', 'error');
+        showToast('error', 'Network Error', 'Please check your connection and try again.');
         
         // Re-enable button
         if (checkInButton) {

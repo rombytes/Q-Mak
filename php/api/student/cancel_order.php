@@ -7,34 +7,24 @@
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
-ob_start();
-
-set_exception_handler(function($e){
-    http_response_code(500);
-    if (ob_get_level()) { ob_clean(); }
-    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
-    exit;
-});
-
-register_shutdown_function(function(){
-    $e = error_get_last();
-    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        http_response_code(500);
-        if (ob_get_level()) { ob_clean(); }
-        echo json_encode(['success' => false, 'message' => 'Server error occurred']);
-    }
-});
+ini_set('log_errors', 1);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: true');
+
+// Handle preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 require_once __DIR__ . '/../../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    if (ob_get_level()) { ob_clean(); }
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     exit;
 }
@@ -43,10 +33,9 @@ try {
     $input = json_decode(file_get_contents('php://input'), true);
     
     $orderId = isset($input['order_id']) ? (int)$input['order_id'] : null;
-    $referenceNumber = trim($input['reference_number'] ?? '');
+    $referenceNumber = isset($input['reference_number']) ? trim($input['reference_number']) : '';
     
     if (empty($orderId) && empty($referenceNumber)) {
-        if (ob_get_level()) { ob_clean(); }
         echo json_encode(['success' => false, 'message' => 'Order ID or reference number is required']);
         exit;
     }
@@ -72,7 +61,6 @@ try {
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$order) {
-        if (ob_get_level()) { ob_clean(); }
         echo json_encode(['success' => false, 'message' => 'Order not found']);
         exit;
     }
@@ -80,43 +68,41 @@ try {
     // ============================================================
     // VALIDATION: Check Status
     // ============================================================
-    if ($order['status'] === 'completed') {
-        if (ob_get_level()) { ob_clean(); }
+    $currentStatus = $order['status'] ?? '';
+    
+    if ($currentStatus === 'completed') {
         echo json_encode([
             'success' => false,
             'message' => 'Cannot cancel order. It has already been completed.',
-            'current_status' => $order['status']
+            'current_status' => $currentStatus
         ]);
         exit;
     }
     
-    if ($order['status'] === 'processing') {
-        if (ob_get_level()) { ob_clean(); }
+    if ($currentStatus === 'processing') {
         echo json_encode([
             'success' => false,
             'message' => 'Cannot cancel order. It is already being processed by COOP staff.',
-            'current_status' => $order['status']
+            'current_status' => $currentStatus
         ]);
         exit;
     }
     
-    if ($order['status'] === 'cancelled') {
-        if (ob_get_level()) { ob_clean(); }
+    if ($currentStatus === 'cancelled') {
         echo json_encode([
             'success' => false,
             'message' => 'Order is already cancelled.',
-            'current_status' => $order['status']
+            'current_status' => $currentStatus
         ]);
         exit;
     }
     
     // Only 'pending' and 'scheduled' orders can be cancelled
-    if (!in_array($order['status'], ['pending', 'scheduled'])) {
-        if (ob_get_level()) { ob_clean(); }
+    if (!in_array($currentStatus, ['pending', 'scheduled'])) {
         echo json_encode([
             'success' => false,
             'message' => 'Order cannot be cancelled in its current status.',
-            'current_status' => $order['status']
+            'current_status' => $currentStatus
         ]);
         exit;
     }
@@ -130,7 +116,14 @@ try {
         // ============================================================
         // INVENTORY REVERSAL
         // ============================================================
-        $orderTypeService = $order['order_type_service'] ?? 'items';
+        // Check if order_type_service column exists, default to 'items' if not
+        $orderTypeService = 'items';
+        if (isset($order['order_type_service'])) {
+            $orderTypeService = $order['order_type_service'];
+        } elseif (isset($order['item_name']) && strtolower($order['item_name']) === 'printing services') {
+            $orderTypeService = 'printing';
+        }
+        
         $inventoryRestocked = false;
         $restoredItems = [];
         
@@ -145,26 +138,38 @@ try {
                 foreach ($items as $itemName) {
                     if (empty($itemName)) continue;
                     
-                    // Check if item exists in inventory
-                    $checkStmt = $db->prepare("SELECT item_id, item_name, quantity FROM inventory_items WHERE LOWER(item_name) = LOWER(?)");
-                    $checkStmt->execute([$itemName]);
-                    $inventoryItem = $checkStmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if ($inventoryItem) {
-                        // Restock the item
-                        $restockStmt = $db->prepare("UPDATE inventory_items SET quantity = quantity + 1, updated_at = NOW() WHERE item_id = ?");
-                        $restockStmt->execute([$inventoryItem['item_id']]);
+                    try {
+                        // Check if item exists in inventory - use * to be safe
+                        $checkStmt = $db->prepare("SELECT * FROM inventory_items WHERE LOWER(item_name) = LOWER(?) LIMIT 1");
+                        $checkStmt->execute([$itemName]);
+                        $inventoryItem = $checkStmt->fetch(PDO::FETCH_ASSOC);
                         
-                        $inventoryRestocked = true;
-                        $restoredItems[] = [
-                            'item_name' => $inventoryItem['item_name'],
-                            'new_quantity' => $inventoryItem['quantity'] + 1
-                        ];
-                        
-                        error_log("Inventory restocked: {$inventoryItem['item_name']} - New quantity: " . ($inventoryItem['quantity'] + 1));
-                    } else {
-                        // Item not found in inventory - log warning but don't fail
-                        error_log("Warning: Item '{$itemName}' not found in inventory during cancellation");
+                        if ($inventoryItem) {
+                            // Determine quantity column name (could be 'stock_quantity', 'quantity', or 'stock')
+                            $qtyColumn = isset($inventoryItem['stock_quantity']) ? 'stock_quantity' :
+                                        (isset($inventoryItem['quantity']) ? 'quantity' : 
+                                        (isset($inventoryItem['stock']) ? 'stock' : null));
+                            
+                            if ($qtyColumn) {
+                                // Restock the item
+                                $restockStmt = $db->prepare("UPDATE inventory_items SET {$qtyColumn} = {$qtyColumn} + 1, updated_at = NOW() WHERE item_id = ?");
+                                $restockStmt->execute([$inventoryItem['item_id']]);
+                                
+                                $inventoryRestocked = true;
+                                $restoredItems[] = [
+                                    'item_name' => $inventoryItem['item_name'],
+                                    'new_quantity' => ($inventoryItem[$qtyColumn] ?? 0) + 1
+                                ];
+                                
+                                error_log("Inventory restocked: {$inventoryItem['item_name']}");
+                            }
+                        } else {
+                            // Item not found in inventory - log warning but don't fail
+                            error_log("Warning: Item '{$itemName}' not found in inventory during cancellation");
+                        }
+                    } catch (Exception $e) {
+                        // Inventory update failed - log but don't fail the cancellation
+                        error_log("Inventory restock failed for '{$itemName}': " . $e->getMessage());
                     }
                 }
             }
@@ -174,15 +179,21 @@ try {
         // ============================================================
         // UPDATE ORDER STATUS TO CANCELLED
         // ============================================================
-        $updateStmt = $db->prepare("
-            UPDATE orders 
-            SET 
-                status = 'cancelled',
-                cancelled_at = NOW(),
-                updated_at = NOW()
-            WHERE order_id = ?
-        ");
+        // Check if cancelled_at column exists
+        $updateSql = "UPDATE orders SET status = 'cancelled', updated_at = NOW()";
         
+        // Try to also update cancelled_at if column exists
+        try {
+            $checkCol = $db->query("SHOW COLUMNS FROM orders LIKE 'cancelled_at'");
+            if ($checkCol->rowCount() > 0) {
+                $updateSql = "UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), updated_at = NOW()";
+            }
+        } catch (Exception $e) {
+            // Column check failed, use simple update
+        }
+        
+        $updateSql .= " WHERE order_id = ?";
+        $updateStmt = $db->prepare($updateSql);
         $updateStmt->execute([$order['order_id']]);
         
         // ============================================================
@@ -193,14 +204,13 @@ try {
         // ============================================================
         // SUCCESS RESPONSE
         // ============================================================
-        if (ob_get_level()) { ob_clean(); }
         echo json_encode([
             'success' => true,
             'message' => 'Order cancelled successfully. Your reserved item has been released.',
             'data' => [
                 'order_id' => $order['order_id'],
-                'reference_number' => $order['reference_number'],
-                'previous_status' => $order['status'],
+                'reference_number' => $order['reference_number'] ?? '',
+                'previous_status' => $currentStatus,
                 'new_status' => 'cancelled',
                 'cancelled_at' => date('Y-m-d H:i:s'),
                 'inventory_restocked' => $inventoryRestocked,
@@ -222,11 +232,9 @@ try {
     }
     error_log("Cancel Order PDO Error: " . $e->getMessage());
     http_response_code(500);
-    if (ob_get_level()) { ob_clean(); }
     echo json_encode([
         'success' => false,
-        'message' => 'Database error occurred while cancelling order',
-        'error' => $e->getMessage()
+        'message' => 'Database error: ' . $e->getMessage()
     ]);
     exit;
 } catch (Exception $e) {
@@ -235,7 +243,6 @@ try {
     }
     error_log("Cancel Order Error: " . $e->getMessage());
     http_response_code(500);
-    if (ob_get_level()) { ob_clean(); }
     echo json_encode([
         'success' => false,
         'message' => 'Server error: ' . $e->getMessage()

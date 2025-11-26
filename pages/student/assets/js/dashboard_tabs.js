@@ -194,16 +194,19 @@ function populateProfileData() {
     
     // Profile header
     const initials = getInitials(studentData.first_name, studentData.last_name);
-    const profilePicture = studentData.profile_picture || '/Q-Mak/images/Herons.png';
+    const profilePicture = studentData.profile_picture ? '../../' + studentData.profile_picture : '../../images/Herons.png';
     
     // Update large profile picture
     const profileAvatarLargeImg = document.getElementById('profileAvatarLargeImg');
     if (profileAvatarLargeImg) {
         profileAvatarLargeImg.src = profilePicture;
         profileAvatarLargeImg.onerror = function() {
-            this.style.display = 'none';
-            document.getElementById('profileAvatarLarge').style.display = 'flex';
-            document.getElementById('profileAvatarLarge').textContent = initials;
+            this.src = '../../images/Herons.png';
+            this.onerror = function() {
+                this.style.display = 'none';
+                document.getElementById('profileAvatarLarge').style.display = 'flex';
+                document.getElementById('profileAvatarLarge').textContent = initials;
+            };
         };
     }
     
@@ -336,7 +339,7 @@ function getInitials(firstName, lastName) {
 function updateNavProfile(studentData) {
     const initials = getInitials(studentData.first_name, studentData.last_name);
     const fullName = `${studentData.first_name} ${studentData.last_name}`;
-    const profilePicture = studentData.profile_picture || '/Q-Mak/images/Herons.png';
+    const profilePicture = studentData.profile_picture ? '../../' + studentData.profile_picture : '../../images/Herons.png';
     
     // Update nav bar
     document.getElementById('navStudentName').textContent = fullName;
@@ -347,8 +350,11 @@ function updateNavProfile(studentData) {
     if (navAvatarImg) {
         navAvatarImg.src = profilePicture;
         navAvatarImg.onerror = function() {
-            this.style.display = 'none';
-            document.getElementById('navAvatarInitials').style.display = 'flex';
+            this.src = '../../images/Herons.png';
+            this.onerror = function() {
+                this.style.display = 'none';
+                document.getElementById('navAvatarInitials').style.display = 'flex';
+            };
         };
     }
     
@@ -361,8 +367,11 @@ function updateNavProfile(studentData) {
     if (dropdownAvatarImg) {
         dropdownAvatarImg.src = profilePicture;
         dropdownAvatarImg.onerror = function() {
-            this.style.display = 'none';
-            document.getElementById('dropdownAvatarInitials').style.display = 'flex';
+            this.src = '../../images/Herons.png';
+            this.onerror = function() {
+                this.style.display = 'none';
+                document.getElementById('dropdownAvatarInitials').style.display = 'flex';
+            };
         };
     }
 }
