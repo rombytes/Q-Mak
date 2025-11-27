@@ -5,29 +5,27 @@
  */
 
 // Dynamic API base path - works on both localhost and production
-const getApiBase = () => {
+const getSecurityApiBase = () => {
     const path = window.location.pathname;
     const base = path.substring(0, path.indexOf('/pages/'));
     return base + '/php/api';
 };
 
-let currentPage = 1;
-let totalPages = 1;
-const logsPerPage = 50;
+let securityCurrentPage = 1;
+let securityTotalPages = 1;
+const securityLogsPerPage = 50;
 
-// Initialize dashboard
-document.addEventListener('DOMContentLoaded', function() {
-    checkAdminAuth();
-    refreshDashboard();
-});
+// Chart instance to prevent re-initialization errors
+let securityEventsChart = null;
 
-// Check admin authentication
-function checkAdminAuth() {
-    // You may want to verify session here
-}
+// Initialize Security Dashboard (called when tab is shown)
+window.initSecurityDashboard = function() {
+    console.log('Initializing Security Dashboard...');
+    refreshSecurityDashboard();
+};
 
 // Refresh entire dashboard
-function refreshDashboard() {
+function refreshSecurityDashboard() {
     loadStatistics();
     loadLockedAccounts();
     loadSecurityLogs();
@@ -37,7 +35,7 @@ function refreshDashboard() {
 // Load statistics
 async function loadStatistics() {
     try {
-        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=get_statistics`);
+        const response = await fetch(`${getSecurityApiBase()}/admin/security_management.php?action=get_statistics`);
         const result = await response.json();
         
         if (result.success) {
@@ -59,7 +57,7 @@ async function loadStatistics() {
 // Load locked accounts
 async function loadLockedAccounts() {
     try {
-        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=get_locked_accounts`);
+        const response = await fetch(`${getSecurityApiBase()}/admin/security_management.php?action=get_locked_accounts`);
         const result = await response.json();
         
         const table = document.getElementById('locked-accounts-table');
@@ -73,12 +71,12 @@ async function loadLockedAccounts() {
                         <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded">${account.attempt_type}</span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${account.failed_attempts}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDateTime(account.locked_until)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatSecurityDateTime(account.locked_until)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${account.ip_address || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <button onclick="unlockAccount('${account.identifier}', '${account.attempt_type}')" 
-                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs">
-                            <i class="fas fa-unlock"></i> Unlock
+                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs flex items-center gap-1">
+                            <i class="bi bi-unlock"></i> Unlock
                         </button>
                     </td>
                 </tr>
@@ -96,20 +94,23 @@ async function loadLockedAccounts() {
 // Load security logs
 async function loadSecurityLogs() {
     try {
-        const severity = document.getElementById('filter-severity').value;
-        const eventType = document.getElementById('filter-event-type').value;
-        const offset = (currentPage - 1) * logsPerPage;
+        const severityEl = document.getElementById('filter-severity');
+        const eventTypeEl = document.getElementById('filter-event-type');
+        
+        const severity = severityEl ? severityEl.value : '';
+        const eventType = eventTypeEl ? eventTypeEl.value : '';
+        const offset = (securityCurrentPage - 1) * securityLogsPerPage;
         
         const params = new URLSearchParams({
             action: 'get_security_logs',
-            limit: logsPerPage,
+            limit: securityLogsPerPage,
             offset: offset
         });
         
         if (severity) params.append('severity', severity);
         if (eventType) params.append('event_type', eventType);
         
-        const response = await fetch(`${getApiBase()}/admin/security_management.php?` + params);
+        const response = await fetch(`${getSecurityApiBase()}/admin/security_management.php?` + params);
         const result = await response.json();
         
         const table = document.getElementById('security-logs-table');
@@ -117,9 +118,9 @@ async function loadSecurityLogs() {
         if (result.success && result.data.length > 0) {
             table.innerHTML = result.data.map(log => `
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDateTime(log.created_at)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">${formatEventType(log.event_type)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">${formatSeverity(log.severity)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatSecurityDateTime(log.created_at)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${formatSecurityEventType(log.event_type)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${formatSecuritySeverity(log.severity)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${log.user_identifier || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.ip_address || 'N/A'}</td>
                     <td class="px-6 py-4 text-sm text-gray-500">${log.description}</td>
@@ -127,10 +128,10 @@ async function loadSecurityLogs() {
             `).join('');
             
             // Update pagination
-            totalPages = result.pagination.pages;
-            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
-            document.getElementById('btn-prev').disabled = currentPage === 1;
-            document.getElementById('btn-next').disabled = currentPage === totalPages;
+            securityTotalPages = result.pagination.pages;
+            document.getElementById('page-info').textContent = `Page ${securityCurrentPage} of ${securityTotalPages}`;
+            document.getElementById('btn-prev').disabled = securityCurrentPage === 1;
+            document.getElementById('btn-next').disabled = securityCurrentPage === securityTotalPages;
         } else {
             table.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No logs found</td></tr>';
         }
@@ -142,7 +143,7 @@ async function loadSecurityLogs() {
 // Load IP blacklist
 async function loadIPBlacklist() {
     try {
-        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=get_ip_blacklist`);
+        const response = await fetch(`${getSecurityApiBase()}/admin/security_management.php?action=get_ip_blacklist`);
         const result = await response.json();
         
         const table = document.getElementById('ip-blacklist-table');
@@ -158,7 +159,7 @@ async function loadIPBlacklist() {
                             ${ip.block_type}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${ip.blocked_until ? formatDateTime(ip.blocked_until) : 'Permanent'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${ip.blocked_until ? formatSecurityDateTime(ip.blocked_until) : 'Permanent'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="px-2 py-1 ${ip.is_active ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'} rounded">
                             ${ip.is_active ? 'Active' : 'Inactive'}
@@ -167,8 +168,8 @@ async function loadIPBlacklist() {
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         ${ip.is_active ? `
                             <button onclick="unblockIP('${ip.ip_address}')" 
-                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs">
-                                <i class="fas fa-check"></i> Unblock
+                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs flex items-center gap-1">
+                                <i class="bi bi-check-lg"></i> Unblock
                             </button>
                         ` : '<span class="text-gray-400">Unblocked</span>'}
                     </td>
@@ -191,7 +192,7 @@ async function unlockAccount(identifier, attemptType) {
     }
     
     try {
-        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=unlock_account`, {
+        const response = await fetch(`${getSecurityApiBase()}/admin/security_management.php?action=unlock_account`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ identifier, attempt_type: attemptType })
@@ -219,7 +220,7 @@ async function unblockIP(ipAddress) {
     }
     
     try {
-        const response = await fetch(`${getApiBase()}/admin/security_management.php?action=unblock_ip`, {
+        const response = await fetch(`${getSecurityApiBase()}/admin/security_management.php?action=unblock_ip`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ ip_address: ipAddress })
@@ -240,66 +241,94 @@ async function unblockIP(ipAddress) {
     }
 }
 
-// Show security tab
+// Show security sub-tab (within security dashboard)
 function showSecurityTab(tabName) {
-    // Hide all tabs
+    // Hide all security tab contents
     document.querySelectorAll('.security-tab-content').forEach(content => {
         content.classList.add('hidden');
     });
     
-    // Deactivate all tab buttons
+    // Deactivate all security tab buttons
     document.querySelectorAll('.security-tab').forEach(tab => {
-        tab.classList.remove('active', 'border-gray-900', 'text-gray-900');
+        tab.classList.remove('active', 'border-blue-600', 'text-blue-600');
         tab.classList.add('border-transparent', 'text-gray-600');
     });
     
-    // Show selected tab
-    document.getElementById('content-' + tabName).classList.remove('hidden');
-    const activeTab = document.getElementById('tab-' + tabName);
-    activeTab.classList.add('active', 'border-gray-900', 'text-gray-900');
-    activeTab.classList.remove('border-transparent', 'text-gray-600');
+    // Show selected tab content
+    const contentEl = document.getElementById('seccontent-' + tabName);
+    if (contentEl) {
+        contentEl.classList.remove('hidden');
+    }
+    
+    // Activate selected tab button
+    const activeTab = document.getElementById('sectab-' + tabName);
+    if (activeTab) {
+        activeTab.classList.add('active', 'border-blue-600', 'text-blue-600');
+        activeTab.classList.remove('border-transparent', 'text-gray-600');
+    }
 }
 
 // Pagination
 function previousPage() {
-    if (currentPage > 1) {
-        currentPage--;
+    if (securityCurrentPage > 1) {
+        securityCurrentPage--;
         loadSecurityLogs();
     }
 }
 
 function nextPage() {
-    if (currentPage < totalPages) {
-        currentPage++;
+    if (securityCurrentPage < securityTotalPages) {
+        securityCurrentPage++;
         loadSecurityLogs();
     }
 }
 
-// Update event chart
+// Update event chart with destroy check
 function updateEventChart(eventBreakdown) {
     const ctx = document.getElementById('chart-events');
     if (!ctx) return;
     
-    const labels = eventBreakdown.map(e => formatEventType(e.event_type));
-    const data = eventBreakdown.map(e => e.count);
+    // Destroy existing chart to prevent "Canvas is already in use" error
+    if (securityEventsChart) {
+        securityEventsChart.destroy();
+        securityEventsChart = null;
+    }
     
-    new Chart(ctx, {
+    const labels = eventBreakdown ? eventBreakdown.map(e => formatSecurityEventType(e.event_type)) : [];
+    const data = eventBreakdown ? eventBreakdown.map(e => e.count) : [];
+    
+    securityEventsChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Event Count',
                 data: data,
-                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 1
+                backgroundColor: 'rgba(37, 99, 235, 0.6)',
+                borderColor: 'rgba(37, 99, 235, 1)',
+                borderWidth: 2,
+                borderRadius: 6
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
         }
@@ -311,20 +340,20 @@ function updateTopFailedIPs(topIPs) {
     const container = document.getElementById('top-failed-ips');
     if (!container) return;
     
-    if (topIPs.length > 0) {
+    if (topIPs && topIPs.length > 0) {
         container.innerHTML = topIPs.map(ip => `
-            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span class="font-mono text-sm">${ip.ip_address}</span>
-                <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold">${ip.count} attempts</span>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <span class="font-mono text-sm text-gray-700">${ip.ip_address}</span>
+                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-xs font-semibold">${ip.count} attempts</span>
             </div>
         `).join('');
     } else {
-        container.innerHTML = '<p class="text-gray-500 text-center">No failed attempts recorded</p>';
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No failed attempts recorded</p>';
     }
 }
 
 // Format helpers
-function formatDateTime(dateStr) {
+function formatSecurityDateTime(dateStr) {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date.toLocaleString('en-US', {
@@ -336,15 +365,17 @@ function formatDateTime(dateStr) {
     });
 }
 
-function formatEventType(type) {
+function formatSecurityEventType(type) {
+    if (!type) return 'Unknown';
     return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-function formatSeverity(severity) {
+function formatSecuritySeverity(severity) {
     const colors = {
         info: 'bg-blue-100 text-blue-800',
         warning: 'bg-yellow-100 text-yellow-800',
         critical: 'bg-red-100 text-red-800'
     };
-    return `<span class="px-2 py-1 ${colors[severity]} rounded">${severity.toUpperCase()}</span>`;
+    const color = colors[severity] || 'bg-gray-100 text-gray-800';
+    return `<span class="px-2 py-1 ${color} rounded">${(severity || 'unknown').toUpperCase()}</span>`;
 }

@@ -149,9 +149,9 @@ try {
     // Get database connection using the getDB function
     $conn = getDB();
 
-    // Query admin_accounts table using PDO
+    // Query admin_accounts table using PDO (exclude archived accounts)
     $stmt = $conn->prepare("
-        SELECT admin_id, email, password, full_name, username, is_super_admin
+        SELECT admin_id, email, password, full_name, username, is_super_admin, is_archived
         FROM admin_accounts
         WHERE email = ?
         LIMIT 1
@@ -180,6 +180,16 @@ try {
                 'remaining_attempts' => $attemptResult['remaining']
             ]);
         }
+        exit;
+    }
+    
+    // Check if account is archived
+    if (!empty($admin['is_archived']) && $admin['is_archived'] == 1) {
+        ob_end_clean();
+        echo json_encode([
+            'success' => false,
+            'message' => 'This account has been archived. Please contact a super administrator.'
+        ]);
         exit;
     }
 

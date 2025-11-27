@@ -59,6 +59,13 @@ try {
             // Create new admin account
             $data = json_decode(file_get_contents('php://input'), true);
             
+            // Debug log for troubleshooting
+            error_log("Admin Management - Creating new admin: " . json_encode([
+                'username' => $data['username'] ?? 'N/A',
+                'email' => $data['email'] ?? 'N/A',
+                'password_length' => isset($data['password']) ? strlen($data['password']) : 0
+            ]));
+            
             if (!isset($data['username']) || !isset($data['password']) || 
                 !isset($data['full_name']) || !isset($data['email'])) {
                 echo json_encode(['success' => false, 'message' => 'Missing required fields']);
@@ -71,6 +78,9 @@ try {
                 exit;
             }
             
+            // Trim password to avoid whitespace issues
+            $password = trim($data['password']);
+            
             // Check if username or email already exists
             $checkQuery = "SELECT admin_id FROM admin_accounts WHERE username = ? OR email = ?";
             $checkStmt = $conn->prepare($checkQuery);
@@ -82,7 +92,10 @@ try {
             }
             
             // Hash password
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Debug log the hash
+            error_log("Admin Management - Password hash generated: " . substr($hashedPassword, 0, 20) . "...");
             
             // Insert new admin
             $insertQuery = "INSERT INTO admin_accounts (username, password, full_name, email, is_super_admin) 

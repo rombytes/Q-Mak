@@ -10,7 +10,6 @@ let refreshInterval = null;
 let currentQueueOrder = null;
 let queueIndex = 0;
 let ordersChart = null;
-let currentAnalyticsPeriod = 'daily';
 let showingArchivedLogs = false;
 let selectedLogIds = [];
 let inventoryStock = {};
@@ -21,8 +20,6 @@ let showingArchivedStudents = false;
 let showingArchivedAdmins = false;
 
 // Analytics variables
-let realtimeAnalyticsInterval = null;
-let isRealtimeAnalytics = false;
 let analyticsCharts = {};
 
 // Check if admin is logged in
@@ -199,6 +196,13 @@ function showTab(tabName) {
     } else if (tabName === 'settings') {
         // Load all settings when settings tab is opened
         loadAllSettings();
+    } else if (tabName === 'security') {
+        // Initialize Security Dashboard
+        if (typeof initSecurityDashboard === 'function') {
+            initSecurityDashboard();
+        } else {
+            console.error('Security module not loaded');
+        }
     }
     
     console.log('=== TAB SWITCH COMPLETE ===');
@@ -2694,13 +2698,7 @@ async function initializeDashboard() {
             const fullName = adminData.full_name || adminData.username || 'Admin';
             const firstName = fullName.split(' ')[0];
             document.getElementById('adminName').textContent = firstName;
-            // Set full name in sidebar
-            document.getElementById('sidebarAdminName').textContent = fullName;
-            // Set email in sidebar
-            if (adminData.email) {
-                document.getElementById('sidebarAdminEmail').textContent = adminData.email;
-            }
-            // Update admin profile footer
+            // Update admin profile footer (bottom of sidebar)
             updateAdminProfileFooter();
             // Profile picture is now set to Herons.png by default in HTML
         }
@@ -2798,7 +2796,7 @@ function displayAdminAccounts(admins) {
         row.className = 'hover:bg-blue-50 transition-colors duration-150';
         
         const roleColor = admin.is_super_admin == 1 ? 'bg-gradient-to-r from-purple-500 to-purple-600' : 'bg-gradient-to-r from-blue-500 to-blue-600';
-        const roleIcon = admin.is_super_admin == 1 ? 'fa-crown' : 'fa-user-shield';
+        const roleIcon = admin.is_super_admin == 1 ? 'bi-star-fill' : 'bi-shield-check';
         const roleText = admin.is_super_admin == 1 ? 'Super Admin' : 'Admin';
         
         const isCurrentUser = admin.admin_id == currentAdminId;
@@ -2814,6 +2812,11 @@ function displayAdminAccounts(admins) {
         };
         const initials = getInitials(admin.full_name);
         
+        // Status display
+        const statusColor = showingArchivedAdmins ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700';
+        const statusText = showingArchivedAdmins ? 'Archived' : 'Active';
+        const statusDotColor = showingArchivedAdmins ? 'text-gray-400' : 'text-green-500';
+        
         row.innerHTML = `
             <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
@@ -2828,46 +2831,46 @@ function displayAdminAccounts(admins) {
             </td>
             <td class="px-6 py-4">
                 <div class="flex items-center gap-2 text-gray-700">
-                    <i class="fas fa-envelope text-blue-600"></i>
+                    <i class="bi bi-envelope text-blue-600"></i>
                     <span>${admin.email}</span>
                 </div>
             </td>
             <td class="px-6 py-4">
                 <span class="${roleColor} text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md inline-flex items-center gap-1">
-                    <i class="fas ${roleIcon}"></i>
+                    <i class="bi ${roleIcon}"></i>
                     ${roleText}
                 </span>
             </td>
             <td class="px-6 py-4">
-                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
-                    <i class="fas fa-circle text-green-500 text-[6px]"></i>
-                    Active
+                <span class="${statusColor} px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1">
+                    <i class="bi bi-circle-fill ${statusDotColor}" style="font-size: 6px;"></i>
+                    ${statusText}
                 </span>
             </td>
             <td class="px-6 py-4">
-                <div class="flex gap-2">
+                <div class="flex gap-2 justify-center">
                     ${!showingArchivedAdmins ? `
                         <button onclick='editAdmin(${JSON.stringify(admin).replace(/'/g, "&#39;")})' 
                                 class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
-                            <i class="fas fa-edit"></i>
+                            <i class="bi bi-pencil-square"></i>
                             <span>Edit</span>
                         </button>
                         ${!isCurrentUser ? `
                             <button onclick="archiveAdmin(${admin.admin_id}, '${admin.full_name.replace(/'/g, "&#39;")}')" 
                                     class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
-                                <i class="fas fa-archive"></i>
+                                <i class="bi bi-archive"></i>
                                 <span>Archive</span>
                             </button>
                         ` : ''}
                     ` : `
                         <button onclick="restoreAdmin(${admin.admin_id}, '${admin.full_name.replace(/'/g, "&#39;")}')" 
                                 class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
-                            <i class="fas fa-undo"></i>
+                            <i class="bi bi-arrow-counterclockwise"></i>
                             <span>Restore</span>
                         </button>
                         <button onclick="permanentDeleteAdmin(${admin.admin_id}, '${admin.full_name.replace(/'/g, "&#39;")}')" 
                                 class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow hover:shadow-md flex items-center gap-1">
-                            <i class="fas fa-trash"></i>
+                            <i class="bi bi-trash3"></i>
                             <span>Delete</span>
                         </button>
                     `}
@@ -2927,7 +2930,7 @@ document.getElementById('createAdminForm').addEventListener('submit', async func
     const originalBtnContent = submitBtn.innerHTML;
     
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+    submitBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-2"></i>Creating...';
     
     const formData = {
         full_name: document.getElementById('newAdminFullName').value,
@@ -3074,12 +3077,43 @@ async function deleteAdmin(adminId, fullName) {
 // ANALYTICS DASHBOARD FUNCTIONS
 // ============================================
 
+// Current analytics filter state
+let currentAnalyticsPeriod = 'daily';
+let analyticsFilters = {
+    college: '',
+    program: '',
+    itemFilter: '',
+    studentId: '',
+    startDate: '',
+    endDate: ''
+};
+
 // Initialize analytics charts
 function initAnalyticsCharts() {
     // Only initialize if not already done
     if (Object.keys(analyticsCharts).length > 0) {
         return;
     }
+    
+    // Monochromatic blue color palette
+    const blueColors = {
+        primary: 'rgba(37, 99, 235, 1)',       // Blue-600
+        primaryLight: 'rgba(37, 99, 235, 0.6)',
+        primaryBg: 'rgba(37, 99, 235, 0.1)',
+        secondary: 'rgba(59, 130, 246, 1)',    // Blue-500
+        secondaryLight: 'rgba(59, 130, 246, 0.6)',
+        tertiary: 'rgba(96, 165, 250, 1)',     // Blue-400
+        tertiaryLight: 'rgba(96, 165, 250, 0.6)'
+    };
+    
+    // Teal accent colors
+    const tealColors = {
+        primary: 'rgba(15, 118, 110, 1)',      // Teal-700
+        primaryLight: 'rgba(15, 118, 110, 0.6)',
+        primaryBg: 'rgba(15, 118, 110, 0.1)',
+        secondary: 'rgba(20, 184, 166, 1)',    // Teal-500
+        secondaryLight: 'rgba(20, 184, 166, 0.6)'
+    };
     
     // Orders Over Time (Line Chart)
     const ordersTimeCtx = document.getElementById('analyticsOrdersTimeChart').getContext('2d');
@@ -3090,11 +3124,16 @@ function initAnalyticsCharts() {
             datasets: [{
                 label: 'Orders',
                 data: [],
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderColor: blueColors.primary,
+                backgroundColor: blueColors.primaryBg,
                 borderWidth: 3,
                 tension: 0.4,
-                fill: true
+                fill: true,
+                pointBackgroundColor: blueColors.primary,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
             }]
         },
         options: {
@@ -3129,7 +3168,7 @@ function initAnalyticsCharts() {
         }
     });
 
-    // Status Pie Chart
+    // Status Pie Chart - Blue/Teal monochromatic
     const statusPieCtx = document.getElementById('analyticsStatusPieChart').getContext('2d');
     analyticsCharts.statusPie = new Chart(statusPieCtx, {
         type: 'doughnut',
@@ -3138,11 +3177,11 @@ function initAnalyticsCharts() {
             datasets: [{
                 data: [0, 0, 0, 0, 0],
                 backgroundColor: [
-                    'rgb(234, 179, 8)',  // Yellow
-                    'rgb(59, 130, 246)',  // Blue
-                    'rgb(139, 92, 246)',  // Purple
-                    'rgb(34, 197, 94)',   // Green
-                    'rgb(239, 68, 68)'    // Red
+                    'rgba(234, 179, 8, 0.85)',   // Yellow for Pending
+                    'rgba(37, 99, 235, 0.85)',   // Blue for Processing
+                    'rgba(15, 118, 110, 0.85)',  // Teal for Ready
+                    'rgba(34, 197, 94, 0.85)',   // Green for Completed
+                    'rgba(156, 163, 175, 0.85)'  // Gray for Cancelled
                 ],
                 borderWidth: 2,
                 borderColor: '#fff'
@@ -3156,13 +3195,17 @@ function initAnalyticsCharts() {
             },
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true
+                    }
                 }
             }
         }
     });
 
-    // Items Bar Chart
+    // Items Bar Chart - Blue gradient
     const itemsBarCtx = document.getElementById('analyticsItemsBarChart').getContext('2d');
     analyticsCharts.itemsBar = new Chart(itemsBarCtx, {
         type: 'bar',
@@ -3172,20 +3215,31 @@ function initAnalyticsCharts() {
                 label: 'Number of Orders',
                 data: [],
                 backgroundColor: [
-                    'rgba(239, 68, 68, 0.8)',
-                    'rgba(34, 197, 94, 0.8)',
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(234, 179, 8, 0.8)',
-                    'rgba(139, 92, 246, 0.8)'
+                    'rgba(30, 58, 138, 0.8)',   // Blue-900
+                    'rgba(30, 64, 175, 0.8)',   // Blue-800
+                    'rgba(29, 78, 216, 0.8)',   // Blue-700
+                    'rgba(37, 99, 235, 0.8)',   // Blue-600
+                    'rgba(59, 130, 246, 0.8)',  // Blue-500
+                    'rgba(96, 165, 250, 0.8)',  // Blue-400
+                    'rgba(147, 197, 253, 0.8)', // Blue-300
+                    'rgba(15, 118, 110, 0.8)',  // Teal-700
+                    'rgba(20, 184, 166, 0.8)',  // Teal-500
+                    'rgba(45, 212, 191, 0.8)'   // Teal-400
                 ],
                 borderColor: [
-                    'rgb(239, 68, 68)',
-                    'rgb(34, 197, 94)',
-                    'rgb(59, 130, 246)',
-                    'rgb(234, 179, 8)',
-                    'rgb(139, 92, 246)'
+                    'rgba(30, 58, 138, 1)',
+                    'rgba(30, 64, 175, 1)',
+                    'rgba(29, 78, 216, 1)',
+                    'rgba(37, 99, 235, 1)',
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(96, 165, 250, 1)',
+                    'rgba(147, 197, 253, 1)',
+                    'rgba(15, 118, 110, 1)',
+                    'rgba(20, 184, 166, 1)',
+                    'rgba(45, 212, 191, 1)'
                 ],
-                borderWidth: 2
+                borderWidth: 2,
+                borderRadius: 6
             }]
         },
         options: {
@@ -3200,6 +3254,14 @@ function initAnalyticsCharts() {
                     beginAtZero: true,
                     ticks: {
                         stepSize: 1
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
                     }
                 }
             },
@@ -3218,7 +3280,7 @@ function initAnalyticsCharts() {
         }
     });
 
-    // Hourly Activity Chart
+    // Hourly Activity Chart - Teal gradient
     const hourlyCtx = document.getElementById('analyticsHourlyChart').getContext('2d');
     analyticsCharts.hourly = new Chart(hourlyCtx, {
         type: 'bar',
@@ -3227,9 +3289,10 @@ function initAnalyticsCharts() {
             datasets: [{
                 label: 'Orders per Hour',
                 data: Array(24).fill(0),
-                backgroundColor: 'rgba(59, 130, 246, 0.6)',
-                borderColor: 'rgb(59, 130, 246)',
-                borderWidth: 2
+                backgroundColor: 'rgba(15, 118, 110, 0.6)',
+                borderColor: 'rgba(15, 118, 110, 1)',
+                borderWidth: 2,
+                borderRadius: 4
             }]
         },
         options: {
@@ -3241,7 +3304,15 @@ function initAnalyticsCharts() {
             },
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
                 }
             },
             plugins: {
@@ -3256,7 +3327,18 @@ function initAnalyticsCharts() {
 // Fetch analytics data from API
 async function generateAnalyticsData() {
     try {
-        const response = await fetch(`${API_BASE}/admin/analytics.php`);
+        // Build query string from filters
+        const params = new URLSearchParams();
+        params.append('period', currentAnalyticsPeriod);
+        
+        if (analyticsFilters.startDate) params.append('start_date', analyticsFilters.startDate);
+        if (analyticsFilters.endDate) params.append('end_date', analyticsFilters.endDate);
+        if (analyticsFilters.college) params.append('college', analyticsFilters.college);
+        if (analyticsFilters.program) params.append('program', analyticsFilters.program);
+        if (analyticsFilters.itemFilter) params.append('item_filter', analyticsFilters.itemFilter);
+        if (analyticsFilters.studentId) params.append('student_id', analyticsFilters.studentId);
+        
+        const response = await fetch(`${API_BASE}/admin/analytics.php?${params.toString()}`);
         const result = await response.json();
         
         if (!result.success) {
@@ -3305,7 +3387,7 @@ async function generateAnalyticsData() {
             analyticsCharts.ordersTime.update();
         }
 
-        // Update activity feed
+        // Update activity feed with Bootstrap Icons
         if (data.recent_activity && data.recent_activity.length > 0) {
             const feed = document.getElementById('analyticsActivityFeed');
             feed.innerHTML = ''; // Clear existing
@@ -3314,23 +3396,28 @@ async function generateAnalyticsData() {
                 const statusColors = {
                     'pending': 'yellow',
                     'processing': 'blue',
-                    'ready': 'purple',
+                    'ready': 'teal',
                     'completed': 'green',
-                    'cancelled': 'red'
+                    'cancelled': 'gray'
                 };
                 const statusIcons = {
-                    'pending': '<i class="fas fa-hourglass-half text-yellow-600"></i>',
-                    'processing': '<i class="fas fa-cog text-blue-600"></i>',
-                    'ready': '<i class="fas fa-check-circle text-purple-600"></i>',
-                    'completed': '<i class="fas fa-trophy text-green-600"></i>',
-                    'cancelled': '<i class="fas fa-times-circle text-red-600"></i>'
+                    'pending': '<i class="bi bi-hourglass-split text-yellow-600"></i>',
+                    'processing': '<i class="bi bi-gear text-blue-600"></i>',
+                    'ready': '<i class="bi bi-check2-circle text-teal-600"></i>',
+                    'completed': '<i class="bi bi-trophy text-green-600"></i>',
+                    'cancelled': '<i class="bi bi-x-circle text-gray-500"></i>'
                 };
                 const color = statusColors[activity.status] || 'gray';
                 addAnalyticsActivityItem(
-                    `${statusIcons[activity.status] || '<i class="fas fa-box"></i>'} Order ${activity.queue_number} - ${activity.student_name} - <span class="text-${color}-600 font-semibold">${activity.status}</span>`,
+                    `${statusIcons[activity.status] || '<i class="bi bi-box"></i>'} Order ${activity.queue_number} - ${activity.student_name} - <span class="text-${color}-600 font-semibold">${activity.status}</span>`,
                     time.toLocaleTimeString()
                 );
             });
+        }
+        
+        // Populate filter dropdowns if available
+        if (result.filters) {
+            populateAnalyticsFilterDropdowns(result.filters);
         }
 
         // Update timestamp
@@ -3338,7 +3425,32 @@ async function generateAnalyticsData() {
         
     } catch (error) {
         console.error('Error fetching analytics data:', error);
-        addAnalyticsActivityItem('<i class="fas fa-exclamation-triangle text-red-600"></i> Error fetching data from API');
+        addAnalyticsActivityItem('<i class="bi bi-exclamation-triangle text-red-600"></i> Error fetching data from API');
+    }
+}
+
+// Populate filter dropdowns
+function populateAnalyticsFilterDropdowns(filters) {
+    const collegeSelect = document.getElementById('analyticsCollege');
+    const programSelect = document.getElementById('analyticsProgram');
+    
+    // Only populate if empty (first load)
+    if (collegeSelect && collegeSelect.options.length <= 1) {
+        filters.colleges.forEach(college => {
+            const option = document.createElement('option');
+            option.value = college;
+            option.textContent = college;
+            collegeSelect.appendChild(option);
+        });
+    }
+    
+    if (programSelect && programSelect.options.length <= 1) {
+        filters.programs.forEach(program => {
+            const option = document.createElement('option');
+            option.value = program;
+            option.textContent = program;
+            programSelect.appendChild(option);
+        });
     }
 }
 
@@ -3346,16 +3458,16 @@ async function generateAnalyticsData() {
 function addAnalyticsActivityItem(message, time = null) {
     const feed = document.getElementById('analyticsActivityFeed');
     const item = document.createElement('div');
-    item.className = 'p-3 bg-blue-50 rounded border-l-4 border-blue-500 text-sm animate-fade-in';
+    item.className = 'p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500 text-sm animate-fade-in';
     const timestamp = time || new Date().toLocaleTimeString();
-    item.innerHTML = `<span class="font-semibold">${timestamp}</span> - ${message}`;
+    item.innerHTML = `<span class="font-semibold text-gray-700">${timestamp}</span> - ${message}`;
     
     // Limit to 10 items
     if (feed.children.length >= 10) {
         feed.removeChild(feed.lastChild);
     }
     
-    // Remove "Waiting for data..." message if it exists
+    // Remove "Loading..." message if it exists
     if (feed.firstChild && feed.firstChild.tagName === 'P') {
         feed.removeChild(feed.firstChild);
     }
@@ -3363,90 +3475,84 @@ function addAnalyticsActivityItem(message, time = null) {
     // Insert at the top
     feed.insertBefore(item, feed.firstChild);
     
-    // Keep scroll position at top (don't auto-scroll)
+    // Keep scroll position at top
     feed.scrollTop = 0;
 }
 
-// Toggle real-time analytics
-function toggleRealtimeAnalytics() {
-    isRealtimeAnalytics = !isRealtimeAnalytics;
-    const btn = document.getElementById('realtimeBtn');
+// Set analytics period (date preset buttons)
+function setAnalyticsPeriod(period) {
+    currentAnalyticsPeriod = period;
     
-    if (isRealtimeAnalytics) {
-        btn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause Real-time';
-        btn.className = 'bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700';
-        realtimeAnalyticsInterval = setInterval(generateAnalyticsData, 2000);
-    } else {
-        btn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Real-time';
-        btn.className = 'bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700';
-        clearInterval(realtimeAnalyticsInterval);
+    // Update button styles
+    document.querySelectorAll('.analytics-period-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+        btn.classList.add('border-gray-300', 'text-gray-600');
+    });
+    
+    const activeBtn = document.getElementById('period' + period.charAt(0).toUpperCase() + period.slice(1).replace('ly', '').replace('ek', 'eek').replace('nth', 'onth').replace('ar', 'ear'));
+    if (activeBtn) {
+        activeBtn.classList.add('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+        activeBtn.classList.remove('border-gray-300', 'text-gray-600');
     }
-}
-
-// Refresh analytics data manually
-function refreshAnalyticsData() {
+    
+    // Clear custom date inputs when using presets
+    document.getElementById('analyticsStartDate').value = '';
+    document.getElementById('analyticsEndDate').value = '';
+    analyticsFilters.startDate = '';
+    analyticsFilters.endDate = '';
+    
     generateAnalyticsData();
-    addAnalyticsActivityItem('<i class="fas fa-sync-alt text-blue-600"></i> Data refreshed manually');
 }
 
-// Reset all analytics charts
-function resetAnalyticsCharts() {
-    analyticsCharts.ordersTime.data.labels = [];
-    analyticsCharts.ordersTime.data.datasets[0].data = [];
-    analyticsCharts.ordersTime.update();
+// Apply all analytics filters
+function applyAnalyticsFilters() {
+    // Collect filter values
+    analyticsFilters.college = document.getElementById('analyticsCollege')?.value || '';
+    analyticsFilters.program = document.getElementById('analyticsProgram')?.value || '';
+    analyticsFilters.itemFilter = document.getElementById('analyticsItemFilter')?.value || '';
+    analyticsFilters.studentId = document.getElementById('analyticsStudentId')?.value || '';
+    analyticsFilters.startDate = document.getElementById('analyticsStartDate')?.value || '';
+    analyticsFilters.endDate = document.getElementById('analyticsEndDate')?.value || '';
     
-    analyticsCharts.statusPie.data.datasets[0].data = [0, 0, 0, 0, 0];
-    analyticsCharts.statusPie.update();
-    
-    analyticsCharts.itemsBar.data.datasets[0].data = [];
-    analyticsCharts.itemsBar.update();
-    
-    analyticsCharts.hourly.data.datasets[0].data = Array(24).fill(0);
-    analyticsCharts.hourly.update();
-    
-    document.getElementById('analyticsActivityFeed').innerHTML = '<p class="text-gray-500 text-sm">Waiting for data...</p>';
-    addAnalyticsActivityItem('<i class="fas fa-redo text-gray-600"></i> Charts reset');
-}
-
-// Change date filter
-function changeDateFilter(value) {
-    const customDateRange = document.getElementById('customDateRange');
-    
-    if (value === 'custom') {
-        customDateRange.classList.remove('hidden');
-        // Set default dates (last 7 days to today)
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 7);
-        
-        document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
-        document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
-    } else {
-        customDateRange.classList.add('hidden');
-        currentAnalyticsPeriod = value;
-        generateAnalyticsData();
-        addAnalyticsActivityItem(`<i class="fas fa-calendar text-blue-600"></i> Filter changed to: ${value}`);
-    }
-}
-
-// Apply custom date range
-function applyCustomDateRange() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    
-    if (!startDate || !endDate) {
-        alert('Please select both start and end dates');
-        return;
+    // If custom dates are set, switch to custom period
+    if (analyticsFilters.startDate && analyticsFilters.endDate) {
+        currentAnalyticsPeriod = 'custom';
+        // Clear period button highlights
+        document.querySelectorAll('.analytics-period-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-blue-600', 'text-white', 'border-blue-600');
+            btn.classList.add('border-gray-300', 'text-gray-600');
+        });
     }
     
-    if (new Date(startDate) > new Date(endDate)) {
-        alert('Start date must be before end date');
-        return;
-    }
-    
-    currentAnalyticsPeriod = 'custom';
     generateAnalyticsData();
-    addAnalyticsActivityItem(`<i class="fas fa-calendar text-blue-600"></i> Custom range: ${startDate} to ${endDate}`);
+    addAnalyticsActivityItem('<i class="bi bi-funnel text-blue-600"></i> Filters applied');
+}
+
+// Clear all analytics filters
+function clearAnalyticsFilters() {
+    // Reset filter state
+    analyticsFilters = {
+        college: '',
+        program: '',
+        itemFilter: '',
+        studentId: '',
+        startDate: '',
+        endDate: ''
+    };
+    currentAnalyticsPeriod = 'daily';
+    
+    // Clear form inputs
+    document.getElementById('analyticsCollege').value = '';
+    document.getElementById('analyticsProgram').value = '';
+    document.getElementById('analyticsItemFilter').value = '';
+    document.getElementById('analyticsStudentId').value = '';
+    document.getElementById('analyticsStartDate').value = '';
+    document.getElementById('analyticsEndDate').value = '';
+    
+    // Reset period buttons
+    setAnalyticsPeriod('daily');
+    
+    addAnalyticsActivityItem('<i class="bi bi-x-circle text-gray-600"></i> Filters cleared');
 }
 
 // ============================================
@@ -4093,13 +4199,21 @@ async function toggleArchivedAdminsView() {
     const title = document.getElementById('adminAccountsTableTitle');
     
     if (showingArchivedAdmins) {
-        btn.innerHTML = '<i class="fas fa-eye mr-2"></i>View Active';
-        btn.className = 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold whitespace-nowrap';
-        title.textContent = 'Archived Admin Accounts';
+        if (btn) {
+            btn.innerHTML = '<i class="bi bi-person-check"></i><span>View Active</span>';
+            btn.className = 'bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-bold whitespace-nowrap shadow-md hover:shadow-lg transition-all flex items-center gap-2';
+        }
+        if (title) {
+            title.innerHTML = '<i class="bi bi-archive"></i><span>Archived Admins</span>';
+        }
     } else {
-        btn.innerHTML = '<i class="fas fa-archive mr-2"></i>View Archived';
-        btn.className = 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-bold whitespace-nowrap';
-        title.textContent = 'Admin Accounts';
+        if (btn) {
+            btn.innerHTML = '<i class="bi bi-archive"></i><span>View Archived</span>';
+            btn.className = 'bg-gray-600 hover:bg-gray-700 text-white px-5 py-3 rounded-xl font-bold whitespace-nowrap shadow-md hover:shadow-lg transition-all flex items-center gap-2';
+        }
+        if (title) {
+            title.innerHTML = '<i class="bi bi-person-badge"></i><span>Admin Accounts</span>';
+        }
     }
     
     await fetchAdminAccounts();
@@ -4239,14 +4353,14 @@ function switchAdminTab(tabName) {
     const logsContent = document.getElementById('admin-content-logs');
     
     if (tabName === 'accounts') {
-        accountsBtn.className = 'flex-1 px-6 py-4 font-bold text-blue-900 border-b-4 border-blue-500 bg-blue-50';
-        logsBtn.className = 'flex-1 px-6 py-4 font-bold text-gray-600 border-b-4 border-transparent hover:bg-gray-50';
+        accountsBtn.className = 'flex-1 px-6 py-4 font-bold text-blue-900 border-b-4 border-orange-500 bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2';
+        logsBtn.className = 'flex-1 px-6 py-4 font-bold text-gray-500 border-b-4 border-transparent hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2';
         accountsContent.classList.remove('hidden');
         logsContent.classList.add('hidden');
         fetchAdminAccounts();
     } else {
-        accountsBtn.className = 'flex-1 px-6 py-4 font-bold text-gray-600 border-b-4 border-transparent hover:bg-gray-50';
-        logsBtn.className = 'flex-1 px-6 py-4 font-bold text-blue-900 border-b-4 border-blue-500 bg-blue-50';
+        accountsBtn.className = 'flex-1 px-6 py-4 font-bold text-gray-500 border-b-4 border-transparent hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2';
+        logsBtn.className = 'flex-1 px-6 py-4 font-bold text-blue-900 border-b-4 border-orange-500 bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2';
         accountsContent.classList.add('hidden');
         logsContent.classList.remove('hidden');
         fetchAdminLogs();
@@ -4319,7 +4433,7 @@ function displayAdminLogs(logs) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                    <i class="fas fa-inbox text-5xl mb-3 text-gray-300"></i>
+                    <i class="bi bi-inbox text-5xl mb-3 text-gray-300"></i>
                     <p class="text-lg font-semibold">No activity logs found</p>
                     <p class="text-sm">Try adjusting your filters or check back later</p>
                 </td>
@@ -4347,12 +4461,12 @@ function displayAdminLogs(logs) {
                 <input type="checkbox" class="admin-log-checkbox w-4 h-4" data-log-id="${log.log_id}" onchange="handleAdminLogCheckbox()">
             </td>
             <td class="px-6 py-4 text-sm text-gray-600">
-                <i class="fas fa-clock text-blue-500 mr-1"></i>${time}
+                <i class="bi bi-clock text-blue-500 mr-1"></i>${time}
             </td>
             <td class="px-6 py-4">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
-                        <i class="fas fa-user text-blue-600 text-sm"></i>
+                        <i class="bi bi-person text-blue-600 text-sm"></i>
                     </div>
                     <span class="font-semibold">${log.admin_name || 'Unknown'}</span>
                 </div>
@@ -4360,7 +4474,7 @@ function displayAdminLogs(logs) {
             <td class="px-6 py-4">${actionBadge}</td>
             <td class="px-6 py-4 text-sm">${log.description || 'No description'}</td>
             <td class="px-6 py-4 text-sm text-gray-600">
-                <i class="fas fa-network-wired text-gray-400 mr-1"></i>${log.ip_address || 'N/A'}
+                <i class="bi bi-hdd-network text-gray-400 mr-1"></i>${log.ip_address || 'N/A'}
             </td>
         `;
         tbody.appendChild(row);
@@ -4372,35 +4486,35 @@ function displayAdminLogs(logs) {
  */
 function getActionBadge(actionType) {
     const badges = {
-        'admin_login': { color: 'bg-green-100 text-green-800 border-green-300', icon: 'sign-in-alt', label: 'Login' },
-        'admin_logout': { color: 'bg-gray-100 text-gray-800 border-gray-300', icon: 'sign-out-alt', label: 'Logout' },
-        'admin_create': { color: 'bg-blue-100 text-blue-800 border-blue-300', icon: 'user-plus', label: 'Admin Created' },
-        'admin_update': { color: 'bg-indigo-100 text-indigo-800 border-indigo-300', icon: 'user-edit', label: 'Admin Updated' },
-        'admin_archive': { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: 'archive', label: 'Admin Archived' },
-        'admin_restore': { color: 'bg-cyan-100 text-cyan-800 border-cyan-300', icon: 'undo', label: 'Admin Restored' },
-        'admin_delete': { color: 'bg-red-100 text-red-800 border-red-300', icon: 'trash', label: 'Admin Deleted' },
-        'student_create': { color: 'bg-green-100 text-green-800 border-green-300', icon: 'user-graduate', label: 'Student Created' },
-        'student_update': { color: 'bg-indigo-100 text-indigo-800 border-indigo-300', icon: 'edit', label: 'Student Updated' },
-        'student_archive': { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: 'archive', label: 'Student Archived' },
-        'student_restore': { color: 'bg-cyan-100 text-cyan-800 border-cyan-300', icon: 'undo', label: 'Student Restored' },
-        'order_status_update': { color: 'bg-purple-100 text-purple-800 border-purple-300', icon: 'exchange-alt', label: 'Order Updated' },
-        'email_archive': { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: 'envelope-open', label: 'Email Archived' },
-        'email_restore': { color: 'bg-cyan-100 text-cyan-800 border-cyan-300', icon: 'envelope', label: 'Email Restored' },
-        'email_delete': { color: 'bg-red-100 text-red-800 border-red-300', icon: 'trash-alt', label: 'Email Deleted' },
-        'inventory_create': { color: 'bg-green-100 text-green-800 border-green-300', icon: 'box', label: 'Item Created' },
-        'inventory_update': { color: 'bg-indigo-100 text-indigo-800 border-indigo-300', icon: 'boxes', label: 'Inventory Updated' },
-        'inventory_delete': { color: 'bg-red-100 text-red-800 border-red-300', icon: 'box-open', label: 'Item Deleted' },
-        'settings_update': { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: 'cog', label: 'Settings Changed' }
+        'admin_login': { color: 'bg-green-100 text-green-800 border-green-300', icon: 'bi-box-arrow-in-right', label: 'Login' },
+        'admin_logout': { color: 'bg-gray-100 text-gray-800 border-gray-300', icon: 'bi-box-arrow-right', label: 'Logout' },
+        'admin_create': { color: 'bg-blue-100 text-blue-800 border-blue-300', icon: 'bi-person-plus', label: 'Admin Created' },
+        'admin_update': { color: 'bg-indigo-100 text-indigo-800 border-indigo-300', icon: 'bi-person-gear', label: 'Admin Updated' },
+        'admin_archive': { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: 'bi-archive', label: 'Admin Archived' },
+        'admin_restore': { color: 'bg-cyan-100 text-cyan-800 border-cyan-300', icon: 'bi-arrow-counterclockwise', label: 'Admin Restored' },
+        'admin_delete': { color: 'bg-red-100 text-red-800 border-red-300', icon: 'bi-trash3', label: 'Admin Deleted' },
+        'student_create': { color: 'bg-green-100 text-green-800 border-green-300', icon: 'bi-mortarboard', label: 'Student Created' },
+        'student_update': { color: 'bg-indigo-100 text-indigo-800 border-indigo-300', icon: 'bi-pencil-square', label: 'Student Updated' },
+        'student_archive': { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: 'bi-archive', label: 'Student Archived' },
+        'student_restore': { color: 'bg-cyan-100 text-cyan-800 border-cyan-300', icon: 'bi-arrow-counterclockwise', label: 'Student Restored' },
+        'order_status_update': { color: 'bg-purple-100 text-purple-800 border-purple-300', icon: 'bi-arrow-left-right', label: 'Order Updated' },
+        'email_archive': { color: 'bg-orange-100 text-orange-800 border-orange-300', icon: 'bi-envelope-open', label: 'Email Archived' },
+        'email_restore': { color: 'bg-cyan-100 text-cyan-800 border-cyan-300', icon: 'bi-envelope', label: 'Email Restored' },
+        'email_delete': { color: 'bg-red-100 text-red-800 border-red-300', icon: 'bi-trash', label: 'Email Deleted' },
+        'inventory_create': { color: 'bg-green-100 text-green-800 border-green-300', icon: 'bi-box-seam', label: 'Item Created' },
+        'inventory_update': { color: 'bg-indigo-100 text-indigo-800 border-indigo-300', icon: 'bi-boxes', label: 'Inventory Updated' },
+        'inventory_delete': { color: 'bg-red-100 text-red-800 border-red-300', icon: 'bi-box', label: 'Item Deleted' },
+        'settings_update': { color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: 'bi-gear', label: 'Settings Changed' }
     };
     
     const badge = badges[actionType] || { 
         color: 'bg-gray-100 text-gray-800 border-gray-300', 
-        icon: 'circle', 
+        icon: 'bi-circle', 
         label: actionType ? actionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown'
     };
     
     return `<span class="${badge.color} px-3 py-1 rounded-full text-xs font-bold border">
-                <i class="fas fa-${badge.icon} mr-1"></i>${badge.label}
+                <i class="bi ${badge.icon} mr-1"></i>${badge.label}
             </span>`;
 }
 

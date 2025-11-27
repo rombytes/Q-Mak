@@ -219,8 +219,17 @@ try {
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($admin) {
+        // Debug log for troubleshooting
+        error_log("Login - Admin found: " . $admin['email'] . ", attempting password verify");
+        error_log("Login - Password length provided: " . strlen($password));
+        error_log("Login - Hash in DB starts with: " . substr($admin['password'], 0, 20));
+        
+        // Trim password to avoid whitespace issues
+        $password = trim($password);
+        
         // Admin account found - verify password
         if (!password_verify($password, $admin['password'])) {
+            error_log("Login - Password verification FAILED for: " . $admin['email']);
             $security->recordFailedAttempt($email, 'login');
             
             // Check if CAPTCHA is now required after this failed attempt

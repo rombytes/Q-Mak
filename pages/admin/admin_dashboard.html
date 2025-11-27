@@ -66,19 +66,6 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Profile Section -->
-            <div class="border-b border-blue-700/50 flex-shrink-0">
-                <div class="group mx-2 px-3 py-3.5 cursor-pointer transition-all duration-200 rounded-xl hover:bg-blue-700/60 flex items-center gap-3">
-                    <div class="profile-avatar flex-shrink-0" id="profileAvatar">
-                        <img src="../../images/Herons.png" alt="Profile Picture">
-                    </div>
-                    <div class="menu-text flex-1 min-w-0">
-                        <h3 class="font-bold text-sm truncate" id="sidebarAdminName">Admin User</h3>
-                        <p class="text-xs text-blue-200 truncate" id="sidebarAdminEmail">admin@umak.com</p>
-                    </div>
-                </div>
-            </div>
 
             <!-- Navigation Menu -->
             <nav class="flex-1 py-2 overflow-y-auto custom-scrollbar">
@@ -181,7 +168,7 @@
                                     <span class="menu-text text-sm">Activity Logs</span>
                                 </div>
                             </li>
-                            <li onclick="window.location.href='security_dashboard.html'" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
+                            <li onclick="showTab('security')" id="tab-security" class="group mx-2 ml-5 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg hover:bg-blue-700/40">
                                 <div class="flex items-center gap-2.5">
                                     <i class="bi bi-shield-lock menu-icon flex-shrink-0" style="font-size: 14px;"></i>
                                     <span class="menu-text text-sm">Security</span>
@@ -1441,21 +1428,33 @@
             </div>
 
             <!-- Admin Management Tab -->
-            <div id="content-admin-management" class="tab-content hidden p-8">
-                <h2 class="text-3xl font-bold text-blue-900 mb-6 border-b-2 border-blue-400 pb-2">
-                    <i class="fas fa-users-cog mr-2"></i>Admin Management Center
-                </h2>
+            <div id="content-admin-management" class="tab-content hidden p-6">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                        <i class="bi bi-house-door"></i>
+                        <span>Dashboard</span>
+                        <span>/</span>
+                        <span class="text-gray-900 font-medium">Admin Management</span>
+                    </div>
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent mb-2 flex items-center gap-3">
+                        <i class="bi bi-people-fill text-blue-600"></i>Admin Management Center
+                    </h2>
+                    <p class="text-gray-600">Manage administrator accounts and monitor activity</p>
+                </div>
                 
                 <!-- Sub-Navigation Tabs -->
-                <div class="bg-white rounded-lg shadow mb-6">
-                    <div class="flex border-b">
+                <div class="glass-effect rounded-2xl shadow-md mb-6 border border-gray-100 overflow-hidden">
+                    <div class="flex">
                         <button onclick="switchAdminTab('accounts')" id="admin-subtab-accounts" 
-                                class="flex-1 px-6 py-4 font-bold text-blue-900 border-b-4 border-blue-500 bg-blue-50">
-                            <i class="fas fa-users mr-2"></i>Admin Accounts
+                                class="flex-1 px-6 py-4 font-bold text-blue-900 border-b-4 border-orange-500 bg-orange-50 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="bi bi-person-badge text-lg"></i>
+                            <span>Admin Accounts</span>
                         </button>
                         <button onclick="switchAdminTab('logs')" id="admin-subtab-logs" 
-                                class="flex-1 px-6 py-4 font-bold text-gray-600 border-b-4 border-transparent hover:bg-gray-50">
-                            <i class="fas fa-clipboard-list mr-2"></i>Activity Logs
+                                class="flex-1 px-6 py-4 font-bold text-gray-500 border-b-4 border-transparent hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="bi bi-clock-history text-lg"></i>
+                            <span>Activity Logs</span>
                         </button>
                     </div>
                 </div>
@@ -1463,70 +1462,73 @@
                 <!-- Admin Accounts Sub-Tab -->
                 <div id="admin-content-accounts" class="admin-subtab-content">
                     <!-- Stats Cards -->
-                    <div class="grid grid-cols-3 gap-6 mb-6">
-                        <div class="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-6 rounded-lg shadow-lg transform transition-all hover:scale-105">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="glass-effect rounded-2xl p-6 shadow-md border border-blue-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-blue-100 text-sm mb-1">Total Admins</p>
-                                    <p class="text-3xl font-bold" id="totalAdminsCount">0</p>
+                                    <p class="text-sm text-gray-600 font-medium mb-1">Total Admins</p>
+                                    <p class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent" id="totalAdminsCount">0</p>
                                 </div>
-                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
-                                    <i class="fas fa-users text-2xl"></i>
+                                <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <i class="bi bi-people-fill text-white text-2xl"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-gradient-to-br from-purple-500 to-purple-700 text-white p-6 rounded-lg shadow-lg transform transition-all hover:scale-105">
+                        <div class="glass-effect rounded-2xl p-6 shadow-md border border-purple-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-purple-100 text-sm mb-1">Super Admins</p>
-                                    <p class="text-3xl font-bold" id="superAdminsCount">0</p>
+                                    <p class="text-sm text-gray-600 font-medium mb-1">Super Admins</p>
+                                    <p class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent" id="superAdminsCount">0</p>
                                 </div>
-                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
-                                    <i class="fas fa-crown text-2xl"></i>
+                                <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <i class="bi bi-shield-fill-check text-white text-2xl"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-6 rounded-lg shadow-lg transform transition-all hover:scale-105">
+                        <div class="glass-effect rounded-2xl p-6 shadow-md border border-orange-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-orange-100 text-sm mb-1">Archived</p>
-                                    <p class="text-3xl font-bold" id="archivedAdminsCount">0</p>
+                                    <p class="text-sm text-gray-600 font-medium mb-1">Archived</p>
+                                    <p class="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent" id="archivedAdminsCount">0</p>
                                 </div>
-                                <div class="bg-white bg-opacity-20 p-3 rounded-full">
-                                    <i class="fas fa-archive text-2xl"></i>
+                                <div class="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <i class="bi bi-archive-fill text-white text-2xl"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Header with Search and Add Button -->
-                    <div class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
-                        <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
-                            <h3 class="text-xl font-bold">
-                                <i class="fas fa-users mr-2"></i>Admin Accounts
+                    <!-- Admin Accounts Table Card -->
+                    <div class="glass-effect rounded-2xl shadow-md overflow-hidden border border-gray-100">
+                        <!-- Header -->
+                        <div class="p-6 bg-gradient-to-r from-blue-900 to-blue-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2" id="adminAccountsTableTitle">
+                                <i class="bi bi-person-badge"></i>
+                                <span>Admin Accounts</span>
                             </h3>
                             <button onclick="openCreateAdminModal()" 
-                                    class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2">
-                                <i class="fas fa-plus-circle"></i>
+                                    class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2">
+                                <i class="bi bi-plus-circle-fill"></i>
                                 <span>Add Admin</span>
                             </button>
                         </div>
                         
                         <!-- Search Bar and Actions -->
-                        <div class="p-4 border-b border-gray-200 bg-gray-50">
-                            <div class="flex gap-4 items-center">
-                                <div class="flex-1 relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-search text-gray-400"></i>
+                        <div class="p-4 bg-gray-50 border-b border-gray-200">
+                            <div class="flex flex-col md:flex-row gap-4 items-center">
+                                <div class="flex-1 relative w-full">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="bi bi-search text-gray-400"></i>
                                     </div>
                                     <input type="text" id="searchAdmins" 
                                            placeholder="Search by name, username, or email..." 
                                            oninput="searchAdmins()" 
-                                           class="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" />
+                                           class="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" />
                                 </div>
                                 <button onclick="toggleArchivedAdminsView()" id="viewArchivedAdminsBtn" 
-                                        class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-bold whitespace-nowrap shadow-lg hover:shadow-xl transition-all">
-                                    <i class="fas fa-archive mr-2"></i>View Archived
+                                        class="bg-gray-600 hover:bg-gray-700 text-white px-5 py-3 rounded-xl font-bold whitespace-nowrap shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                    <i class="bi bi-archive"></i>
+                                    <span>View Archived</span>
                                 </button>
                             </div>
                         </div>
@@ -1537,32 +1539,34 @@
                                 <thead class="bg-gray-50 border-b-2 border-gray-200">
                                     <tr>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
-                                            Admin
+                                            <i class="bi bi-person mr-1"></i>Admin
                                         </th>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
-                                            Contact
+                                            <i class="bi bi-envelope mr-1"></i>Contact
                                         </th>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
-                                            Role
+                                            <i class="bi bi-shield mr-1"></i>Role
                                         </th>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
-                                            Status
+                                            <i class="bi bi-circle-fill mr-1" style="font-size: 8px;"></i>Status
                                         </th>
                                         <th class="px-6 py-4 text-center text-xs font-bold text-blue-900 uppercase tracking-wider">
-                                            Actions
+                                            <i class="bi bi-gear mr-1"></i>Actions
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminAccountsTableBody" class="divide-y divide-gray-200 bg-white">
+                                <tbody id="adminAccountsTableBody" class="divide-y divide-gray-100 bg-white">
                                     <!-- Table rows will be populated by JavaScript -->
                                 </tbody>
                             </table>
                         </div>
                         
                         <!-- Empty State -->
-                        <div id="adminEmptyState" class="hidden p-12 text-center">
-                            <i class="fas fa-users-slash text-6xl text-gray-300 mb-4"></i>
-                            <p class="text-gray-500 text-lg font-semibold">No admins found</p>
+                        <div id="adminEmptyState" class="hidden p-12 text-center bg-gray-50">
+                            <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="bi bi-person-x text-4xl text-gray-400"></i>
+                            </div>
+                            <p class="text-gray-600 text-lg font-semibold mb-1">No admins found</p>
                             <p class="text-gray-400 text-sm">Try adjusting your search criteria</p>
                         </div>
                     </div>
@@ -1571,66 +1575,74 @@
                 <!-- Activity Logs Sub-Tab -->
                 <div id="admin-content-logs" class="admin-subtab-content hidden">
                     <!-- Logs Stats -->
-                    <div class="grid grid-cols-4 gap-6 mb-6">
-                        <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-blue-500">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                        <div class="glass-effect rounded-2xl p-6 shadow-md border border-blue-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600 text-sm mb-1">Total Activities</p>
-                                    <p class="text-3xl font-bold text-blue-900" id="totalLogsCount">0</p>
+                                    <p class="text-sm text-gray-600 font-medium mb-1">Total Activities</p>
+                                    <p class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent" id="totalLogsCount">0</p>
                                 </div>
-                                <i class="fas fa-list text-4xl text-blue-500"></i>
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                                    <i class="bi bi-list-ul text-white text-xl"></i>
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-green-500">
+                        <div class="glass-effect rounded-2xl p-6 shadow-md border border-green-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600 text-sm mb-1">Today's Actions</p>
-                                    <p class="text-3xl font-bold text-green-700" id="todayLogsCount">0</p>
+                                    <p class="text-sm text-gray-600 font-medium mb-1">Today's Actions</p>
+                                    <p class="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent" id="todayLogsCount">0</p>
                                 </div>
-                                <i class="fas fa-calendar-day text-4xl text-green-500"></i>
+                                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-md">
+                                    <i class="bi bi-calendar-check text-white text-xl"></i>
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-purple-500">
+                        <div class="glass-effect rounded-2xl p-6 shadow-md border border-purple-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600 text-sm mb-1">Active Admins</p>
-                                    <p class="text-3xl font-bold text-purple-700" id="activeAdminsLogsCount">0</p>
+                                    <p class="text-sm text-gray-600 font-medium mb-1">Active Admins</p>
+                                    <p class="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent" id="activeAdminsLogsCount">0</p>
                                 </div>
-                                <i class="fas fa-user-check text-4xl text-purple-500"></i>
+                                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+                                    <i class="bi bi-person-check text-white text-xl"></i>
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-lg border-l-4 border-orange-500">
+                        <div class="glass-effect rounded-2xl p-6 shadow-md border border-orange-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-gray-600 text-sm mb-1">Action Types</p>
-                                    <p class="text-3xl font-bold text-orange-700" id="actionTypesCount">0</p>
+                                    <p class="text-sm text-gray-600 font-medium mb-1">Action Types</p>
+                                    <p class="text-3xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent" id="actionTypesCount">0</p>
                                 </div>
-                                <i class="fas fa-tasks text-4xl text-orange-500"></i>
+                                <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
+                                    <i class="bi bi-lightning-charge text-white text-xl"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Filters -->
-                    <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
-                        <h3 class="text-lg font-bold text-blue-900 mb-4">
-                            <i class="fas fa-filter mr-2"></i>Filter Activity Logs
+                    <div class="glass-effect rounded-2xl shadow-md p-6 mb-6 border border-gray-100">
+                        <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                            <i class="bi bi-funnel"></i>Filter Activity Logs
                         </h3>
-                        <div class="grid grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
-                                <label class="block font-bold mb-2 text-gray-700 text-sm">
-                                    <i class="fas fa-user mr-1"></i>Admin
+                                <label class="block font-semibold mb-2 text-gray-700 text-sm flex items-center gap-1">
+                                    <i class="bi bi-person text-blue-600"></i>Admin
                                 </label>
                                 <select id="filterLogAdmin" onchange="fetchAdminLogs()" 
-                                        class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition">
+                                        class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                                     <option value="all">All Admins</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-bold mb-2 text-gray-700 text-sm">
-                                    <i class="fas fa-bolt mr-1"></i>Action Type
+                                <label class="block font-semibold mb-2 text-gray-700 text-sm flex items-center gap-1">
+                                    <i class="bi bi-lightning text-orange-500"></i>Action Type
                                 </label>
                                 <select id="filterLogAction" onchange="fetchAdminLogs()" 
-                                        class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition">
+                                        class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                                     <option value="all">All Actions</option>
                                     <optgroup label="Admin Actions">
                                         <option value="admin_create">Admin Created</option>
@@ -1653,83 +1665,83 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-bold mb-2 text-gray-700 text-sm">
-                                    <i class="fas fa-calendar mr-1"></i>Date
+                                <label class="block font-semibold mb-2 text-gray-700 text-sm flex items-center gap-1">
+                                    <i class="bi bi-calendar3 text-green-600"></i>Date
                                 </label>
                                 <input type="date" id="filterLogDate" onchange="fetchAdminLogs()" 
-                                       class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition" />
+                                       class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" />
                             </div>
                             <div>
-                                <label class="block font-bold mb-2 text-gray-700 text-sm">
-                                    <i class="fas fa-search mr-1"></i>Search
+                                <label class="block font-semibold mb-2 text-gray-700 text-sm flex items-center gap-1">
+                                    <i class="bi bi-search text-purple-600"></i>Search
                                 </label>
                                 <input type="text" id="searchLogs" placeholder="Search logs..." 
                                        onkeyup="fetchAdminLogs()" 
-                                       class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring focus:ring-blue-200 transition" />
+                                       class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" />
                             </div>
                         </div>
-                        <div class="mt-4 flex gap-4">
+                        <div class="mt-4 flex flex-wrap gap-3">
                             <button onclick="fetchAdminLogs()" 
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-sync-alt mr-2"></i>Refresh Logs
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <i class="bi bi-arrow-clockwise"></i>Refresh
                             </button>
                             <button onclick="resetLogFilters()" 
-                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-redo mr-2"></i>Reset Filters
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <i class="bi bi-x-circle"></i>Reset
                             </button>
                             <button onclick="enterAdminLogExportMode()" id="startAdminLogExportBtn"
-                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
-                                <i class="fas fa-file-excel mr-2"></i>Export
+                                    class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <i class="bi bi-file-earmark-spreadsheet"></i>Export
                             </button>
                         </div>
-                        <div id="adminLogActions" class="hidden mt-4 flex gap-2">
-                            <button onclick="exportAllAdminLogs()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
-                                <i class="fas fa-file-excel mr-2"></i>Export All
+                        <div id="adminLogActions" class="hidden mt-4 flex flex-wrap gap-2">
+                            <button onclick="exportAllAdminLogs()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
+                                <i class="bi bi-file-earmark-spreadsheet"></i>Export All
                             </button>
-                            <button onclick="exportSelectedAdminLogs()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
-                                <i class="fas fa-check-square mr-2"></i>Export Selected (<span id="selectedAdminLogCount">0</span>)
+                            <button onclick="exportSelectedAdminLogs()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
+                                <i class="bi bi-check2-square"></i>Export Selected (<span id="selectedAdminLogCount">0</span>)
                             </button>
-                            <button onclick="exitAdminLogExportMode()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
-                                <i class="fas fa-times mr-2"></i>Cancel
+                            <button onclick="exitAdminLogExportMode()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
+                                <i class="bi bi-x-lg"></i>Cancel
                             </button>
                         </div>
                     </div>
 
                     <!-- Logs Table -->
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                        <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b-2 border-blue-200">
-                            <h3 class="text-xl font-bold text-blue-900">
-                                <i class="fas fa-clipboard-list mr-2"></i>Activity Timeline
+                    <div class="glass-effect rounded-2xl shadow-md overflow-hidden border border-gray-100">
+                        <div class="p-6 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-xl font-semibold text-blue-900 flex items-center gap-2">
+                                <i class="bi bi-clock-history"></i>Activity Timeline
                             </h3>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full">
-                                <thead class="bg-gradient-to-r from-gray-100 to-gray-200">
+                                <thead class="bg-gray-50 border-b-2 border-gray-200">
                                     <tr>
                                         <th class="px-6 py-4 text-left admin-log-checkbox-column hidden">
-                                            <input type="checkbox" id="selectAllAdminLogs" onchange="toggleSelectAllAdminLogs()" class="w-4 h-4">
+                                            <input type="checkbox" id="selectAllAdminLogs" onchange="toggleSelectAllAdminLogs()" class="w-4 h-4 rounded">
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-clock mr-1"></i>Time
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            <i class="bi bi-clock mr-1"></i>Time
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-user mr-1"></i>Admin
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            <i class="bi bi-person mr-1"></i>Admin
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-bolt mr-1"></i>Action
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            <i class="bi bi-lightning mr-1"></i>Action
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-info-circle mr-1"></i>Description
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            <i class="bi bi-info-circle mr-1"></i>Description
                                         </th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase">
-                                            <i class="fas fa-network-wired mr-1"></i>IP Address
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                            <i class="bi bi-hdd-network mr-1"></i>IP Address
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody id="adminLogsTableBody" class="divide-y divide-gray-200">
+                                <tbody id="adminLogsTableBody" class="divide-y divide-gray-100 bg-white">
                                     <tr>
-                                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                            <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                            <i class="bi bi-arrow-repeat animate-spin text-3xl mb-3 block text-blue-500"></i>
                                             <p>Loading activity logs...</p>
                                         </td>
                                     </tr>
@@ -1742,16 +1754,18 @@
 
             <!-- Create Admin Modal -->
             <div id="createAdminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-                <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 animate-modal-in">
+                <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden animate-fade-in">
                     <!-- Modal Header -->
-                    <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-8 py-6 rounded-t-2xl">
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-8 py-6">
                         <div class="flex justify-between items-center">
-                            <h3 class="text-2xl font-bold flex items-center gap-2">
-                                <i class="fas fa-user-plus"></i>
-                                Create New Admin Account
+                            <h3 class="text-2xl font-bold flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                                    <i class="bi bi-person-plus-fill text-xl"></i>
+                                </div>
+                                Create New Admin
                             </h3>
-                            <button onclick="closeCreateAdminModal()" class="text-white hover:text-gray-200 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <button onclick="closeCreateAdminModal()" class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-xl transition-all">
+                                <i class="bi bi-x-lg text-xl"></i>
                             </button>
                         </div>
                     </div>
@@ -1762,45 +1776,45 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <!-- Full Name -->
                                 <div>
-                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
-                                        <i class="fas fa-user text-blue-600"></i>
-                                        Full Name *
+                                    <label class="block font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="bi bi-person text-blue-600"></i>
+                                        Full Name <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" id="newAdminFullName" required 
-                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" 
                                            placeholder="John Doe" />
                                 </div>
                                 
                                 <!-- Username -->
                                 <div>
-                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
-                                        <i class="fas fa-id-badge text-blue-600"></i>
-                                        Username *
+                                    <label class="block font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="bi bi-at text-blue-600"></i>
+                                        Username <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" id="newAdminUsername" required 
-                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" 
                                            placeholder="johndoe" />
                                 </div>
                                 
                                 <!-- Email -->
                                 <div>
-                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
-                                        <i class="fas fa-envelope text-blue-600"></i>
-                                        Email *
+                                    <label class="block font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="bi bi-envelope text-blue-600"></i>
+                                        Email <span class="text-red-500">*</span>
                                     </label>
                                     <input type="email" id="newAdminEmail" required 
-                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" 
                                            placeholder="admin@example.com" />
                                 </div>
                                 
                                 <!-- Password -->
                                 <div>
-                                    <label class="block font-bold mb-2 text-gray-700 flex items-center gap-2">
-                                        <i class="fas fa-lock text-blue-600"></i>
-                                        Password *
+                                    <label class="block font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                        <i class="bi bi-lock text-blue-600"></i>
+                                        Password <span class="text-red-500">*</span>
                                     </label>
                                     <input type="password" id="newAdminPassword" required minlength="8" 
-                                           class="w-full border-2 border-gray-300 rounded-lg p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" 
+                                           class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" 
                                            placeholder="••••••••" />
                                     <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
                                 </div>
@@ -1808,11 +1822,11 @@
                             
                             <!-- Super Admin Checkbox -->
                             <div class="mt-6">
-                                <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-purple-50 hover:border-purple-300 transition">
+                                <label class="flex items-start gap-3 p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 hover:border-purple-300 transition-all">
                                     <input type="checkbox" id="newAdminSuperAdmin" class="w-5 h-5 text-purple-600 mt-0.5 rounded" />
                                     <div class="flex-1">
                                         <span class="font-bold text-gray-800 flex items-center gap-2">
-                                            <i class="fas fa-crown text-purple-600"></i>
+                                            <i class="bi bi-shield-fill-check text-purple-600"></i>
                                             Grant Super Admin Privileges
                                         </span>
                                         <p class="text-sm text-gray-600 mt-1">Full access to all admin features including logs, admin management, and system settings</p>
@@ -1823,12 +1837,12 @@
                             <!-- Action Buttons -->
                             <div class="flex gap-3 pt-4">
                                 <button type="submit" 
-                                        class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2">
-                                    <i class="fas fa-check-circle"></i>
+                                        class="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                                    <i class="bi bi-check-circle-fill"></i>
                                     Create Admin Account
                                 </button>
                                 <button type="button" onclick="closeCreateAdminModal()" 
-                                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold transition-all">
+                                        class="px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-all">
                                     Cancel
                                 </button>
                             </div>
@@ -1838,43 +1852,82 @@
             </div>
 
             <!-- Edit Admin Modal -->
-            <div id="editAdminModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-                <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
-                    <h3 class="text-2xl font-bold text-blue-900 mb-4">Edit Admin Account</h3>
-                    <form id="editAdminForm" class="space-y-4">
+            <div id="editAdminModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+                    <!-- Modal Header -->
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                                <i class="bi bi-pencil-square text-white text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white">Edit Admin Account</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal Body -->
+                    <form id="editAdminForm" class="p-6 space-y-5">
                         <input type="hidden" id="editAdminId" />
+                        
                         <div>
-                            <label class="block font-bold mb-1">Full Name</label>
-                            <input type="text" id="editAdminFullName" required class="w-full border border-gray-300 rounded p-2" />
-                        </div>
-                        <div>
-                            <label class="block font-bold mb-1">Username</label>
-                            <input type="text" id="editAdminUsername" required class="w-full border border-gray-300 rounded p-2" />
-                        </div>
-                        <div>
-                            <label class="block font-bold mb-1">Email</label>
-                            <input type="email" id="editAdminEmail" required class="w-full border border-gray-300 rounded p-2" />
-                        </div>
-                        <div>
-                            <label class="block font-bold mb-1">New Password (leave blank to keep current)</label>
-                            <input type="password" id="editAdminPassword" minlength="8" class="w-full border border-gray-300 rounded p-2" />
-                        </div>
-                        <div>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" id="editAdminSuperAdmin" class="w-4 h-4" />
-                                <span class="font-bold">Super Admin</span>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                <i class="bi bi-person text-blue-600"></i> Full Name
                             </label>
+                            <input type="text" id="editAdminFullName" required 
+                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" />
                         </div>
-                        <div class="flex gap-4">
-                            <button type="submit" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white px-6 py-2 rounded font-bold">
-                                Update
+                        
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                <i class="bi bi-badge-id text-blue-600"></i> Username
+                            </label>
+                            <input type="text" id="editAdminUsername" required 
+                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" />
+                        </div>
+                        
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                <i class="bi bi-envelope text-blue-600"></i> Email
+                            </label>
+                            <input type="email" id="editAdminEmail" required 
+                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" />
+                        </div>
+                        
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                <i class="bi bi-shield-lock text-blue-600"></i> New Password
+                                <span class="text-xs text-gray-400 font-normal">(leave blank to keep current)</span>
+                            </label>
+                            <input type="password" id="editAdminPassword" minlength="8" 
+                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none" />
+                        </div>
+                        
+                        <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" id="editAdminSuperAdmin" 
+                                    class="w-5 h-5 rounded border-2 border-amber-400 text-amber-600 focus:ring-amber-500" />
+                                <div class="flex items-center gap-2">
+                                    <i class="bi bi-star-fill text-amber-500"></i>
+                                    <span class="font-bold text-amber-800">Super Admin</span>
+                                </div>
+                            </label>
+                            <p class="text-xs text-amber-600 mt-2 ml-8">Grant full system access and permissions</p>
+                        </div>
+                        
+                        <!-- Message Display -->
+                        <div id="editAdminMessage" class="hidden text-sm font-medium p-3 rounded-xl"></div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3 pt-2">
+                            <button type="submit" 
+                                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all">
+                                <i class="bi bi-check-circle"></i> Update Admin
                             </button>
-                            <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-bold">
+                            <button type="button" onclick="closeEditModal()" 
+                                class="px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-all">
                                 Cancel
                             </button>
                         </div>
                     </form>
-                    <div id="editAdminMessage" class="mt-4 text-sm font-medium"></div>
                 </div>
             </div>
 
@@ -1992,100 +2045,159 @@
                 <!-- Page Header -->
                 <div class="mb-8">
                     <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent mb-2 flex items-center gap-2">
-                        <i class="fas fa-chart-line"></i>Order Analytics Dashboard
+                        <i class="bi bi-graph-up-arrow"></i>Order Analytics Dashboard
                     </h2>
                     <p class="text-gray-600">Visualize trends and monitor performance metrics</p>
                 </div>
                 
-                <!-- Control Panel -->
+                <!-- Advanced Filter Bar -->
                 <div class="glass-effect rounded-2xl shadow-md p-6 mb-6 border border-gray-100">
-                    <div class="flex gap-3 items-center flex-wrap">
-                        <button onclick="toggleRealtimeAnalytics()" id="realtimeBtn" 
-                                class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
-                            <i class="fas fa-play mr-2"></i>Start Real-time
-                        </button>
-                        <button onclick="refreshAnalyticsData()" 
-                                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
-                            <i class="fas fa-sync-alt mr-2"></i>Refresh Data
-                        </button>
-                        <button onclick="resetAnalyticsCharts()" 
-                                class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
-                            <i class="fas fa-redo mr-2"></i>Reset
-                        </button>
-                        
-                        <!-- Date Range Filter -->
-                        <div class="flex gap-2 items-center border-l border-gray-300 pl-4">
-                            <label class="text-sm font-semibold text-gray-700">
-                                <i class="fas fa-calendar mr-1"></i>Period:
-                            </label>
-                            <select id="analyticsDateFilter" onchange="changeDateFilter(this.value)" 
-                                    class="px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
-                                <option value="daily">Today</option>
-                                <option value="weekly">This Week</option>
-                                <option value="monthly">This Month</option>
-                                <option value="custom">Custom Range</option>
-                            </select>
-                            
-                            <!-- Custom Date Range Inputs (Hidden by default) -->
-                            <div id="customDateRange" class="hidden flex gap-2 items-center">
-                                <input type="date" id="startDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
-                                <span class="text-gray-500">to</span>
-                                <input type="date" id="endDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
-                                <button onclick="applyCustomDateRange()" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300">
-                                    Apply
-                                </button>
+                    <div class="flex flex-col gap-4">
+                        <!-- Filter Header -->
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="bi bi-funnel text-blue-600"></i>
+                                Filter Analytics
+                            </h3>
+                            <div class="text-sm text-gray-500">
+                                <i class="bi bi-clock-history mr-1"></i>
+                                <span id="analyticsUpdateTime">Last updated: --:--:--</span>
                             </div>
                         </div>
                         
-                        <div class="ml-auto text-sm text-gray-600">
-                            <span id="analyticsUpdateTime">Last updated: --:--:--</span>
+                        <!-- Filter Row 1: Date Presets & Custom Range -->
+                        <div class="flex flex-wrap gap-3 items-center">
+                            <!-- Date Preset Buttons -->
+                            <div class="flex gap-2">
+                                <button onclick="setAnalyticsPeriod('daily')" id="periodToday" 
+                                        class="analytics-period-btn active px-4 py-2 rounded-xl text-sm font-medium border-2 border-blue-600 bg-blue-600 text-white transition-all">
+                                    <i class="bi bi-calendar-day mr-1"></i>Today
+                                </button>
+                                <button onclick="setAnalyticsPeriod('weekly')" id="periodWeek" 
+                                        class="analytics-period-btn px-4 py-2 rounded-xl text-sm font-medium border-2 border-gray-300 text-gray-600 hover:border-blue-600 hover:text-blue-600 transition-all">
+                                    <i class="bi bi-calendar-week mr-1"></i>This Week
+                                </button>
+                                <button onclick="setAnalyticsPeriod('monthly')" id="periodMonth" 
+                                        class="analytics-period-btn px-4 py-2 rounded-xl text-sm font-medium border-2 border-gray-300 text-gray-600 hover:border-blue-600 hover:text-blue-600 transition-all">
+                                    <i class="bi bi-calendar-month mr-1"></i>This Month
+                                </button>
+                                <button onclick="setAnalyticsPeriod('yearly')" id="periodYear" 
+                                        class="analytics-period-btn px-4 py-2 rounded-xl text-sm font-medium border-2 border-gray-300 text-gray-600 hover:border-blue-600 hover:text-blue-600 transition-all">
+                                    <i class="bi bi-calendar3 mr-1"></i>This Year
+                                </button>
+                            </div>
+                            
+                            <!-- Custom Date Range -->
+                            <div class="flex gap-2 items-center border-l border-gray-300 pl-4">
+                                <span class="text-sm text-gray-500">Custom:</span>
+                                <input type="date" id="analyticsStartDate" 
+                                       class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <span class="text-gray-400">to</span>
+                                <input type="date" id="analyticsEndDate" 
+                                       class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Row 2: Advanced Filters -->
+                        <div class="flex flex-wrap gap-3 items-center">
+                            <!-- College Filter -->
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">
+                                    <i class="bi bi-building mr-1"></i>College:
+                                </label>
+                                <select id="analyticsCollege" 
+                                        class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all min-w-[150px]">
+                                    <option value="">All Colleges</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Program Filter -->
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">
+                                    <i class="bi bi-mortarboard mr-1"></i>Program:
+                                </label>
+                                <select id="analyticsProgram" 
+                                        class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all min-w-[150px]">
+                                    <option value="">All Programs</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Item Filter -->
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">
+                                    <i class="bi bi-box mr-1"></i>Item:
+                                </label>
+                                <input type="text" id="analyticsItemFilter" placeholder="Search items..." 
+                                       class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-40">
+                            </div>
+                            
+                            <!-- Student ID Filter -->
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">
+                                    <i class="bi bi-person-badge mr-1"></i>Student ID:
+                                </label>
+                                <input type="text" id="analyticsStudentId" placeholder="Enter ID..." 
+                                       class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all w-36">
+                            </div>
+                            
+                            <!-- Apply & Clear Buttons -->
+                            <div class="flex gap-2 ml-auto">
+                                <button onclick="applyAnalyticsFilters()" 
+                                        class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2">
+                                    <i class="bi bi-search"></i>Apply Filters
+                                </button>
+                                <button onclick="clearAnalyticsFilters()" 
+                                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2">
+                                    <i class="bi bi-x-lg"></i>Clear
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg shadow p-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">Total Orders</p>
+                                <p class="text-gray-500 text-sm font-medium">Total Orders</p>
                                 <p class="text-3xl font-bold text-blue-600" id="analyticsTotalOrders">0</p>
                             </div>
-                            <div class="text-4xl text-blue-600">
-                                <i class="fas fa-box"></i>
+                            <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-box-seam text-2xl text-blue-600"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow p-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">Pending</p>
+                                <p class="text-gray-500 text-sm font-medium">Pending</p>
                                 <p class="text-3xl font-bold text-yellow-600" id="analyticsPendingOrders">0</p>
                             </div>
-                            <div class="text-4xl text-yellow-600">
-                                <i class="fas fa-hourglass-half"></i>
+                            <div class="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-hourglass-split text-2xl text-yellow-600"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow p-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">Completed</p>
+                                <p class="text-gray-500 text-sm font-medium">Completed</p>
                                 <p class="text-3xl font-bold text-green-600" id="analyticsCompletedOrders">0</p>
                             </div>
-                            <div class="text-4xl text-green-600">
-                                <i class="fas fa-check-circle"></i>
+                            <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-check-circle text-2xl text-green-600"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow p-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 hover:shadow-lg transition-shadow">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-gray-500 text-sm">Avg Wait Time</p>
-                                <p class="text-3xl font-bold text-purple-600" id="analyticsAvgWaitTime">0m</p>
+                                <p class="text-gray-500 text-sm font-medium">Avg Wait Time</p>
+                                <p class="text-3xl font-bold text-teal-600" id="analyticsAvgWaitTime">0m</p>
                             </div>
-                            <div class="text-4xl text-purple-600">
-                                <i class="fas fa-clock"></i>
+                            <div class="w-14 h-14 bg-teal-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-stopwatch text-2xl text-teal-600"></i>
                             </div>
                         </div>
                     </div>
@@ -2094,9 +2206,9 @@
                 <!-- Charts Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <!-- Orders Over Time (Line Chart) -->
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-bold mb-4">
-                            <i class="fas fa-chart-line text-blue-600 mr-2"></i>Orders Over Time
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i class="bi bi-graph-up text-blue-600"></i>Orders Over Time
                         </h2>
                         <div style="position: relative; height: 300px;">
                             <canvas id="analyticsOrdersTimeChart"></canvas>
@@ -2104,9 +2216,9 @@
                     </div>
 
                     <!-- Order Status Distribution (Pie Chart) -->
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-bold mb-4">
-                            <i class="fas fa-chart-pie text-blue-600 mr-2"></i>Status Distribution
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i class="bi bi-pie-chart text-blue-600"></i>Status Distribution
                         </h2>
                         <div style="position: relative; height: 300px;">
                             <canvas id="analyticsStatusPieChart"></canvas>
@@ -2114,9 +2226,9 @@
                     </div>
 
                     <!-- Items Demand (Bar Chart) -->
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-bold mb-4">
-                            <i class="fas fa-chart-bar text-blue-600 mr-2"></i>Popular Items
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i class="bi bi-bar-chart text-blue-600"></i>Popular Items
                         </h2>
                         <div style="position: relative; height: 300px;">
                             <canvas id="analyticsItemsBarChart"></canvas>
@@ -2124,9 +2236,9 @@
                     </div>
 
                     <!-- Hourly Activity (Animated Bar Chart) -->
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h2 class="text-xl font-bold mb-4">
-                            <i class="fas fa-clock text-blue-600 mr-2"></i>Hourly Activity
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i class="bi bi-clock-history text-blue-600"></i>Hourly Activity
                         </h2>
                         <div style="position: relative; height: 300px;">
                             <canvas id="analyticsHourlyChart"></canvas>
@@ -2134,13 +2246,13 @@
                     </div>
                 </div>
 
-                <!-- Real-time Activity Feed -->
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-xl font-bold mb-4">
-                        <i class="fas fa-stream text-blue-600 mr-2"></i>Live Order Stream
+                <!-- Recent Activity Feed -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="bi bi-list-task text-blue-600"></i>Recent Activity
                     </h2>
                     <div id="analyticsActivityFeed" class="space-y-2 max-h-64 overflow-y-auto scroll-smooth">
-                        <p class="text-gray-500 text-sm">Waiting for data...</p>
+                        <p class="text-gray-500 text-sm">Loading activity...</p>
                     </div>
                 </div>
             </div>
@@ -2173,6 +2285,267 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Security Dashboard Tab -->
+            <div id="content-security" class="tab-content hidden p-8">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                        <span>/</span>
+                        <span class="text-gray-900 font-medium">Security</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-3">
+                                <i class="bi bi-shield-check text-blue-600" style="font-size: 28px;"></i>
+                                Security Dashboard
+                            </h2>
+                            <p class="text-gray-600 text-sm">Monitor and manage brute force protection</p>
+                        </div>
+                        <button onclick="refreshSecurityDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <!-- Locked Accounts -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Locked Accounts</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-locked-accounts">0</p>
+                            </div>
+                            <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-lock-fill text-2xl text-red-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blacklisted IPs -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Blacklisted IPs</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-blacklisted-ips">0</p>
+                            </div>
+                            <div class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-slash-circle text-2xl text-orange-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Failed Logins Today -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Failed Logins Today</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-failed-today">0</p>
+                            </div>
+                            <div class="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-exclamation-triangle text-2xl text-yellow-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Critical Events (24h) -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">Critical Events (24h)</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-2" id="stat-critical-events">0</p>
+                            </div>
+                            <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <i class="bi bi-lightning-charge text-2xl text-purple-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Tabs -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-100 mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex -mb-px">
+                            <button onclick="showSecurityTab('locked-accounts')" id="sectab-locked-accounts" class="security-tab active px-6 py-3 border-b-2 border-blue-600 text-blue-600 font-medium flex items-center gap-2">
+                                <i class="bi bi-lock"></i>
+                                Locked Accounts
+                            </button>
+                            <button onclick="showSecurityTab('security-logs')" id="sectab-security-logs" class="security-tab px-6 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 flex items-center gap-2">
+                                <i class="bi bi-journal-text"></i>
+                                Security Logs
+                            </button>
+                            <button onclick="showSecurityTab('ip-blacklist')" id="sectab-ip-blacklist" class="security-tab px-6 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 flex items-center gap-2">
+                                <i class="bi bi-slash-circle"></i>
+                                IP Blacklist
+                            </button>
+                            <button onclick="showSecurityTab('sec-analytics')" id="sectab-sec-analytics" class="security-tab px-6 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 flex items-center gap-2">
+                                <i class="bi bi-bar-chart"></i>
+                                Analytics
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="p-6">
+                        <!-- Locked Accounts Tab -->
+                        <div id="seccontent-locked-accounts" class="security-tab-content">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-gray-900">Currently Locked Accounts</h3>
+                                <button onclick="loadLockedAccounts()" class="text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Identifier</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Failed Attempts</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locked Until</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="locked-accounts-table" class="bg-white divide-y divide-gray-200">
+                                        <!-- Data loaded via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="locked-accounts-empty" class="text-center py-8 text-gray-500 hidden">
+                                <i class="bi bi-check-circle text-4xl text-green-400 mb-2"></i>
+                                <p>No locked accounts at this time</p>
+                            </div>
+                        </div>
+
+                        <!-- Security Logs Tab -->
+                        <div id="seccontent-security-logs" class="security-tab-content hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-gray-900">Security Event Logs</h3>
+                                <div class="flex gap-2">
+                                    <select id="filter-severity" onchange="loadSecurityLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">All Severity</option>
+                                        <option value="info">Info</option>
+                                        <option value="warning">Warning</option>
+                                        <option value="critical">Critical</option>
+                                    </select>
+                                    <select id="filter-event-type" onchange="loadSecurityLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">All Events</option>
+                                        <option value="login_success">Login Success</option>
+                                        <option value="login_failed">Login Failed</option>
+                                        <option value="account_locked">Account Locked</option>
+                                        <option value="ip_blocked">IP Blocked</option>
+                                        <option value="otp_failed">OTP Failed</option>
+                                    </select>
+                                    <button onclick="loadSecurityLogs()" class="text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="security-logs-table" class="bg-white divide-y divide-gray-200">
+                                        <!-- Data loaded via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <div id="logs-pagination" class="flex justify-between items-center mt-4">
+                                <button onclick="previousPage()" id="btn-prev" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1" disabled>
+                                    <i class="bi bi-chevron-left"></i>
+                                    Previous
+                                </button>
+                                <span id="page-info" class="text-gray-700 font-medium">Page 1</span>
+                                <button onclick="nextPage()" id="btn-next" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                                    Next
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- IP Blacklist Tab -->
+                        <div id="seccontent-ip-blacklist" class="security-tab-content hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold text-gray-900">IP Blacklist</h3>
+                                <button onclick="loadIPBlacklist()" class="text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block Type</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blocked Until</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ip-blacklist-table" class="bg-white divide-y divide-gray-200">
+                                        <!-- Data loaded via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="ip-blacklist-empty" class="text-center py-8 text-gray-500 hidden">
+                                <i class="bi bi-check-circle text-4xl text-green-400 mb-2"></i>
+                                <p>No blacklisted IPs at this time</p>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Tab -->
+                        <div id="seccontent-sec-analytics" class="security-tab-content hidden">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4">Security Analytics</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <!-- Event Breakdown Chart -->
+                                <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+                                    <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <i class="bi bi-bar-chart text-blue-600"></i>
+                                        Event Breakdown (Last 7 Days)
+                                    </h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="chart-events"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Top Failed IPs -->
+                                <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+                                    <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <i class="bi bi-geo-alt text-red-600"></i>
+                                        Top IPs with Failed Attempts
+                                    </h4>
+                                    <div id="top-failed-ips" class="space-y-2">
+                                        <!-- Data loaded via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2181,6 +2554,7 @@
     <!-- External JavaScript Files -->
     <script src="assets/js/qr_scanner.js"></script>
     <script src="assets/js/notifications.js"></script>
+    <script src="assets/js/security_dashboard.js"></script>
     <!-- Inline CSS removed - now in assets/css/admin_dashboard.css -->
 
     <!-- Floating QR Scanner Button -->
