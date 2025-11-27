@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f0fdfa; }
+        body { font-family: 'Inter', sans-serif; }
         
         /* Pulse animation for the active step */
         @keyframes pulse-ring {
@@ -20,24 +20,39 @@
         }
         .step-active-pulse { animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         
+        /* Purple pulse for scheduled button */
+        @keyframes pulse-purple {
+            0% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.5); }
+            70% { box-shadow: 0 0 0 12px rgba(147, 51, 234, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
+        }
+        .btn-pulse-purple { animation: pulse-purple 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
         /* Fade in animation */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        
+        /* Floating animation for scheduled icon */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-gradient-to-b from-blue-50 to-white">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-6" id="pageBody">
 
     <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 relative animate-fade-in">
         
-        <!-- Top accent bar -->
-        <div class="h-2 bg-gradient-to-r from-blue-600 to-blue-400 w-full"></div>
+        <!-- Top accent bar (dynamic color) -->
+        <div id="accentBar" class="h-2 bg-gradient-to-r from-blue-600 to-blue-400 w-full"></div>
 
         <!-- Header -->
-        <div class="px-6 py-4 flex justify-between items-center border-b border-gray-100">
-            <div class="flex items-center gap-2 text-blue-900 font-bold">
+        <div id="headerBar" class="px-6 py-4 flex justify-between items-center border-b border-gray-100">
+            <div id="headerTitle" class="flex items-center gap-2 text-blue-900 font-bold">
                 <i class="bi bi-shop text-blue-600"></i> Q-Mak Status
             </div>
             <button onclick="goHome()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-50 transition-all">
@@ -45,8 +60,98 @@
             </button>
         </div>
 
-        <!-- Main Content -->
-        <div class="p-8 text-center">
+        <!-- ============== SCHEDULED VIEW ============== -->
+        <div id="scheduledView" class="hidden p-8 text-center">
+            
+            <!-- Floating Calendar Icon -->
+            <div class="mb-6">
+                <div class="w-24 h-24 mx-auto bg-gradient-to-br from-purple-100 to-violet-200 rounded-full flex items-center justify-center animate-float">
+                    <i class="bi bi-calendar-check text-5xl text-purple-600"></i>
+                </div>
+            </div>
+            
+            <!-- Status Badge -->
+            <div class="inline-block px-4 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-bold uppercase mb-4">
+                <i class="bi bi-clock-history mr-1"></i> Scheduled
+            </div>
+            
+            <!-- Student Info Card -->
+            <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-5 border border-purple-100 text-left mb-6">
+                <div class="flex items-center gap-4 mb-4 pb-4 border-b border-purple-200">
+                    <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg" id="scheduledStudentAvatar">
+                        --
+                    </div>
+                    <div>
+                        <p id="scheduledStudentName" class="font-bold text-purple-900 text-lg">Loading...</p>
+                        <p id="scheduledStudentId" class="text-sm text-purple-600 font-mono">ID: ---</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-purple-400 uppercase font-semibold mb-1">Reference</p>
+                        <p id="scheduledRefNum" class="font-mono font-bold text-purple-800 text-sm">...</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-purple-400 uppercase font-semibold mb-1">Scheduled Date</p>
+                        <p id="scheduledDate" class="font-bold text-purple-800 text-sm">...</p>
+                    </div>
+                    <div class="col-span-2 pt-3 border-t border-purple-200">
+                        <p class="text-xs text-purple-400 uppercase font-semibold mb-1">Item(s)</p>
+                        <p id="scheduledItems" class="font-medium text-purple-900 text-sm">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Check-In Section -->
+            <div id="scheduledCheckInSection" class="mb-6">
+                <div class="bg-gradient-to-r from-purple-600 to-violet-600 rounded-2xl p-6 shadow-xl">
+                    <div class="flex flex-col items-center gap-4 text-white">
+                        <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                            <i class="bi bi-geo-alt-fill text-3xl"></i>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="font-bold text-xl mb-1">Arrived at COOP?</h4>
+                            <p class="text-sm text-purple-200">Check in to get your queue number</p>
+                        </div>
+                        <button onclick="activateOrderStatus()" id="scheduledCheckInButton"
+                            class="w-full bg-white text-purple-600 hover:bg-purple-50 px-8 py-4 rounded-xl font-bold text-lg transition-all hover:shadow-2xl flex items-center justify-center gap-3 btn-pulse-purple">
+                            <i class="bi bi-check-circle-fill text-2xl"></i>
+                            <span>I'M HERE</span>
+                        </button>
+                    </div>
+                </div>
+                <p id="scheduledDateWarning" class="hidden text-sm text-amber-600 mt-3 bg-amber-50 rounded-lg px-4 py-2">
+                    <i class="bi bi-exclamation-triangle mr-1"></i> Check-in available on your scheduled date only
+                </p>
+            </div>
+            
+            <!-- Cancel for Scheduled -->
+            <button onclick="cancelOrderStatus()" id="scheduledCancelButton"
+                class="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all text-sm flex items-center justify-center gap-2 mb-4">
+                <i class="bi bi-x-circle"></i>
+                Cancel Order
+            </button>
+            
+            <!-- Home Button -->
+            <button onclick="goHome()" class="w-full py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all text-sm">
+                <i class="bi bi-house-door mr-1"></i> Back to Home
+            </button>
+        </div>
+
+        <!-- ============== ACTIVE VIEW ============== -->
+        <div id="activeView" class="hidden p-8 text-center">
+            
+            <!-- Student Info Bar -->
+            <div id="activeStudentInfo" class="bg-blue-50 rounded-xl p-3 mb-6 flex items-center gap-3 border border-blue-100">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm" id="activeStudentAvatar">
+                    --
+                </div>
+                <div class="text-left">
+                    <p id="activeStudentName" class="font-bold text-blue-900 text-sm">Loading...</p>
+                    <p id="activeStudentId" class="text-xs text-blue-600 font-mono">ID: ---</p>
+                </div>
+            </div>
             
             <!-- Hero Queue Number -->
             <div class="mb-8">
@@ -129,24 +234,6 @@
                 <p class="text-xs text-gray-400 mt-2">Scan at Counter</p>
             </div>
 
-            <!-- Check-In Button for Scheduled Orders -->
-            <div id="checkInSection" class="hidden mb-6">
-                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-5 shadow-lg">
-                    <div class="flex flex-col items-center gap-3 text-white">
-                        <i class="bi bi-geo-alt-fill text-3xl"></i>
-                        <div class="text-center">
-                            <h4 class="font-bold text-lg">Ready to Check In?</h4>
-                            <p class="text-sm text-purple-100">Tap to join the queue</p>
-                        </div>
-                        <button onclick="activateOrderStatus()" id="statusCheckInButton"
-                            class="bg-white text-purple-600 hover:bg-purple-50 px-6 py-3 rounded-lg font-bold transition-all hover:shadow-xl flex items-center gap-2 mt-2">
-                            <i class="bi bi-check-circle-fill text-xl"></i>
-                            <span>I'M HERE</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Cancel Button for Active Orders -->
             <div id="cancelSection" class="hidden mb-6">
                 <button onclick="cancelOrderStatus()" id="statusCancelButton"
@@ -167,6 +254,15 @@
             </div>
 
         </div>
+
+        <!-- Loading State -->
+        <div id="loadingView" class="p-8 text-center">
+            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="bi bi-arrow-repeat text-3xl text-gray-400 animate-spin"></i>
+            </div>
+            <p class="text-gray-500 font-medium">Loading order status...</p>
+        </div>
+
     </div>
 
     <script src="assets/js/status_display.js"></script>

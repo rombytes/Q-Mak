@@ -1,5 +1,5 @@
 /**
- * Status Display Script (Dashboard-Matched Stepper)
+ * Status Display Script (Dual View: Scheduled + Active)
  * Q-Mak Queue Management System
  */
 
@@ -12,6 +12,7 @@ const API_BASE = (() => {
 
 // Store current order for actions
 window.currentOrder = null;
+window.currentEmail = null;
 
 async function loadOrderStatus() {
     const email = sessionStorage.getItem('checkStatusEmail');
@@ -20,9 +21,14 @@ async function loadOrderStatus() {
         return;
     }
     
+    window.currentEmail = email;
+    
     try {
         const response = await fetch(`${API_BASE}/admin/check_status.php?email=${encodeURIComponent(email)}`);
         const result = await response.json();
+        
+        // Hide loading view
+        document.getElementById('loadingView').classList.add('hidden');
         
         if (result.success && result.data.orders.length > 0) {
             const order = result.data.orders[0];
@@ -38,97 +44,180 @@ async function loadOrderStatus() {
         }
     } catch (error) {
         console.error('Error:', error);
-        document.getElementById('displayQueueNum').textContent = 'ERR';
-        document.getElementById('displayStatusBadge').textContent = 'Error Loading';
+        document.getElementById('loadingView').innerHTML = `
+            <div class="text-center p-8">
+                <i class="bi bi-exclamation-circle text-5xl text-red-400 mb-4"></i>
+                <p class="text-red-600 font-medium">Error loading order status</p>
+                <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200">
+                    Try Again
+                </button>
+            </div>
+        `;
     }
 }
 
 function updateUI(order, email) {
     // Store order reference for actions
     window.currentOrder = {
+        order_id: order.order_id,
         queue_number: order.queue_number,
         reference_number: order.reference_number || 'QMAK-' + order.order_id.toString().padStart(8, '0'),
-        status: order.order_status
+        status: order.order_status,
+        scheduled_date: order.queue_date || order.scheduled_date,
+        student_name: `${order.first_name || ''} ${order.last_name || ''}`.trim() || 'Student',
+        student_id: order.student_number || 'N/A'
     };
     
     const status = order.order_status || 'pending';
     
-    // 1. Update Hero Queue Number
-    const queueDisplay = document.getElementById('displayQueueNum');
+    // Get views
+    const scheduledView = document.getElementById('scheduledView');
+    const activeView = document.getElementById('activeView');
+    const pageBody = document.getElementById('pageBody');
+    const accentBar = document.getElementById('accentBar');
+    const headerTitle = document.getElementById('headerTitle');
+    
     if (status === 'scheduled') {
-        queueDisplay.textContent = 'SCH';
-        queueDisplay.classList.add('text-purple-600');
-        queueDisplay.classList.remove('text-blue-900');
+        // ========== SCHEDULED VIEW ==========
+        scheduledView.classList.remove('hidden');
+        activeView.classList.add('hidden');
+        
+        // Purple theme for body
+        pageBody.className = 'min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-gradient-to-b from-purple-50 to-violet-50';
+        accentBar.className = 'h-2 bg-gradient-to-r from-purple-600 to-violet-500 w-full';
+        headerTitle.innerHTML = '<i class="bi bi-calendar-check text-purple-600"></i> <span class="text-purple-900">Scheduled Order</span>';
+        
+        // Student Info
+        const initials = getInitials(window.currentOrder.student_name);
+        document.getElementById('scheduledStudentAvatar').textContent = initials;
+        document.getElementById('scheduledStudentName').textContent = window.currentOrder.student_name;
+        document.getElementById('scheduledStudentId').textContent = `ID: ${window.currentOrder.student_id}`;
+        
+        // Order Details
+        document.getElementById('scheduledRefNum').textContent = window.currentOrder.reference_number;
+        
+        // Format scheduled date
+        const scheduledDate = window.currentOrder.scheduled_date;
+        if (scheduledDate) {
+            const dateObj = new Date(scheduledDate + 'T00:00:00');
+            document.getElementById('scheduledDate').textContent = dateObj.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        } else {
+            document.getElementById('scheduledDate').textContent = 'Not set';
+        }
+        
+        // Items
+        const items = (order.item_name || order.item_ordered || '').split(',').map(i => capitalizeWords(i.trim())).join(', ');
+        document.getElementById('scheduledItems').textContent = items || 'N/A';
+        
+        // Check if today matches scheduled date for check-in eligibility
+        const today = new Date().toISOString().split('T')[0];
+        const checkInBtn = document.getElementById('scheduledCheckInButton');
+        const dateWarning = document.getElementById('scheduledDateWarning');
+        
+        if (scheduledDate && scheduledDate !== today) {
+            // Not the scheduled day - disable check-in
+            checkInBtn.disabled = true;
+            checkInBtn.classList.remove('btn-pulse-purple', 'hover:shadow-2xl');
+            checkInBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            dateWarning.classList.remove('hidden');
+        } else {
+            // Today is the day!
+            checkInBtn.disabled = false;
+            checkInBtn.classList.add('btn-pulse-purple', 'hover:shadow-2xl');
+            checkInBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            dateWarning.classList.add('hidden');
+        }
+        
     } else {
+        // ========== ACTIVE VIEW (pending, processing, ready, completed, cancelled) ==========
+        scheduledView.classList.add('hidden');
+        activeView.classList.remove('hidden');
+        
+        // Blue theme for body
+        pageBody.className = 'min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-gradient-to-b from-blue-50 to-white';
+        accentBar.className = 'h-2 bg-gradient-to-r from-blue-600 to-blue-400 w-full';
+        headerTitle.innerHTML = '<i class="bi bi-shop text-blue-600"></i> <span class="text-blue-900">Q-Mak Status</span>';
+        
+        // Student Info in Active View
+        const initials = getInitials(window.currentOrder.student_name);
+        document.getElementById('activeStudentAvatar').textContent = initials;
+        document.getElementById('activeStudentName').textContent = window.currentOrder.student_name;
+        document.getElementById('activeStudentId').textContent = `ID: ${window.currentOrder.student_id}`;
+        
+        // 1. Update Hero Queue Number
+        const queueDisplay = document.getElementById('displayQueueNum');
         queueDisplay.textContent = order.queue_number || '--';
         queueDisplay.classList.remove('text-purple-600');
         queueDisplay.classList.add('text-blue-900');
-    }
-    
-    // 2. Update Status Badge
-    const badge = document.getElementById('displayStatusBadge');
-    const badgeStyles = {
-        pending: 'bg-yellow-100 text-yellow-700',
-        processing: 'bg-blue-100 text-blue-700',
-        ready: 'bg-purple-100 text-purple-700',
-        completed: 'bg-green-100 text-green-700',
-        cancelled: 'bg-red-100 text-red-700',
-        scheduled: 'bg-purple-100 text-purple-700'
-    };
-    badge.className = `inline-block px-4 py-1.5 rounded-full text-sm font-bold uppercase ${badgeStyles[status] || badgeStyles.pending}`;
-    badge.textContent = status === 'ready' ? 'Ready for Pickup' : status;
+        
+        // 2. Update Status Badge
+        const badge = document.getElementById('displayStatusBadge');
+        const badgeStyles = {
+            pending: 'bg-yellow-100 text-yellow-700',
+            processing: 'bg-blue-100 text-blue-700',
+            ready: 'bg-purple-100 text-purple-700',
+            completed: 'bg-green-100 text-green-700',
+            cancelled: 'bg-red-100 text-red-700'
+        };
+        badge.className = `inline-block px-4 py-1.5 rounded-full text-sm font-bold uppercase ${badgeStyles[status] || badgeStyles.pending}`;
+        badge.textContent = status === 'ready' ? 'Ready for Pickup' : status;
 
-    // 3. Update 4-Step Stepper
-    updateStepper(status);
+        // 3. Update 4-Step Stepper
+        updateStepper(status);
 
-    // 4. Update Order Details
-    document.getElementById('displayRefNum').textContent = window.currentOrder.reference_number;
-    
-    // Format items
-    const items = (order.item_name || order.item_ordered || '').split(',').map(i => capitalizeWords(i.trim())).join(', ');
-    document.getElementById('displayItems').textContent = items || 'N/A';
-    
-    // Wait time
-    const waitTimeEl = document.getElementById('displayWaitTime');
-    if (status === 'completed') {
-        waitTimeEl.textContent = 'Done ✓';
-        waitTimeEl.classList.remove('text-orange-600');
-        waitTimeEl.classList.add('text-green-600');
-    } else if (status === 'cancelled') {
-        waitTimeEl.textContent = 'Cancelled';
-        waitTimeEl.classList.remove('text-orange-600');
-        waitTimeEl.classList.add('text-red-600');
-    } else if (status === 'scheduled') {
-        waitTimeEl.textContent = 'Check In Required';
-        waitTimeEl.classList.remove('text-orange-600');
-        waitTimeEl.classList.add('text-purple-600');
-    } else {
-        waitTimeEl.textContent = `${order.estimated_wait_time || 10} mins`;
-    }
+        // 4. Update Order Details
+        document.getElementById('displayRefNum').textContent = window.currentOrder.reference_number;
+        
+        // Format items
+        const items = (order.item_name || order.item_ordered || '').split(',').map(i => capitalizeWords(i.trim())).join(', ');
+        document.getElementById('displayItems').textContent = items || 'N/A';
+        
+        // Wait time
+        const waitTimeEl = document.getElementById('displayWaitTime');
+        if (status === 'completed') {
+            waitTimeEl.textContent = 'Done ✓';
+            waitTimeEl.className = 'font-bold text-green-600 text-sm';
+        } else if (status === 'cancelled') {
+            waitTimeEl.textContent = 'Cancelled';
+            waitTimeEl.className = 'font-bold text-red-600 text-sm';
+        } else if (status === 'ready') {
+            waitTimeEl.textContent = 'Ready Now!';
+            waitTimeEl.className = 'font-bold text-purple-600 text-sm';
+        } else {
+            waitTimeEl.textContent = `${order.estimated_wait_time || 10} mins`;
+            waitTimeEl.className = 'font-bold text-orange-600 text-sm';
+        }
 
-    // 5. Show/Hide QR Code
-    if (['pending', 'processing', 'ready'].includes(status)) {
-        document.getElementById('qrCodeWrapper').classList.remove('hidden');
-        generateQR(order, email);
-    } else {
-        document.getElementById('qrCodeWrapper').classList.add('hidden');
+        // 5. Show/Hide QR Code
+        if (['pending', 'processing', 'ready'].includes(status)) {
+            document.getElementById('qrCodeWrapper').classList.remove('hidden');
+            generateQR(order, email);
+        } else {
+            document.getElementById('qrCodeWrapper').classList.add('hidden');
+        }
+        
+        // 6. Show/Hide Cancel Button for pending orders only
+        const cancelSection = document.getElementById('cancelSection');
+        if (status === 'pending') {
+            cancelSection.classList.remove('hidden');
+        } else {
+            cancelSection.classList.add('hidden');
+        }
     }
-    
-    // 6. Show/Hide Check-In Section for Scheduled Orders
-    const checkInSection = document.getElementById('checkInSection');
-    if (status === 'scheduled') {
-        checkInSection.classList.remove('hidden');
-    } else {
-        checkInSection.classList.add('hidden');
+}
+
+function getInitials(name) {
+    if (!name) return '--';
+    const parts = name.split(' ').filter(p => p.length > 0);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
-    
-    // 7. Show/Hide Cancel Button for Cancellable Orders
-    const cancelSection = document.getElementById('cancelSection');
-    if (['pending', 'scheduled'].includes(status)) {
-        cancelSection.classList.remove('hidden');
-    } else {
-        cancelSection.classList.add('hidden');
-    }
+    return name.substring(0, 2).toUpperCase();
 }
 
 function updateStepper(status) {
@@ -141,15 +230,15 @@ function updateStepper(status) {
     let activeIndex = 0;
     let progressWidth = '15%';
 
-    if (status === 'scheduled') {
-        activeIndex = 0; // Still at confirmed, waiting for check-in
-        progressWidth = '8%';
-    } else if (status === 'pending') {
+    if (status === 'pending') {
         activeIndex = 1; // Waiting
         progressWidth = '38%';
-    } else if (status === 'processing' || status === 'ready') {
+    } else if (status === 'processing') {
         activeIndex = 2; // Processing
-        progressWidth = status === 'ready' ? '85%' : '62%';
+        progressWidth = '62%';
+    } else if (status === 'ready') {
+        activeIndex = 2; // Still Processing step but almost done
+        progressWidth = '85%';
     } else if (status === 'completed') {
         activeIndex = 3; // Completed
         progressWidth = '100%';
@@ -221,7 +310,7 @@ function capitalizeWords(str) {
 
 // Check-In for Scheduled Orders
 async function activateOrderStatus() {
-    const btn = document.getElementById('statusCheckInButton');
+    const btn = document.getElementById('scheduledCheckInButton');
     
     if (!window.currentOrder?.reference_number) {
         alert('Order information not found');
@@ -231,26 +320,43 @@ async function activateOrderStatus() {
     // Disable button
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin text-xl"></i> <span>Checking In...</span>';
+        btn.classList.remove('btn-pulse-purple');
+        btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin text-2xl"></i> <span>Checking In...</span>';
     }
     
     try {
         const response = await fetch(`${API_BASE}/student/activate_scheduled_order.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reference_number: window.currentOrder.reference_number })
+            body: JSON.stringify({ 
+                reference_number: window.currentOrder.reference_number,
+                email: window.currentEmail
+            })
         });
         
         const result = await response.json();
         
         if (result.success) {
-            alert(`✓ Checked in successfully!\n\nYour queue number: ${result.data.queue_number}\nEstimated wait: ${result.data.wait_time} mins`);
-            setTimeout(() => loadOrderStatus(), 1000);
+            // Show success message
+            const checkInSection = document.getElementById('scheduledCheckInSection');
+            checkInSection.innerHTML = `
+                <div class="bg-green-500 rounded-2xl p-6 shadow-xl text-white text-center">
+                    <i class="bi bi-check-circle-fill text-5xl mb-3"></i>
+                    <h4 class="font-bold text-xl mb-2">Checked In!</h4>
+                    <p class="text-green-100 mb-2">Your queue number is:</p>
+                    <p class="text-4xl font-black">${result.data.queue_number}</p>
+                    <p class="text-sm text-green-200 mt-2">Wait time: ~${result.data.wait_time} mins</p>
+                </div>
+            `;
+            
+            // Reload after 2s to show active view
+            setTimeout(() => loadOrderStatus(), 2000);
         } else {
             alert('✗ ' + (result.message || 'Check-in failed'));
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-check-circle-fill text-xl"></i> <span>I\'M HERE</span>';
+                btn.classList.add('btn-pulse-purple');
+                btn.innerHTML = '<i class="bi bi-check-circle-fill text-2xl"></i> <span>I\'M HERE</span>';
             }
         }
     } catch (error) {
@@ -258,14 +364,15 @@ async function activateOrderStatus() {
         alert('✗ Network error. Please try again.');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle-fill text-xl"></i> <span>I\'M HERE</span>';
+            btn.classList.add('btn-pulse-purple');
+            btn.innerHTML = '<i class="bi bi-check-circle-fill text-2xl"></i> <span>I\'M HERE</span>';
         }
     }
 }
 
 // Cancel Order
 async function cancelOrderStatus() {
-    const btn = document.getElementById('statusCancelButton');
+    const btn = document.getElementById('statusCancelButton') || document.getElementById('scheduledCancelButton');
     
     if (!window.currentOrder?.reference_number) {
         alert('Order information not found');
