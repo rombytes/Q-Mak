@@ -204,23 +204,39 @@ try {
             $allowPreorders = getSetting($db, 'allow_preorders', 1);
             
             if ($allowPreorders) {
-                // Calculate next business day
-                $nextBusinessDay = getNextBusinessDay($db);
+                // Distinguish between "Not yet open" (early morning) vs "Closed for day/holiday"
+                $isEarlyMorning = ($coopStatus['reason'] === 'Not yet open');
                 
-                if (!$nextBusinessDay) {
-                    throw new Exception("Unable to process order. No available business days found.");
+                if ($isEarlyMorning) {
+                    // Early morning order (e.g., 2:00 AM) - Schedule for TODAY, not next business day
+                    $orderType = 'pre-order';
+                    $queueDate = date('Y-m-d'); // Use today's date
+                    $orderedOutsideHours = 1;
+                    
+                    // Do NOT generate queue number - set to null for scheduled orders
+                    $queueNum = null;
+                    $finalStatus = 'scheduled'; // Will be processed when COOP opens today
+                    
+                    $response['message'] = "COOP is not open yet. Your order has been placed for today and will be processed when we open.";
+                } else {
+                    // COOP is closed for the day, holiday, or break - Schedule for next business day
+                    $nextBusinessDay = getNextBusinessDay($db);
+                    
+                    if (!$nextBusinessDay) {
+                        throw new Exception("Unable to process order. No available business days found.");
+                    }
+                    
+                    // Create as scheduled order for next business day
+                    $orderType = 'pre-order';
+                    $queueDate = $nextBusinessDay;
+                    $orderedOutsideHours = 1;
+                    
+                    // Do NOT generate queue number - set to null for scheduled orders
+                    $queueNum = null;
+                    $finalStatus = 'scheduled';
+                    
+                    $response['message'] = "Order Scheduled. Please check in when you arrive on " . date('l, F j', strtotime($nextBusinessDay));
                 }
-                
-                // Create as scheduled order (Option C: No queue number, 'scheduled' status)
-                $orderType = 'pre-order';
-                $queueDate = $nextBusinessDay;
-                $orderedOutsideHours = 1;
-                
-                // Do NOT generate queue number - set to null for scheduled orders
-                $queueNum = null;
-                $finalStatus = 'scheduled'; // Will be used in INSERT statement
-                
-                $response['message'] = "Order Scheduled. Please check in when you arrive on " . date('l, F j', strtotime($nextBusinessDay));
             } else {
                 throw new Exception("COOP is currently closed. Reason: " . $coopStatus['reason'] . ". Please place your order during operating hours.");
             }
