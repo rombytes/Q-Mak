@@ -9,13 +9,13 @@ USE `qmak_db`;
 -- --------------------------------------------------------
 
 INSERT INTO `students` 
-(`student_id`, `student_number`, `first_name`, `last_name`, `middle_initial`, `email`, `college`, `program`, `year_level`, `section`) 
+(`student_id`, `first_name`, `last_name`, `middle_initial`, `email`, `college`, `program`, `year_level`, `section`) 
 VALUES
-('2021-12345', '2021-12345', 'Juan', 'Dela Cruz', 'M', 'jdelacruz.a12345@umak.edu.ph', 'College of Engineering', 'Computer Engineering', 3, 'A'),
-('2022-23456', '2022-23456', 'Maria', 'Santos', 'R', 'msantos.a23456@umak.edu.ph', 'College of Business Administration', 'Business Management', 2, 'B'),
-('2020-34567', '2020-34567', 'Jose', 'Reyes', 'L', 'jreyes.a34567@umak.edu.ph', 'College of Education', 'Secondary Education', 4, 'C'),
-('2023-45678', '2023-45678', 'Ana', 'Garcia', 'P', 'agarcia.a45678@umak.edu.ph', 'College of Nursing', 'Nursing', 1, 'A'),
-('2021-56789', '2021-56789', 'Pedro', 'Ramos', 'S', 'pramos.a56789@umak.edu.ph', 'College of Information Technology', 'Information Technology', 3, 'D');
+('2021-12345', 'Juan', 'Dela Cruz', 'M', 'jdelacruz.a12345@umak.edu.ph', 'College of Engineering', 'Computer Engineering', 3, 'A'),
+('2022-23456', 'Maria', 'Santos', 'R', 'msantos.a23456@umak.edu.ph', 'College of Business Administration', 'Business Management', 2, 'B'),
+('2020-34567', 'Jose', 'Reyes', 'L', 'jreyes.a34567@umak.edu.ph', 'College of Education', 'Secondary Education', 4, 'C'),
+('2023-45678', 'Ana', 'Garcia', 'P', 'agarcia.a45678@umak.edu.ph', 'College of Nursing', 'Nursing', 1, 'A'),
+('2021-56789', 'Pedro', 'Ramos', 'S', 'pramos.a56789@umak.edu.ph', 'College of Information Technology', 'Information Technology', 3, 'D');
 
 -- --------------------------------------------------------
 -- Sample Orders

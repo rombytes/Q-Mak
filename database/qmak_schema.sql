@@ -96,7 +96,6 @@ ON DUPLICATE KEY UPDATE username = username;
 
 CREATE TABLE IF NOT EXISTS `students` (
   `student_id` VARCHAR(50) NOT NULL,
-  `student_number` VARCHAR(50) NULL,
   `first_name` VARCHAR(50) NOT NULL,
   `last_name` VARCHAR(50) NOT NULL,
   `middle_initial` VARCHAR(5) NULL,
@@ -115,7 +114,6 @@ CREATE TABLE IF NOT EXISTS `students` (
   `archived_at` DATETIME NULL,
   `archived_by` INT(11) NULL COMMENT 'Admin ID who archived',
   PRIMARY KEY (`student_id`),
-  INDEX `idx_student_number` (`student_number`),
   INDEX `idx_email` (`email`),
   INDEX `idx_is_verified` (`is_verified`),
   INDEX `idx_is_archived` (`is_archived`)

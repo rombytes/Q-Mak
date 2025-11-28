@@ -106,7 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 o.created_at,
                 o.updated_at,
                 s.student_id,
-                s.student_number,
                 s.first_name,
                 s.last_name,
                 s.email

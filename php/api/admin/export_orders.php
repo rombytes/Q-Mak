@@ -31,7 +31,7 @@ try {
             o.order_date,
             o.ready_time,
             o.completed_time,
-            s.student_number,
+            s.student_id,
             CONCAT(s.first_name, ' ', s.last_name) as student_name,
             s.email,
             s.course
@@ -77,7 +77,7 @@ try {
     fputcsv($output, [
         'Order ID',
         'Queue Number',
-        'Student Number',
+        'Student ID',
         'Student Name',
         'Email',
         'Course',
@@ -95,7 +95,7 @@ try {
         fputcsv($output, [
             $order['order_id'],
             $order['queue_number'],
-            $order['student_number'],
+            $order['student_id'],
             $order['student_name'],
             $order['email'],
             $order['course'],

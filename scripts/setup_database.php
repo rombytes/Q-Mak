@@ -40,7 +40,6 @@ try {
     $tables = [
         'students' => "CREATE TABLE IF NOT EXISTS `students` (
             `student_id` INT(11) NOT NULL AUTO_INCREMENT,
-            `student_number` VARCHAR(20) NOT NULL UNIQUE,
             `first_name` VARCHAR(50) NOT NULL,
             `last_name` VARCHAR(50) NOT NULL,
             `email` VARCHAR(100) NOT NULL UNIQUE,
@@ -54,7 +53,6 @@ try {
             `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (`student_id`),
-            INDEX `idx_student_number` (`student_number`),
             INDEX `idx_email` (`email`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         
