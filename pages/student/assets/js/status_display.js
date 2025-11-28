@@ -197,6 +197,8 @@ function updateUI(order, email) {
         if (['pending', 'processing', 'ready'].includes(status)) {
             document.getElementById('qrCodeWrapper').classList.remove('hidden');
             generateQR(order, email);
+            // Re-attach event listeners after QR is generated
+            setTimeout(setupEventListeners, 100);
         } else {
             document.getElementById('qrCodeWrapper').classList.add('hidden');
         }
@@ -527,5 +529,75 @@ function goHome() {
     window.location.href = '../index.html';
 }
 
+// Setup event listeners for mobile compatibility
+function setupEventListeners() {
+    // QR Container click to zoom
+    const qrContainer = document.getElementById('qrContainer');
+    if (qrContainer) {
+        qrContainer.addEventListener('click', window.openQRZoom);
+        qrContainer.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            window.openQRZoom();
+        });
+    }
+    
+    // Download button
+    const downloadBtn = document.getElementById('qrDownloadBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', window.downloadQR);
+        downloadBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            window.downloadQR();
+        });
+    }
+    
+    // Modal close button
+    const closeBtn = document.getElementById('qrZoomCloseBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', window.closeQRZoom);
+        closeBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.closeQRZoom();
+        });
+    }
+    
+    // Modal download button
+    const modalDownloadBtn = document.getElementById('qrZoomDownloadBtn');
+    if (modalDownloadBtn) {
+        modalDownloadBtn.addEventListener('click', window.downloadQR);
+        modalDownloadBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.downloadQR();
+        });
+    }
+    
+    // Modal backdrop
+    const modal = document.getElementById('qrZoomModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                window.closeQRZoom();
+            }
+        });
+    }
+    
+    // Prevent content clicks from closing modal
+    const modalContent = document.getElementById('qrZoomContent');
+    if (modalContent) {
+        modalContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+}
+
 // Initialize
 loadOrderStatus();
+
+// Setup event listeners after DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupEventListeners);
+} else {
+    setupEventListeners();
+}
