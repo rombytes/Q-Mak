@@ -2737,20 +2737,44 @@ async function initializeDashboard() {
 }
 
 // Check if super admin and show management tab
+// RBAC: Super Admin sees everything, Regular Admin sees only operational tabs
+// Backend APIs (security_management.php, admin_management.php) also verify is_super_admin session
 function checkSuperAdminAccess() {
     const adminData = JSON.parse(sessionStorage.getItem('adminData') || '{}');
+    const restrictedTabs = ['admin-management', 'security'];
+    
     if (adminData && adminData.is_super_admin == 1) {
-        document.getElementById('tab-admin-management').classList.remove('hidden');
+        // Super Admin: Unhide sensitive tabs
+        const adminManagementTab = document.getElementById('tab-admin-management');
+        const securityTab = document.getElementById('tab-security');
+        
+        if (adminManagementTab) adminManagementTab.classList.remove('hidden');
+        if (securityTab) securityTab.classList.remove('hidden');
+        
         // Show export admin logs button for super admin
         const exportAdminLogsBtn = document.getElementById('exportAdminLogsBtn');
         if (exportAdminLogsBtn) {
             exportAdminLogsBtn.classList.remove('hidden');
         }
     } else {
+        // Regular Admin: Keep sensitive tabs hidden
+        const adminManagementTab = document.getElementById('tab-admin-management');
+        const securityTab = document.getElementById('tab-security');
+        
+        if (adminManagementTab) adminManagementTab.classList.add('hidden');
+        if (securityTab) securityTab.classList.add('hidden');
+        
         // Hide export admin logs button for regular admin
         const exportAdminLogsBtn = document.getElementById('exportAdminLogsBtn');
         if (exportAdminLogsBtn) {
             exportAdminLogsBtn.classList.add('hidden');
+        }
+        
+        // Redirect if currently on a restricted tab (e.g., page refresh)
+        const currentTab = window.currentTab || sessionStorage.getItem('currentAdminTab');
+        if (currentTab && restrictedTabs.includes(currentTab)) {
+            console.warn('Regular admin attempted to access restricted tab:', currentTab);
+            showTab('queue-management');
         }
     }
 }
