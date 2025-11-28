@@ -14,7 +14,8 @@ require_once __DIR__ . '/../../utils/queue_functions.php';
 try {
     $db = getDB();
     
-    // Get today's queue orders
+    // Get today's queue orders - exclude cancelled and scheduled orders without queue numbers
+    // Only show actionable live queue data: pending, processing, ready, and last 5 completed
     $stmt = $db->prepare("
         SELECT 
             o.queue_number,
@@ -34,7 +35,38 @@ try {
             CAST(SUBSTRING(o.queue_number, LOCATE('-', o.queue_number) + 1) AS UNSIGNED) as queue_position
         FROM orders o
         WHERE o.queue_date = CURDATE()
-        ORDER BY o.created_at ASC
+        AND o.status IN ('pending', 'processing', 'ready')
+        AND o.queue_number IS NOT NULL 
+        AND o.queue_number != ''
+        
+        UNION ALL
+        
+        (SELECT 
+            o.queue_number,
+            o.reference_number,
+            o.status,
+            o.estimated_wait_time,
+            o.created_at,
+            o.started_processing_at,
+            o.completed_at,
+            TIMESTAMPDIFF(MINUTE, o.created_at, o.completed_at) as actual_wait_minutes,
+            CAST(SUBSTRING(o.queue_number, LOCATE('-', o.queue_number) + 1) AS UNSIGNED) as queue_position
+        FROM orders o
+        WHERE o.queue_date = CURDATE()
+        AND o.status = 'completed'
+        AND o.queue_number IS NOT NULL
+        AND o.queue_number != ''
+        ORDER BY o.completed_at DESC
+        LIMIT 5)
+        
+        ORDER BY
+            CASE status
+                WHEN 'processing' THEN 1
+                WHEN 'ready' THEN 2
+                WHEN 'pending' THEN 3
+                ELSE 4
+            END,
+            created_at ASC
     ");
     $stmt->execute();
     $orders = $stmt->fetchAll();
