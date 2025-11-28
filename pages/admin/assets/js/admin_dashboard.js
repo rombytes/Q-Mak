@@ -3528,7 +3528,7 @@ function applyAnalyticsFilters() {
     addAnalyticsActivityItem('<i class="bi bi-funnel text-blue-600"></i> Filters applied');
 }
 
-// Download Analytics Report as Excel
+// Download Analytics Report as CSV
 function downloadAnalyticsReport() {
     // Collect current filter values
     const period = currentAnalyticsPeriod;
@@ -3552,7 +3552,7 @@ function downloadAnalyticsReport() {
     // Trigger download
     window.open(url, '_blank');
     
-    addAnalyticsActivityItem('<i class="bi bi-file-earmark-excel text-green-600"></i> Report exported to Excel');
+    addAnalyticsActivityItem('<i class="bi bi-file-earmark-spreadsheet text-green-600"></i> Report exported to CSV');
 }
 
 // Clear all analytics filters
