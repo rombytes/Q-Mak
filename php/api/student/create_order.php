@@ -121,10 +121,10 @@ try {
         }
         
         // Check file extension
-        $allowedExtensions = ['pdf', 'doc', 'docx'];
+        $allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'];
         $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if (!in_array($fileExt, $allowedExtensions)) {
-            throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed');
+            throw new Exception('Invalid file type. Only PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, and PNG files are allowed');
         }
         
         // Create upload directory if it doesn't exist

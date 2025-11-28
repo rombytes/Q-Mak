@@ -28,7 +28,53 @@ let printingPrices = {
 
 // File upload constraints
 const MAX_FILE_SIZE = 10485760; // 10MB
-const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx'];
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'];
+
+/**
+ * Count pages in a file
+ * - PDFs: Uses pdf.js to get exact page count
+ * - Images: Returns 1
+ * - Word/Excel: Returns null (manual entry needed)
+ * @param {File} file - The file to count pages for
+ * @returns {Promise<number|null>} Page count or null if cannot be determined
+ */
+async function countFilePages(file) {
+    if (!file) return null;
+    
+    const fileType = file.type.toLowerCase();
+    const fileName = file.name.toLowerCase();
+    const extension = fileName.split('.').pop();
+    
+    // Images always count as 1 page
+    if (fileType.startsWith('image/') || ['jpg', 'jpeg', 'png'].includes(extension)) {
+        return 1;
+    }
+    
+    // PDFs - use pdf.js to get exact page count
+    if (fileType === 'application/pdf' || extension === 'pdf') {
+        try {
+            // Check if pdfjsLib is available
+            if (typeof pdfjsLib === 'undefined') {
+                console.warn('PDF.js library not loaded');
+                return null;
+            }
+            
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            return pdf.numPages;
+        } catch (error) {
+            console.error('Error counting PDF pages:', error);
+            return null;
+        }
+    }
+    
+    // Word/Excel documents - cannot determine page count automatically
+    if (['doc', 'docx', 'xls', 'xlsx'].includes(extension)) {
+        return null;
+    }
+    
+    return null;
+}
 
 /**
  * Load printing prices from settings
@@ -139,11 +185,12 @@ function updatePrintingPriceDisplay() {
 }
 
 /**
- * Handle file input change
+ * Handle file input change with auto page count detection
  */
-function handlePrintFileChange(event) {
+async function handlePrintFileChange(event) {
     const file = event.target.files[0];
     const feedbackElement = document.getElementById('fileFeedback');
+    const pageCountInput = document.getElementById('pageCount');
     
     if (!file) {
         if (feedbackElement) {
@@ -169,16 +216,72 @@ function handlePrintFileChange(event) {
         return;
     }
     
-    // Show success feedback
+    // Show loading state while detecting page count
     const fileSizeMB = (file.size / 1048576).toFixed(2);
     if (feedbackElement) {
         feedbackElement.innerHTML = `
-            <div class="flex items-center gap-2 text-green-600">
-                <i class="bi bi-check-circle-fill"></i>
-                <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Ready to upload</span>
+            <div class="flex items-center gap-2 text-blue-600">
+                <i class="bi bi-hourglass-split animate-spin"></i>
+                <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Detecting page count...</span>
             </div>
         `;
         feedbackElement.classList.remove('hidden');
+    }
+    
+    // Auto-detect page count
+    try {
+        const pageCount = await countFilePages(file);
+        
+        if (pageCount !== null && pageCountInput) {
+            pageCountInput.value = pageCount;
+            updatePrintingPriceDisplay();
+            
+            // Show success with page count info
+            if (feedbackElement) {
+                feedbackElement.innerHTML = `
+                    <div class="flex items-center gap-2 text-green-600">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span><strong>${file.name}</strong> (${fileSizeMB}MB) - ${pageCount} page${pageCount !== 1 ? 's' : ''} detected</span>
+                    </div>
+                `;
+            }
+        } else {
+            // Could not detect page count (Word/Excel)
+            if (pageCountInput && !pageCountInput.value) {
+                pageCountInput.value = 1; // Default to 1
+            }
+            
+            if (feedbackElement) {
+                feedbackElement.innerHTML = `
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2 text-green-600">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Ready to upload</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-amber-600 text-sm">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Please verify the page count for this document.</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Show toast notification
+            if (typeof showToast === 'function') {
+                showToast('Please verify page count for documents.', 'warning');
+            }
+        }
+    } catch (error) {
+        console.error('Error detecting page count:', error);
+        // Show success without page count
+        if (feedbackElement) {
+            feedbackElement.innerHTML = `
+                <div class="flex items-center gap-2 text-green-600">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Ready to upload</span>
+                </div>
+            `;
+        }
     }
 }
 

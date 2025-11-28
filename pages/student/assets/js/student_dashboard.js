@@ -75,6 +75,8 @@ async function initDashboard() {
         await checkActiveOrdersAndDisableButtons();
         // Phase 8: Check service status and update UI
         await checkServicesStatusAndUpdate();
+        // Check cutoff warning
+        await checkDashboardCutoff();
     } catch (error) {
         console.error('Dashboard initialization error:', error);
         showToast('error', 'Error', 'Failed to load dashboard data');
@@ -1229,12 +1231,13 @@ function switchOrderTypeModal(type) {
 
 // Initialize printing form listeners for modal
 function initializePrintingModalListeners() {
-    // File input listener
+    // File input listener with auto page count detection
     const fileInput = document.getElementById('modalPrintFile');
     if (fileInput && !fileInput.dataset.listenerAdded) {
-        fileInput.addEventListener('change', function(e) {
+        fileInput.addEventListener('change', async function(e) {
             const file = e.target.files[0];
             const feedbackElement = document.getElementById('modalFileFeedback');
+            const pageCountInput = document.getElementById('modalPageCount');
             
             if (!file) {
                 if (feedbackElement) {
@@ -1260,15 +1263,72 @@ function initializePrintingModalListeners() {
                 return;
             }
             
+            // Show loading state while detecting page count
             const fileSizeMB = (file.size / 1048576).toFixed(2);
             if (feedbackElement) {
                 feedbackElement.innerHTML = `
-                    <div class="flex items-center gap-2 text-green-600">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Ready to upload</span>
+                    <div class="flex items-center gap-2 text-blue-600">
+                        <i class="bi bi-hourglass-split animate-spin"></i>
+                        <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Detecting page count...</span>
                     </div>
                 `;
                 feedbackElement.classList.remove('hidden');
+            }
+            
+            // Auto-detect page count
+            try {
+                const pageCount = typeof countFilePages === 'function' ? await countFilePages(file) : null;
+                
+                if (pageCount !== null && pageCountInput) {
+                    pageCountInput.value = pageCount;
+                    updateModalPrintingPrice();
+                    
+                    // Show success with page count info
+                    if (feedbackElement) {
+                        feedbackElement.innerHTML = `
+                            <div class="flex items-center gap-2 text-green-600">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span><strong>${file.name}</strong> (${fileSizeMB}MB) - ${pageCount} page${pageCount !== 1 ? 's' : ''} detected</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Could not detect page count (Word/Excel)
+                    if (pageCountInput && !pageCountInput.value) {
+                        pageCountInput.value = 1; // Default to 1
+                    }
+                    
+                    if (feedbackElement) {
+                        feedbackElement.innerHTML = `
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2 text-green-600">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Ready to upload</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-amber-600 text-sm">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <span>Please verify the page count for this document.</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Show toast notification
+                    if (typeof showToast === 'function') {
+                        showToast('Please verify page count for documents.', 'warning');
+                    }
+                }
+            } catch (error) {
+                console.error('Error detecting page count:', error);
+                // Show success without page count
+                if (feedbackElement) {
+                    feedbackElement.innerHTML = `
+                        <div class="flex items-center gap-2 text-green-600">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span><strong>${file.name}</strong> (${fileSizeMB}MB) - Ready to upload</span>
+                        </div>
+                    `;
+                }
             }
         });
         fileInput.dataset.listenerAdded = 'true';
@@ -2409,6 +2469,76 @@ setInterval(() => {
         loadCurrentOrder();
     }
 }, 30000);
+
+// Refresh cutoff warning every 60 seconds
+setInterval(() => {
+    if (currentTab === 'dashboard') {
+        checkDashboardCutoff();
+    }
+}, 60000);
+
+// Check cutoff warning for dashboard
+async function checkDashboardCutoff() {
+    try {
+        const response = await fetch(`${API_BASE}/student/check_cutoff.php`);
+        const data = await response.json();
+        
+        const banner = document.getElementById('dashboardCutoffBanner');
+        if (!banner) return;
+        
+        if (data.success && data.warning) {
+            const warning = data.warning;
+            
+            if (warning.level === 'error') {
+                // COOP is closed
+                banner.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-900 p-4 rounded-lg shadow-md">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="font-bold text-lg">COOP Closed</p>
+                                <p class="mt-1">${warning.message}</p>
+                                <p class="mt-2 text-sm">Orders placed now will be scheduled for ${warning.next_business_day}.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (warning.level === 'warning') {
+                // Closing soon
+                const minutesLeft = warning.minutes_until_close || 'few';
+                banner.innerHTML = `
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-4 rounded-lg shadow-md animate-pulse">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="font-bold text-lg">Closing Soon!</p>
+                                <p class="mt-1">${warning.message}</p>
+                                <p class="mt-2 text-sm font-semibold">You have ${minutesLeft} minutes left to place immediate orders.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // No warning - clear banner
+                banner.innerHTML = '';
+            }
+        } else {
+            // No warning - clear banner
+            banner.innerHTML = '';
+        }
+    } catch (error) {
+        console.error('Error checking cutoff warning:', error);
+        // Silently fail - don't show error to user
+    }
+}
 
 // Phase 8: Check services status and update UI accordingly
 async function checkServicesStatusAndUpdate() {
