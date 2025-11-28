@@ -2022,7 +2022,7 @@ function downloadQRCode() {
 }
 
 // Open QR zoom modal for dashboard
-function openDashboardQRZoom() {
+window.openDashboardQRZoom = function() {
     const canvas = document.getElementById('activeOrderQRCode');
     const zoomedCanvas = document.getElementById('zoomedQR');
     const modal = document.getElementById('qrZoomModal');
@@ -2048,15 +2048,15 @@ function openDashboardQRZoom() {
     } catch (error) {
         console.error('Zoom error:', error);
     }
-}
+};
 
-function closeQRZoom() {
+window.closeQRZoom = function() {
     const modal = document.getElementById('qrZoomModal');
     if (modal) {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
     }
-}
+};
 
 // Download QR code from active order card
 function downloadActiveOrderQR() {

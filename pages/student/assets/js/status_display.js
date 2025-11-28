@@ -423,7 +423,8 @@ async function cancelOrderStatus() {
     }
 }
 
-function openQRZoom() {
+// Make functions globally available
+window.openQRZoom = function() {
     const canvas = document.getElementById('qrcode');
     const zoomedCanvas = document.getElementById('zoomedQR');
     const modal = document.getElementById('qrZoomModal');
@@ -449,15 +450,17 @@ function openQRZoom() {
     } catch (error) {
         console.error('Zoom error:', error);
     }
-}
+};
 
-function closeQRZoom() {
+window.closeQRZoom = function() {
     const modal = document.getElementById('qrZoomModal');
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-}
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+};
 
-function downloadQR() {
+window.downloadQR = function() {
     const canvas = document.getElementById('qrcode');
     if (!canvas) {
         alert('QR code not available');
@@ -465,28 +468,57 @@ function downloadQR() {
     }
     
     try {
-        // Get canvas data as PNG
-        const dataURL = canvas.toDataURL('image/png');
+        // Get canvas data as PNG with maximum quality
+        const dataURL = canvas.toDataURL('image/png', 1.0);
+        const filename = `QMak-QR-${window.currentOrder?.queue_number || 'Order'}.png`;
         
-        // Create download link with mobile-friendly approach
-        const link = document.createElement('a');
-        link.href = dataURL;
-        link.download = `QMak-QR-${window.currentOrder?.queue_number || 'Order'}.png`;
-        link.style.display = 'none';
-        
-        // Append, click, and remove (mobile-friendly)
-        document.body.appendChild(link);
-        
-        // Use setTimeout to ensure link is in DOM
-        setTimeout(() => {
-            link.click();
-            setTimeout(() => {
-                document.body.removeChild(link);
-            }, 100);
-        }, 0);
+        // Try modern approach first (works on most mobile browsers)
+        if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+            // Convert dataURL to blob for sharing
+            fetch(dataURL)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], filename, { type: 'image/png' });
+                    return navigator.share({
+                        files: [file],
+                        title: 'QR Code',
+                        text: 'Order QR Code'
+                    });
+                })
+                .catch(err => {
+                    // Fallback to download if share fails
+                    console.log('Share failed, using download:', err);
+                    triggerDownload(dataURL, filename);
+                });
+        } else {
+            // Desktop or browsers without share API
+            triggerDownload(dataURL, filename);
+        }
     } catch (error) {
         console.error('Download error:', error);
         alert('Failed to download QR code');
+    }
+};
+
+function triggerDownload(dataURL, filename) {
+    // Create temporary link element
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = filename;
+    
+    // iOS Safari workaround
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // Open in new window for iOS
+        const newWindow = window.open();
+        if (newWindow) {
+            newWindow.document.write(`<img src="${dataURL}" alt="QR Code"/>`);
+            newWindow.document.write(`<br><p>Long press the image to save</p>`);
+        }
+    } else {
+        // Standard download for other browsers
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }
 

@@ -373,7 +373,7 @@ function showQRError(message) {
     }
 }
 
-function openQRZoom() {
+window.openQRZoom = function() {
     const canvas = document.getElementById('qrcode');
     const zoomedCanvas = document.getElementById('zoomedQR');
     const modal = document.getElementById('qrZoomModal');
@@ -399,33 +399,39 @@ function openQRZoom() {
     } catch (error) {
         console.error('Zoom error:', error);
     }
-}
+};
 
-function closeQRZoom() {
+window.closeQRZoom = function() {
     const modal = document.getElementById('qrZoomModal');
-    modal.classList.add('hidden');
-    document.body.style.overflow = '';
-}
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+};
 
-function downloadQR() {
+window.downloadQR = function() {
     const canvas = document.getElementById('qrcode');
     if (!canvas) return;
     
     try {
-        const url = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = `UMAK-COOP-${orderData.queueNum}-${orderData.referenceNum}.png`;
-        link.href = url;
-        link.style.display = 'none';
+        const url = canvas.toDataURL('image/png', 1.0);
+        const filename = `UMAK-COOP-${orderData.queueNum}-${orderData.referenceNum}.png`;
         
-        // Mobile-friendly approach
-        document.body.appendChild(link);
-        setTimeout(() => {
+        // iOS Safari workaround
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            const newWindow = window.open();
+            if (newWindow) {
+                newWindow.document.write(`<img src="${url}" alt="QR Code"/>`);
+                newWindow.document.write(`<br><p>Long press the image to save</p>`);
+            }
+        } else {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            document.body.appendChild(link);
             link.click();
-            setTimeout(() => {
-                document.body.removeChild(link);
-            }, 100);
-        }, 0);
+            document.body.removeChild(link);
+        }
         
         if (window.notificationManager) {
             window.notificationManager.showInAppNotification('QR Code downloaded!', 'success');
@@ -433,7 +439,7 @@ function downloadQR() {
     } catch (error) {
         console.error('Download error:', error);
     }
-}
+};
 
 // Add reference number display
 if (orderData.referenceNum) {
