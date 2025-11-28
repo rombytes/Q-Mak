@@ -122,6 +122,14 @@ class Database {
             $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             $this->conn->setAttribute(PDO::MYSQL_ATTR_INIT_COMMAND, "SET NAMES " . DB_CHARSET);
             
+            // Set MySQL session timezone to Philippine Time (UTC+8)
+            try {
+                $this->conn->exec("SET time_zone = '+08:00';");
+            } catch (PDOException $tz_error) {
+                // Log timezone error but don't fail connection
+                error_log("MySQL timezone setting failed: " . $tz_error->getMessage());
+            }
+            
         } catch(PDOException $exception) {
             // Log error securely to file instead of displaying
             $this->logDatabaseError($exception);

@@ -31,7 +31,7 @@ Options -Indexes
 # Environment-aware PHP error handling
 # Localhost: display errors, Production: hide errors
 <IfModule mod_env.c>
-    # Production (Hostinger) - Hide errors
+    # Production (Hostinger) - Hide errors for security
     SetEnvIf Host "qmak.online" IS_PRODUCTION
     php_flag display_errors Off
     php_value error_reporting 0

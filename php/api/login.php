@@ -87,9 +87,12 @@ try {
         exit;
     }
     
-    // Check if account is locked due to failed attempts
-    if ($security->isLocked($email, 'login')) {
-        $status = $security->getAccountStatus($email, 'login');
+    // Check if account is locked due to failed attempts (check both student and admin)
+    if ($security->isLocked($email, 'student_login') || $security->isLocked($email, 'admin_login')) {
+        $status = $security->getAccountStatus($email, 'student_login');
+        if (!$status || !$status['is_locked']) {
+            $status = $security->getAccountStatus($email, 'admin_login');
+        }
         ob_end_clean();
         echo json_encode([
             'success' => false,
@@ -99,8 +102,8 @@ try {
         exit;
     }
     
-    // Check if CAPTCHA is required
-    $requiresCaptcha = $security->requiresCaptcha($email, 'login');
+    // Check if CAPTCHA is required (check both student and admin)
+    $requiresCaptcha = $security->requiresCaptcha($email, 'student_login') || $security->requiresCaptcha($email, 'admin_login');
     if ($requiresCaptcha) {
         $captcha = $security->generateCaptcha($email);
         
@@ -144,10 +147,10 @@ try {
     if ($student) {
         // Student account found - verify password
         if (!password_verify($password, $student['password'])) {
-            $security->recordFailedAttempt($email, 'login');
+            $security->recordFailedAttempt($email, 'student_login');
             
             // Check if CAPTCHA is now required after this failed attempt
-            $nowRequiresCaptcha = $security->requiresCaptcha($email, 'login');
+            $nowRequiresCaptcha = $security->requiresCaptcha($email, 'student_login');
             $response = [
                 'success' => false, 
                 'message' => 'Invalid email or password'
@@ -171,7 +174,7 @@ try {
         }
         
         // Successful login - record successful attempt
-        $security->recordSuccessfulAttempt($email, 'login');
+        $security->recordSuccessfulAttempt($email, 'student_login');
         
         // Update last login
         $updateStmt = $db->prepare("UPDATE students SET last_login = NOW() WHERE student_id = :id");
@@ -230,10 +233,10 @@ try {
         // Admin account found - verify password
         if (!password_verify($password, $admin['password'])) {
             error_log("Login - Password verification FAILED for: " . $admin['email']);
-            $security->recordFailedAttempt($email, 'login');
+            $security->recordFailedAttempt($email, 'admin_login');
             
             // Check if CAPTCHA is now required after this failed attempt
-            $nowRequiresCaptcha = $security->requiresCaptcha($email, 'login');
+            $nowRequiresCaptcha = $security->requiresCaptcha($email, 'admin_login');
             $response = [
                 'success' => false, 
                 'message' => 'Invalid email or password'
@@ -250,7 +253,7 @@ try {
         }
         
         // Successful login - record successful attempt
-        $security->recordSuccessfulAttempt($email, 'login');
+        $security->recordSuccessfulAttempt($email, 'admin_login');
         
         // Update last login timestamp
         $updateStmt = $db->prepare("UPDATE admin_accounts SET last_login = NOW() WHERE admin_id = :id");
@@ -286,10 +289,10 @@ try {
     // =============================================
     // STEP 3: No account found
     // =============================================
-    $security->recordFailedAttempt($email, 'login');
+    $security->recordFailedAttempt($email, 'student_login');
     
     // Check if CAPTCHA is now required after this failed attempt
-    $nowRequiresCaptcha = $security->requiresCaptcha($email, 'login');
+    $nowRequiresCaptcha = $security->requiresCaptcha($email, 'student_login');
     $response = [
         'success' => false, 
         'message' => 'Invalid email or password'
@@ -309,10 +312,27 @@ try {
     ob_end_clean();
     error_log('Login error: ' . $e->getMessage());
     error_log('Login error trace: ' . $e->getTraceAsString());
+    error_log('Login error file: ' . $e->getFile() . ' line: ' . $e->getLine());
     http_response_code(500);
-    echo json_encode([
-        'success' => false, 
-        'message' => 'An error occurred during login'
-    ]);
+    
+    // Show detailed error in development, generic in production
+    $isProduction = (strpos($_SERVER['HTTP_HOST'] ?? '', 'qmak.online') !== false);
+    
+    if ($isProduction) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'An error occurred during login. Please try again.'
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'An error occurred during login',
+            'debug' => [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]
+        ]);
+    }
     exit;
 }
