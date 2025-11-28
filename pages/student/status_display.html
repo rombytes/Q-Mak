@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Status - UMak COOP</title>
+    <link rel="icon" type="image/svg+xml" href="../../images/logo-files/favicon-32x32-orange.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -164,43 +165,43 @@
 
             <!-- 4-Step Progress Stepper -->
             <div class="mb-10">
-                <div class="flex justify-between items-start mb-3 relative z-10">
+                <div class="flex justify-between items-start mb-6 relative z-10">
                     
                     <!-- Step 0: Confirmed -->
                     <div class="flex flex-col items-center flex-1">
-                        <div id="step-icon-0" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-green-100 text-green-600 transition-all duration-300 border-2 border-white shadow-sm">
+                        <div id="step-icon-0" class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600 transition-all duration-300 border-2 border-white shadow-sm">
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
-                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Confirmed</span>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide mt-3">Confirmed</span>
                     </div>
 
                     <!-- Step 1: Waiting -->
                     <div class="flex flex-col items-center flex-1">
-                        <div id="step-icon-1" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
+                        <div id="step-icon-1" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
                             <i class="bi bi-hourglass-split"></i>
                         </div>
-                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Waiting</span>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide mt-3">Waiting</span>
                     </div>
 
                     <!-- Step 2: Processing -->
                     <div class="flex flex-col items-center flex-1">
-                        <div id="step-icon-2" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
+                        <div id="step-icon-2" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
                             <i class="bi bi-bell-fill"></i>
                         </div>
-                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Processing</span>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide mt-3">Processing</span>
                     </div>
 
                     <!-- Step 3: Completed -->
                     <div class="flex flex-col items-center flex-1">
-                        <div id="step-icon-3" class="w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
+                        <div id="step-icon-3" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-400 transition-all duration-300 border-2 border-white shadow-sm">
                             <i class="bi bi-hand-thumbs-up-fill"></i>
                         </div>
-                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide">Completed</span>
+                        <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wide mt-3">Completed</span>
                     </div>
                 </div>
 
                 <!-- Progress Bar -->
-                <div class="relative h-2 bg-gray-100 rounded-full mx-4 -mt-8 z-0">
+                <div class="relative h-2 bg-gray-100 rounded-full mx-4 -mt-[52px] z-0">
                     <div id="progressBarFill" class="absolute top-0 left-0 h-full bg-blue-600 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
                 </div>
             </div>

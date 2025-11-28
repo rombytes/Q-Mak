@@ -65,7 +65,7 @@ function updateUI(order, email) {
         status: order.order_status,
         scheduled_date: order.queue_date || order.scheduled_date,
         student_name: `${order.first_name || ''} ${order.last_name || ''}`.trim() || 'Student',
-        student_id: order.student_number || 'N/A'
+        student_id: order.student_number || order.student_id || 'N/A'
     };
     
     const status = order.order_status || 'pending';
@@ -255,8 +255,8 @@ function updateStepper(status) {
         const iconBox = document.getElementById(`step-icon-${i}`);
         if (!iconBox) continue;
         
-        // Reset classes
-        iconBox.className = 'w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300 border-2 border-white shadow-sm';
+        // Reset classes (no mb-2, labels now use mt-3)
+        iconBox.className = 'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 border-white shadow-sm';
         
         if (status === 'cancelled') {
             // All steps gray for cancelled

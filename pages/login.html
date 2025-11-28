@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1e3a8a">
     <title>Login - UMak COOP</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo-files/favicon-32x32-orange.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="../js/notifications.js"></script>
@@ -73,44 +74,64 @@
         /* Mobile optimizations */
         @media (max-width: 768px) {
             body {
-                padding: 1rem;
+                padding: 0.75rem;
             }
             
             .login-card {
-                padding: 1.5rem !important;
-                border-radius: 1.5rem;
+                padding: 1.25rem !important;
+                border-radius: 1.25rem;
             }
             
             h3 {
-                font-size: 2rem !important;
+                font-size: 1.25rem !important;
             }
             
             button, a.btn-secondary {
-                min-height: 52px;
-                font-size: 1rem;
-                border-radius: 0.875rem;
+                min-height: 44px;
+                font-size: 0.875rem;
+                border-radius: 0.75rem;
+                padding-top: 0.625rem;
+                padding-bottom: 0.625rem;
             }
             
             button:active, a:active {
-                transform: scale(0.97);
+                transform: scale(0.98);
             }
             
             input {
                 font-size: 16px !important;
-                min-height: 52px;
-                border-radius: 0.875rem;
+                min-height: 44px;
+                border-radius: 0.75rem;
+                padding: 0.625rem 0.875rem;
             }
             
             .mb-8 {
-                margin-bottom: 1.5rem !important;
+                margin-bottom: 1rem !important;
             }
             
             .space-y-6 > * + * {
-                margin-top: 1.25rem !important;
+                margin-top: 0.875rem !important;
             }
             
-            img[alt*="Logo"] {
-                height: 4rem;
+            .mt-6 {
+                margin-top: 1rem !important;
+            }
+            
+            .space-y-3 > * + * {
+                margin-top: 0.5rem !important;
+            }
+            
+            label {
+                font-size: 0.75rem !important;
+                margin-bottom: 0.375rem !important;
+            }
+            
+            .text-xs {
+                font-size: 0.65rem !important;
+            }
+            
+            .mt-8 {
+                margin-top: 1rem !important;
             }
         }
 
@@ -136,13 +157,13 @@
     <div class="bg-overlay fixed inset-0 z-0"></div>
     
     <!-- Login Card -->
-    <div class="login-card rounded-2xl shadow-2xl p-10 max-w-md w-full relative z-10">
+    <div class="login-card rounded-2xl shadow-2xl p-6 md:p-10 max-w-md w-full relative z-10">
         <!-- Logo Section -->
         <div class="text-center mb-8">
-            <img src="../images/logo-files/logo-wo-text-blue.svg" alt="Q-Mak Logo" class="h-20 mx-auto mb-3" onerror="this.style.display='none'">
-            <div class="text-4xl font-extrabold text-blue-900 mb-1 tracking-tight">Q-MAK</div>
-            <p class="text-gray-600 text-sm mb-6">UMak COOP Order Hub</p>
-            <h3 class="text-2xl font-bold text-blue-900 mb-2">Login</h3>
+            <img src="../images/logo-files/logo-wo-text-orange.svg" alt="Q-Mak Logo" class="h-16 md:h-20 mx-auto mb-3" onerror="this.style.display='none'">
+            <div class="text-3xl md:text-4xl font-extrabold text-blue-900 mb-1 tracking-tight">Q-MAK</div>
+            <p class="text-gray-600 text-xs md:text-sm mb-4 md:mb-6">UMak COOP Order Hub</p>
+            <h3 class="text-xl md:text-2xl font-bold text-blue-900 mb-2">Login</h3>
         </div>
         
         <!-- Divider -->
@@ -215,7 +236,7 @@
             <button 
                 type="submit" 
                 id="loginBtn"
-                class="w-full btn-primary text-white py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center gap-2 touch-ripple"
+                class="w-full btn-primary text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg shadow-lg flex items-center justify-center gap-2 touch-ripple"
                 aria-label="Log in to your account"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
