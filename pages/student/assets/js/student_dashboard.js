@@ -406,7 +406,7 @@ function displayCurrentOrder(order) {
                             <i class="bi bi-qr-code"></i>
                             Present this at COOP counter
                         </p>
-                        <button onclick="downloadActiveOrderQR()" class="mt-3 px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-all flex items-center gap-2">
+                        <button onclick="downloadActiveOrderQR()" class="mt-3 px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-all flex items-center gap-2 touch-manipulation active:bg-gray-200 w-full justify-center">
                             <i class="bi bi-download"></i>
                             Download QR
                         </button>
