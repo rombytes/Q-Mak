@@ -60,12 +60,12 @@ if (isLocalhost()) {
     define('SMTP_FROM_EMAIL', 'your-test-email@gmail.com');
     define('SMTP_FROM_NAME', 'UMak COOP [DEV]');
 } else {
-    // PRODUCTION - Hostinger email
-    define('SMTP_HOST', 'smtp.hostinger.com');
-    define('SMTP_PORT', 587);  // Use 587 for TLS or 465 for SSL
-    define('SMTP_USERNAME', 'noreply@yourdomain.com');  // ⚠️ REPLACE: Your full Hostinger email
-    define('SMTP_PASSWORD', 'YOUR_HOSTINGER_EMAIL_PASSWORD');  // ⚠️ REPLACE: Email password from hPanel
-    define('SMTP_FROM_EMAIL', 'noreply@yourdomain.com');
+    // PRODUCTION - Gmail for better deliverability
+    define('SMTP_HOST', 'smtp.gmail.com');
+    define('SMTP_PORT', 587);  // TLS port for Gmail
+    define('SMTP_USERNAME', 'qmak.noreply@gmail.com');  // ⚠️ REPLACE: Your production Gmail
+    define('SMTP_PASSWORD', 'YOUR_GMAIL_APP_PASSWORD_HERE');  // ⚠️ REPLACE: 16-digit Gmail App Password
+    define('SMTP_FROM_EMAIL', 'qmak.noreply@gmail.com');  // ⚠️ REPLACE: Your production Gmail
     define('SMTP_FROM_NAME', 'UMak COOP Order Hub');
 }
 
