@@ -1905,7 +1905,28 @@ function updateCurrentQueue() {
     // Update order information
     document.getElementById('currentQueueNumber').textContent = currentQueueOrder.queue_number;
     document.getElementById('currentReferenceNumber').textContent = currentQueueOrder.reference_number || 'N/A';
-    document.getElementById('currentItemOrdered').textContent = currentQueueOrder.item_ordered;
+    
+    // Check if this is a printing order
+    const isPrinting = currentQueueOrder.order_type_service === 'printing' || 
+                       currentQueueOrder.item_name === 'Printing Services' ||
+                       currentQueueOrder.item_ordered === 'Printing Services';
+    
+    // Display item ordered with "View File" button for printing orders
+    const currentItemOrderedEl = document.getElementById('currentItemOrdered');
+    if (isPrinting) {
+        currentItemOrderedEl.innerHTML = `
+            <div class="inline-flex items-center gap-2">
+                <span>Printing Services</span>
+                <button onclick="viewOrderDetails(${currentQueueOrder.order_id})" 
+                        class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-1 rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1">
+                    <i class="fas fa-file-pdf"></i> View File
+                </button>
+            </div>
+        `;
+    } else {
+        currentItemOrderedEl.textContent = currentQueueOrder.item_ordered;
+    }
+    
     const createdTime = new Date(currentQueueOrder.created_at).toLocaleString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit',

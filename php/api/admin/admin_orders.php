@@ -106,11 +106,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         // Sort orders appropriately
         if ($filter === 'upcoming') {
-            // Upcoming orders: sort by queue_date and queue_number
-            $query .= " ORDER BY o.queue_date ASC, CAST(SUBSTRING(o.queue_number, 3) AS UNSIGNED) ASC";
+            // Upcoming orders: sort by queue_date and queue_number (numerically)
+            // Extract number after hyphen 'Q-45' -> '45' and sort numerically
+            $query .= " ORDER BY o.queue_date ASC, CAST(SUBSTRING_INDEX(o.queue_number, '-', -1) AS UNSIGNED) ASC";
         } elseif ($filter === 'today') {
-            // Today's queue: FIFO - sort by created_at ASC (oldest first)
-            $query .= " ORDER BY o.created_at ASC";
+            // Today's queue: Strict FIFO based on queue_number (numerical value)
+            // Extract number after hyphen 'Q-2' -> '2', 'Q-10' -> '10' and sort numerically
+            $query .= " ORDER BY CAST(SUBSTRING_INDEX(o.queue_number, '-', -1) AS UNSIGNED) ASC";
         } else {
             // History: show newest first
             $query .= " ORDER BY o.created_at DESC";
