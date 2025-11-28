@@ -26,15 +26,27 @@ try {
     if (!$status['open']) {
         $response['can_order'] = false;
         
-        // Get next business day
-        $nextBusinessDay = getNextBusinessDay($db);
-        $nextBusinessDayFormatted = $nextBusinessDay ? date('l, F j', strtotime($nextBusinessDay)) : 'Unknown';
+        // Distinguish between "Not yet open" (early morning) vs "Closed for day/holiday"
+        $isEarlyMorning = ($status['reason'] === 'Not yet open');
+        
+        if ($isEarlyMorning) {
+            // Early morning - order for TODAY
+            $targetDate = date('Y-m-d');
+            $dateString = 'Today, ' . date('F j');
+            $opensAt = $status['opens_at'] ?? '7:00 AM';
+            $message = "COOP opens at " . date('g:i A', strtotime($opensAt)) . ". You can place an order for today.";
+        } else {
+            // Closed for the day/Holiday - order for NEXT business day
+            $targetDate = getNextBusinessDay($db);
+            $dateString = $targetDate ? date('l, F j', strtotime($targetDate)) : 'Unknown';
+            $message = "COOP is currently closed.";
+        }
         
         $response['warning'] = [
             'level' => 'error',
-            'message' => 'COOP is currently closed. Your order will be scheduled as a pre-order for the next business day.',
+            'message' => $message,
             'reason' => $status['reason'] ?? 'Closed',
-            'next_business_day' => $nextBusinessDayFormatted
+            'next_business_day' => $dateString
         ];
     } else {
         // Check cutoff time
