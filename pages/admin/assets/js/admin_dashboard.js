@@ -3528,6 +3528,33 @@ function applyAnalyticsFilters() {
     addAnalyticsActivityItem('<i class="bi bi-funnel text-blue-600"></i> Filters applied');
 }
 
+// Download Analytics Report as Excel
+function downloadAnalyticsReport() {
+    // Collect current filter values
+    const period = currentAnalyticsPeriod;
+    const startDate = document.getElementById('analyticsStartDate')?.value || '';
+    const endDate = document.getElementById('analyticsEndDate')?.value || '';
+    const college = document.getElementById('analyticsCollege')?.value || '';
+    const program = document.getElementById('analyticsProgram')?.value || '';
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('period', period);
+    
+    if (startDate) params.append('start', startDate);
+    if (endDate) params.append('end', endDate);
+    if (college) params.append('college', college);
+    if (program) params.append('program', program);
+    
+    // Construct download URL
+    const url = `${API_BASE}/admin/export_analytics.php?${params.toString()}`;
+    
+    // Trigger download
+    window.open(url, '_blank');
+    
+    addAnalyticsActivityItem('<i class="bi bi-file-earmark-excel text-green-600"></i> Report exported to Excel');
+}
+
 // Clear all analytics filters
 function clearAnalyticsFilters() {
     // Reset filter state
