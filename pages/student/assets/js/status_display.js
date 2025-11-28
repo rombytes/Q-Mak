@@ -24,7 +24,7 @@ async function loadOrderStatus() {
     window.currentEmail = email;
     
     try {
-        const response = await fetch(`${API_BASE}/admin/check_status.php?email=${encodeURIComponent(email)}`);
+        const response = await fetch(`${API_BASE}/admin/check_status.php?email=${encodeURIComponent(email)}&_t=${Date.now()}`);
         const result = await response.json();
         
         // Hide loading view
@@ -293,8 +293,8 @@ function generateQR(order, email) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     QRCode.toCanvas(canvas, qrData, {
-        width: 128,
-        margin: 1,
+        width: 256,
+        margin: 2,
         color: { dark: '#1e3a8a', light: '#ffffff' }
     }, function(error) {
         if (error) console.error('QR Error:', error);
@@ -317,10 +317,10 @@ async function activateOrderStatus() {
         return;
     }
     
-    // Disable button
+    // Disable button and show loading state
     if (btn) {
         btn.disabled = true;
-        btn.classList.remove('btn-pulse-purple');
+        btn.classList.remove('btn-pulse-purple', 'hover:shadow-2xl');
         btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin text-2xl"></i> <span>Checking In...</span>';
     }
     
@@ -349,7 +349,7 @@ async function activateOrderStatus() {
                 </div>
             `;
             
-            // Reload after 2s to show active view
+            // Reload immediately to show active view
             setTimeout(() => loadOrderStatus(), 2000);
         } else {
             alert('✗ ' + (result.message || 'Check-in failed'));
@@ -420,6 +420,32 @@ async function cancelOrderStatus() {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-x-circle"></i> Cancel Order';
         }
+    }
+}
+
+function downloadQR() {
+    const canvas = document.getElementById('qrcode');
+    if (!canvas) {
+        alert('QR code not available');
+        return;
+    }
+    
+    try {
+        // Get canvas data as PNG
+        const dataURL = canvas.toDataURL('image/png');
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = `QMak-QR-${window.currentOrder?.queue_number || 'Order'}.png`;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Download error:', error);
+        alert('Failed to download QR code');
     }
 }
 
