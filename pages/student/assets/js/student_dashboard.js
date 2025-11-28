@@ -399,12 +399,16 @@ function displayCurrentOrder(order) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- QR Code -->
                     <div class="flex flex-col items-center justify-center">
-                        <div class="bg-white p-4 rounded-2xl shadow-xl">
+                        <div class="bg-white p-4 rounded-2xl shadow-xl cursor-pointer hover:shadow-2xl transition-all" onclick="openDashboardQRZoom()">
                             <canvas id="activeOrderQRCode" class="mx-auto"></canvas>
                         </div>
                         <p class="text-xs text-center mt-3 flex items-center gap-1" style="color: #dbeafe !important;">
                             <i class="bi bi-qr-code"></i>
                             Present this at COOP counter
+                        </p>
+                        <p class="text-xs text-center mt-1 flex items-center justify-center gap-1" style="color: #93c5fd !important;">
+                            <i class="bi bi-search"></i>
+                            Tap to enlarge
                         </p>
                         <button onclick="downloadActiveOrderQR()" class="mt-3 px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-all flex items-center gap-2 touch-manipulation active:bg-gray-200 w-full justify-center">
                             <i class="bi bi-download"></i>
@@ -2014,6 +2018,43 @@ function downloadQRCode() {
         link.download = 'order-qr-code.png';
         link.href = qrCanvas.toDataURL();
         link.click();
+    }
+}
+
+// Open QR zoom modal for dashboard
+function openDashboardQRZoom() {
+    const canvas = document.getElementById('activeOrderQRCode');
+    const zoomedCanvas = document.getElementById('zoomedQR');
+    const modal = document.getElementById('qrZoomModal');
+    const queueNumDisplay = document.getElementById('zoomedQueueNum');
+    
+    if (!canvas || !zoomedCanvas) return;
+    
+    try {
+        // Copy canvas to zoomed version with higher resolution
+        const ctx = zoomedCanvas.getContext('2d');
+        zoomedCanvas.width = 512;
+        zoomedCanvas.height = 512;
+        ctx.drawImage(canvas, 0, 0, 512, 512);
+        
+        // Update queue number display
+        if (window.currentActiveOrder && window.currentActiveOrder.queue_number) {
+            queueNumDisplay.textContent = window.currentActiveOrder.queue_number;
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } catch (error) {
+        console.error('Zoom error:', error);
+    }
+}
+
+function closeQRZoom() {
+    const modal = document.getElementById('qrZoomModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
     }
 }
 

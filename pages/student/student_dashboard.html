@@ -1069,6 +1069,23 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
+    
+    <!-- QR Zoom Modal -->
+    <div id="qrZoomModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[60] flex items-center justify-center p-4" onclick="closeQRZoom()">
+        <div class="relative w-full max-w-sm" onclick="event.stopPropagation()">
+            <button onclick="closeQRZoom()" class="absolute -top-12 right-0 text-white p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all">
+                <i class="bi bi-x-lg text-2xl"></i>
+            </button>
+            <div class="bg-white p-6 rounded-2xl shadow-2xl">
+                <canvas id="zoomedQR" class="w-full h-auto block"></canvas>
+                <p class="text-center text-gray-700 mt-4 font-bold text-lg" id="zoomedQueueNum">--</p>
+            </div>
+            <button onclick="downloadActiveOrderQR()" class="mt-6 w-full bg-white text-blue-600 font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-gray-50 transition-all touch-manipulation active:bg-gray-100">
+                <i class="bi bi-download text-xl"></i> Save Image
+            </button>
+        </div>
+    </div>
+    
     <!-- Core Scripts -->
     <script src="../../js/notifications.js?v=8"></script>
     <script src="../../js/inventory_helper.js?v=8"></script>

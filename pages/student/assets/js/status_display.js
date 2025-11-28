@@ -293,7 +293,7 @@ function generateQR(order, email) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     QRCode.toCanvas(canvas, qrData, {
-        width: 256,
+        width: 192,
         margin: 2,
         color: { dark: '#1e3a8a', light: '#ffffff' }
     }, function(error) {
@@ -423,6 +423,40 @@ async function cancelOrderStatus() {
     }
 }
 
+function openQRZoom() {
+    const canvas = document.getElementById('qrcode');
+    const zoomedCanvas = document.getElementById('zoomedQR');
+    const modal = document.getElementById('qrZoomModal');
+    const queueNumDisplay = document.getElementById('zoomedQueueNum');
+    
+    if (!canvas || !zoomedCanvas) return;
+    
+    try {
+        // Copy canvas to zoomed version with higher resolution
+        const ctx = zoomedCanvas.getContext('2d');
+        zoomedCanvas.width = 512;
+        zoomedCanvas.height = 512;
+        ctx.drawImage(canvas, 0, 0, 512, 512);
+        
+        // Update queue number display
+        if (window.currentOrder?.queue_number) {
+            queueNumDisplay.textContent = window.currentOrder.queue_number;
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } catch (error) {
+        console.error('Zoom error:', error);
+    }
+}
+
+function closeQRZoom() {
+    const modal = document.getElementById('qrZoomModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
 function downloadQR() {
     const canvas = document.getElementById('qrcode');
     if (!canvas) {
@@ -434,15 +468,22 @@ function downloadQR() {
         // Get canvas data as PNG
         const dataURL = canvas.toDataURL('image/png');
         
-        // Create download link
+        // Create download link with mobile-friendly approach
         const link = document.createElement('a');
         link.href = dataURL;
         link.download = `QMak-QR-${window.currentOrder?.queue_number || 'Order'}.png`;
+        link.style.display = 'none';
         
-        // Trigger download
+        // Append, click, and remove (mobile-friendly)
         document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        
+        // Use setTimeout to ensure link is in DOM
+        setTimeout(() => {
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+        }, 0);
     } catch (error) {
         console.error('Download error:', error);
         alert('Failed to download QR code');

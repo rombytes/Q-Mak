@@ -41,11 +41,15 @@
         <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-6 border border-blue-100 shadow-lg">
             <div class="flex flex-col md:flex-row items-center justify-center gap-8">
                 <!-- QR Code -->
-                <div class="bg-white p-6 rounded-2xl shadow-xl border border-blue-200">
+                <div class="bg-white p-6 rounded-2xl shadow-xl border border-blue-200 cursor-pointer hover:border-blue-400 transition-all" onclick="openQRZoom()">
                     <canvas id="qrcode" class="mx-auto"></canvas>
                     <p class="text-xs text-center text-gray-500 mt-3 flex items-center justify-center gap-1">
                         <i class="fas fa-qrcode"></i>
                         Scan to verify
+                    </p>
+                    <p class="text-xs text-center text-blue-400 mt-2 font-medium flex items-center justify-center gap-1">
+                        <i class="fas fa-search-plus"></i>
+                        Tap to enlarge
                     </p>
                 </div>
                 
@@ -181,6 +185,22 @@
             <button onclick="goHome()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 rounded-xl font-bold transition-all hover:shadow-xl flex items-center justify-center gap-2 group">
                 <i class="fas fa-home group-hover:scale-110 transition-transform"></i>
                 Back to Home
+            </button>
+        </div>
+    </div>
+
+    <!-- QR Zoom Modal -->
+    <div id="qrZoomModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[60] flex items-center justify-center p-4" onclick="closeQRZoom()">
+        <div class="relative w-full max-w-sm" onclick="event.stopPropagation()">
+            <button onclick="closeQRZoom()" class="absolute -top-12 right-0 text-white p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            <div class="bg-white p-6 rounded-2xl shadow-2xl">
+                <canvas id="zoomedQR" class="w-full h-auto block"></canvas>
+                <p class="text-center text-gray-700 mt-4 font-bold text-lg" id="zoomedQueueNum">--</p>
+            </div>
+            <button onclick="downloadQR()" class="mt-6 w-full bg-white text-blue-600 font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-gray-50 transition-all touch-manipulation active:bg-gray-100">
+                <i class="fas fa-download text-xl"></i> Save Image
             </button>
         </div>
     </div>

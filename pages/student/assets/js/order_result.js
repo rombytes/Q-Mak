@@ -373,16 +373,65 @@ function showQRError(message) {
     }
 }
 
+function openQRZoom() {
+    const canvas = document.getElementById('qrcode');
+    const zoomedCanvas = document.getElementById('zoomedQR');
+    const modal = document.getElementById('qrZoomModal');
+    const queueNumDisplay = document.getElementById('zoomedQueueNum');
+    
+    if (!canvas || !zoomedCanvas) return;
+    
+    try {
+        // Copy canvas to zoomed version with higher resolution
+        const ctx = zoomedCanvas.getContext('2d');
+        zoomedCanvas.width = 512;
+        zoomedCanvas.height = 512;
+        ctx.drawImage(canvas, 0, 0, 512, 512);
+        
+        // Update queue number display
+        if (orderData && orderData.queueNum) {
+            queueNumDisplay.textContent = orderData.queueNum;
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } catch (error) {
+        console.error('Zoom error:', error);
+    }
+}
+
+function closeQRZoom() {
+    const modal = document.getElementById('qrZoomModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
 function downloadQR() {
     const canvas = document.getElementById('qrcode');
-    const url = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = `UMAK-COOP-${orderData.queueNum}-${orderData.referenceNum}.png`;
-    link.href = url;
-    link.click();
+    if (!canvas) return;
     
-    if (window.notificationManager) {
-        window.notificationManager.showInAppNotification('QR Code downloaded!', 'success');
+    try {
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `UMAK-COOP-${orderData.queueNum}-${orderData.referenceNum}.png`;
+        link.href = url;
+        link.style.display = 'none';
+        
+        // Mobile-friendly approach
+        document.body.appendChild(link);
+        setTimeout(() => {
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+        }, 0);
+        
+        if (window.notificationManager) {
+            window.notificationManager.showInAppNotification('QR Code downloaded!', 'success');
+        }
+    } catch (error) {
+        console.error('Download error:', error);
     }
 }
 
